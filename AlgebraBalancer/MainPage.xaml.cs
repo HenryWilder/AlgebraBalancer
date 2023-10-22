@@ -12,7 +12,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-
+using System.Data;
 using static System.Net.Mime.MediaTypeNames;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -28,6 +28,8 @@ namespace AlgebraBalancer
         {
             this.InitializeComponent();
         }
+
+        private readonly static DataTable dt = new DataTable();
 
         private void Update(object sender, TextChangedEventArgs args)
         {
@@ -50,7 +52,7 @@ namespace AlgebraBalancer
                         throw new StackOverflowException();
                     }
 
-                    int x = int.Parse(text);
+                    int x = (int)dt.Compute(text, "");
 
                     // Square
                     {
@@ -86,9 +88,9 @@ namespace AlgebraBalancer
                     {
                         throw new StackOverflowException();
                     }
-
-                    int a = int.Parse(aText);
-                    int b = int.Parse(bText);
+                                        
+                    int a = (int)dt.Compute(aText, "");
+                    int b = (int)dt.Compute(bText, "");
 
                     int gcf = GCF(a, b);
 
