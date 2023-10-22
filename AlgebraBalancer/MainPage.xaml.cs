@@ -142,7 +142,7 @@ namespace AlgebraBalancer
 
             if (n > 0) // Positive
             {
-                for (int i = 2; i < (n / i); ++i)
+                for (int i = 2; i <= (n / i); ++i)
                 {
                     if (n % i != 0) { continue; }
                     factors.Add((i, n / i));
@@ -150,7 +150,7 @@ namespace AlgebraBalancer
             }
             else if (n < 0) // Negative
             {
-                for (int i = 2; i < -(n / i); ++i)
+                for (int i = 2; i <= -(n / i); ++i)
                 {
                     if (n % i != 0) { continue; }
                     factors.Add((i, n / i));
