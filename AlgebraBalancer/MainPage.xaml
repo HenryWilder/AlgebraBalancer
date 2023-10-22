@@ -23,9 +23,10 @@
             <TextBox x:Name="InputB" InputScope="Number" TextChanged="Update" Grid.Row="1" Header="B" HorizontalAlignment="Right"/>
         </Grid>
         <TextBlock FontSize="20" VerticalAlignment="Center" Grid.Column="1">=</TextBlock>
-        <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="18,0,18,0">
-            <TextBlock>Factors</TextBlock>
-            <TextBlock x:Name="OutputFactors" Text="..." HorizontalAlignment="Left" FontFamily="Consolas"/>
+        <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="18,0,18,0" Spacing="18">
+            <TextBlock x:Name="OutputGCF"     Text="..." FontFamily="Consolas" FontSize="18"/>
+            <TextBlock x:Name="OutputLCM"     Text="..." FontFamily="Consolas" FontSize="18"/>
+            <TextBlock x:Name="OutputFactors" Text="..." FontFamily="Consolas" FontSize="18"/>
         </StackPanel>
     </Grid>
 </Page>

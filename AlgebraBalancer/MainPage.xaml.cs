@@ -19,18 +19,6 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace AlgebraBalancer
 {
-    struct FactorPair
-    {
-        public int a;
-        public int b;
-
-        public FactorPair(int a, int b)
-        {
-            this.a = a;
-            this.b = b;
-        }
-    }
-
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
@@ -48,46 +36,82 @@ namespace AlgebraBalancer
                 string aText = InputA.Text;
                 string bText = InputB.Text;
 
-                if (aText.Length > 10 || bText.Length > 10)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
-
                 if (aText == string.Empty || bText == string.Empty) // Unary
                 {
+                    OutputGCF.Visibility = Visibility.Collapsed;
+                    OutputLCM.Visibility = Visibility.Collapsed;
+
                     string text = aText == string.Empty ? bText : aText;
                     int x = int.Parse(text);
 
-                    var factors = Factors(x);
-                    int factorsPad1 = 0;
-                    int factorsPad2 = 0;
-                    foreach (var f in factors)
+                    // Factors
                     {
-                        factorsPad1 = Math.Max(f.a.ToString().Length, factorsPad1);
-                        factorsPad2 = Math.Max(f.b.ToString().Length, factorsPad2);
-                    }
+                        var factors = Factors(x);
+                        int factorsPad1 = 0;
+                        int factorsPad2 = 0;
+                        foreach (var f in factors)
+                        {
+                            factorsPad1 = Math.Max(f.Item1.ToString().Length, factorsPad1);
+                            factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
+                        }
 
-                    OutputFactors.Text = string.Join("\n",
-                        from f in factors
-                        select f.a.ToString().PadLeft(factorsPad1) + " × " + f.b.ToString().PadLeft(factorsPad2));
+                        OutputFactors.Text = "Factors:\n" + string.Join("\n", from f in factors select
+                                f.Item1.ToString().PadLeft(factorsPad1) + " × " +
+                                f.Item2.ToString().PadLeft(factorsPad2));
+                    }
                 }
                 else // Binary
                 {
+                    OutputGCF.Visibility = Visibility.Visible;
+                    OutputLCM.Visibility = Visibility.Visible;
+
                     int a = int.Parse(aText);
                     int b = int.Parse(bText);
+
+                    // GCF
+                    {
+                        OutputGCF.Text = "GCF: " + GCF(a, b).ToString();
+                    }
+
+                    // LCM
+                    {
+                        OutputLCM.Text = "LCM: " + LCM(a, b).ToString();
+                    }
+
+                    // Common factors
+                    {
+                        var factors = CommonFactors(a, b);
+
+                        int factorsPad1 = 0;
+                        int factorsPad2 = 0;
+                        int factorsPad3 = 0;
+                        foreach (var f in factors)
+                        {
+                            factorsPad1 = Math.Max(f.Item1.ToString().Length, factorsPad1);
+                            factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
+                            factorsPad3 = Math.Max(f.Item3.ToString().Length, factorsPad3);
+                        }
+                        
+                        OutputFactors.Text = "Common Factors:\n" + string.Join("\n", from f in factors select
+                            f.Item1.ToString().PadLeft(factorsPad1) + " × " +
+                            f.Item2.ToString().PadLeft(factorsPad2) + ", " +
+                            f.Item3.ToString().PadLeft(factorsPad3));
+                    }
                 }
             }
             catch
             {
+                OutputGCF.Text = "GCF: ...";
+                OutputLCM.Text = "LCM: ...";
                 OutputFactors.Text = "...";
             }
         }
 
-        private List<FactorPair> Factors(int n)
+        private static List<(int, int)> Factors(int n)
         {
-            var factors = new List<FactorPair>
+            var factors = new List<(int, int)>
             {
-                new FactorPair(1, n)
+                (1, n)
             };
 
             if (n > 0) // Positive
@@ -95,7 +119,7 @@ namespace AlgebraBalancer
                 for (int i = 2; i < (n / i); ++i)
                 {
                     if (n % i != 0) { continue; }
-                    factors.Add(new FactorPair(i, n / i));
+                    factors.Add((i, n / i));
                 }
             }
             else if (n < 0) // Negative
@@ -103,10 +127,67 @@ namespace AlgebraBalancer
                 for (int i = 2; i < -(n / i); ++i)
                 {
                     if (n % i != 0) { continue; }
-                    factors.Add(new FactorPair(i, n / i));
+                    factors.Add((i, n / i));
                 }
             }
+
             return factors;
+        }
+
+        private static List<(int, int, int)> CommonFactors(int a, int b)
+        {
+            var factors = new List<(int, int, int)>();
+
+            if (a < 0 || b < 0) // Not sure what to do in this case
+            {
+                return factors;
+            }
+
+            for (int i = 1; i < Math.Min(a, b); ++i)
+            {
+                if (a % i != 0 || b % i != 0) { continue; }
+                factors.Add((i, a / i, b / i));
+            }
+
+            return factors;
+        }
+
+        private static int GCF(int a, int b)
+        {
+            if (a <= 0 || b <= 0) // Not sure what to do in this case
+            {
+                throw new NotImplementedException();
+            }
+
+            for (int gcf = Math.Min(a, b); gcf > 1; --gcf)
+            {
+                if (a % gcf == 0 && b % gcf == 0)
+                {
+                    return gcf;
+                }
+            }
+
+            return 1;
+        }
+
+        private static int LCM(int a, int b)
+        {
+            if (a <= 0 || b <= 0) // Not sure what to do in this case
+            {
+                throw new NotImplementedException();
+            }
+
+            int product = a * b;
+
+            for (int lcm = Math.Max(a, b); lcm < product; ++lcm)
+            {
+                if (lcm % a == 0 && lcm % b == 0)
+                {
+                    return lcm;
+                }
+            }
+
+            return product;
         }
     }
 }
