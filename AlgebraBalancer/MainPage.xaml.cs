@@ -220,13 +220,13 @@ namespace AlgebraBalancer
             foreach (var (a, b) in factors)
             {
                 double rootB = Math.Sqrt(b);
-                if (IsInt(rootB))
+                if (IsInt(rootB) && (int)rootB != 1)
                 {
                     return $"{(int)rootB}√{a}";
                 }
 
                 double rootA = Math.Sqrt(a);
-                if (IsInt(rootA))
+                if (IsInt(rootA) && (int)rootA != 1)
                 {
                     return $"{(int)rootA}√{b}";
                 }
