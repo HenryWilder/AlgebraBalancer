@@ -47,7 +47,7 @@ namespace AlgebraBalancer
 
                     string text = aText == string.Empty ? bText : aText;
 
-                    if (text.Length > 5)
+                    if (text.Length > 7)
                     {
                         throw new StackOverflowException();
                     }
@@ -84,7 +84,7 @@ namespace AlgebraBalancer
                 }
                 else // Binary
                 {
-                    if (aText.Length > 5 || bText.Length > 5)
+                    if (aText.Length > 7 || bText.Length > 7)
                     {
                         throw new StackOverflowException();
                     }
