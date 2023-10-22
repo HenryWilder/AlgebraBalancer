@@ -96,10 +96,10 @@ namespace AlgebraBalancer
 
                     int gcf = GCF(a, b);
 
-                    Output.Text += $"\n{a}+{b} = " + (a + b).ToString();
-                    Output.Text += $"\n{a}-{b} = " + (a - b).ToString();
-                    Output.Text += $"\n{a}×{b} = " + (a * b).ToString();
-                    Output.Text += $"\n{a}÷{b} = " + ((a % b == 0) ? (a / b).ToString() : $"{a / gcf}/{b / gcf}");
+                    Output.Text += $"\n{a} + {b} = " + (a + b).ToString();
+                    Output.Text += $"\n{a} - {b} = " + (a - b).ToString();
+                    Output.Text += $"\n{a} × {b} = " + (a * b).ToString();
+                    Output.Text += $"\n{a} ÷ {b} = " + ((a % b == 0) ? (a / b).ToString() : $"{a / gcf}/{b / gcf}");
                     Output.Text += "\nGCF: " + gcf.ToString();
                     Output.Text += "\nLCM: " + LCM(a, b).ToString();
 
@@ -118,9 +118,9 @@ namespace AlgebraBalancer
                         }
                         
                         Output.Text += "\nCommon Factors:\n" + string.Join("\n", from f in factors select
-                            f.Item1.ToString().PadLeft(factorsPad1) + " × " +
+                            f.Item1.ToString().PadLeft(factorsPad1) + " × (" +
                             f.Item2.ToString().PadLeft(factorsPad2) + ", " +
-                            f.Item3.ToString().PadLeft(factorsPad3));
+                            f.Item3.ToString().PadLeft(factorsPad3)) + ")";
                     }
                 }
             }
