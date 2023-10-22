@@ -22,5 +22,6 @@
         <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="18,0,18,0" Spacing="18">
             <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="18"/>
         </StackPanel>
+        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="11,11,11,11" FontSize="11">© 2023 Henry Wilder</TextBlock>
     </Grid>
 </Page>
