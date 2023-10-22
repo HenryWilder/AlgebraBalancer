@@ -73,17 +73,20 @@ namespace AlgebraBalancer
                         var factors = Factors(x);
                         int factorsPad1 = 0;
                         int factorsPad2 = 0;
+                        int sumPad = 0;
                         int differencePad = 0;
                         foreach (var f in factors)
                         {
                             factorsPad1 = Math.Max(f.Item1.ToString().Length, factorsPad1);
                             factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
+                            sumPad = Math.Max((f.Item2 + f.Item1).ToString().Length, differencePad);
                             differencePad = Math.Max((f.Item2 - f.Item1).ToString().Length, differencePad);
                         }
 
                         Output.Text += "\nFactors:\n" + string.Join("\n", from f in factors select
                                 f.Item1.ToString().PadLeft(factorsPad1) + " × " +
-                                f.Item2.ToString().PadLeft(factorsPad2) + "; Δ=" +
+                                f.Item2.ToString().PadLeft(factorsPad2) + "; Σ=" +
+                                (f.Item2 + f.Item1).ToString().PadLeft(sumPad) + "; Δ=" +
                                 (f.Item2 - f.Item1).ToString().PadLeft(differencePad));
                     }
                 }
