@@ -14,19 +14,13 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Grid VerticalAlignment="Center" Grid.Column="0" RowSpacing="18" Margin="18,0,18,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <TextBox x:Name="InputA" InputScope="Number" TextChanged="Update" Grid.Row="0" Header="A" HorizontalAlignment="Right"/>
-            <TextBox x:Name="InputB" InputScope="Number" TextChanged="Update" Grid.Row="1" Header="B" HorizontalAlignment="Right"/>
-        </Grid>
+        <StackPanel VerticalAlignment="Center" Grid.Column="0" Margin="18,0,18,0" Spacing="18" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBox x:Name="InputA" InputScope="Number" TextChanged="Update" TextAlignment="Right"/>
+            <TextBox x:Name="InputB" InputScope="Number" TextChanged="Update" TextAlignment="Right"/>
+        </StackPanel>
         <TextBlock FontSize="20" VerticalAlignment="Center" Grid.Column="1">=</TextBlock>
         <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="18,0,18,0" Spacing="18">
-            <TextBlock x:Name="OutputGCF"     Text="..." FontFamily="Consolas" FontSize="18"/>
-            <TextBlock x:Name="OutputLCM"     Text="..." FontFamily="Consolas" FontSize="18"/>
-            <TextBlock x:Name="OutputFactors" Text="..." FontFamily="Consolas" FontSize="18"/>
+            <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="18"/>
         </StackPanel>
     </Grid>
 </Page>

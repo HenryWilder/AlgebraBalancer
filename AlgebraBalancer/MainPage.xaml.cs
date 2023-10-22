@@ -36,13 +36,33 @@ namespace AlgebraBalancer
                 string aText = InputA.Text;
                 string bText = InputB.Text;
 
-                if (aText == string.Empty || bText == string.Empty) // Unary
+                bool isBinary = aText != string.Empty && bText != string.Empty;
+
+                Output.Text = "";
+
+                if (!isBinary) // Unary
                 {
-                    OutputGCF.Visibility = Visibility.Collapsed;
-                    OutputLCM.Visibility = Visibility.Collapsed;
 
                     string text = aText == string.Empty ? bText : aText;
+
+                    if (text.Length > 5)
+                    {
+                        throw new StackOverflowException();
+                    }
+
                     int x = int.Parse(text);
+
+                    // Square
+                    {
+                        Output.Text += $"\n{x}² = " + (x * x).ToString();
+                    }
+
+                    // Root
+                    {
+                        double root = Math.Sqrt(x);
+                        bool isRational = Math.Abs(root - Math.Round(root)) < (1.0 / 1024);
+                        Output.Text += $"\n√{x} = " + (isRational ? ((int)root).ToString() : SimplifiedRoot(x));
+                    }
 
                     // Factors
                     {
@@ -55,28 +75,29 @@ namespace AlgebraBalancer
                             factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
                         }
 
-                        OutputFactors.Text = "Factors:\n" + string.Join("\n", from f in factors select
+                        Output.Text += "\nFactors:\n" + string.Join("\n", from f in factors select
                                 f.Item1.ToString().PadLeft(factorsPad1) + " × " +
                                 f.Item2.ToString().PadLeft(factorsPad2));
                     }
                 }
                 else // Binary
                 {
-                    OutputGCF.Visibility = Visibility.Visible;
-                    OutputLCM.Visibility = Visibility.Visible;
+                    if (aText.Length > 5 || bText.Length > 5)
+                    {
+                        throw new StackOverflowException();
+                    }
 
                     int a = int.Parse(aText);
                     int b = int.Parse(bText);
 
-                    // GCF
-                    {
-                        OutputGCF.Text = "GCF: " + GCF(a, b).ToString();
-                    }
+                    int gcf = GCF(a, b);
 
-                    // LCM
-                    {
-                        OutputLCM.Text = "LCM: " + LCM(a, b).ToString();
-                    }
+                    Output.Text += $"\n{a}+{b} = " + (a + b).ToString();
+                    Output.Text += $"\n{a}-{b} = " + (a - b).ToString();
+                    Output.Text += $"\n{a}×{b} = " + (a * b).ToString();
+                    Output.Text += $"\n{a}÷{b} = " + ((a % b == 0) ? (a / b).ToString() : $"{a / gcf}/{b / gcf}");
+                    Output.Text += "\nGCF: " + gcf.ToString();
+                    Output.Text += "\nLCM: " + LCM(a, b).ToString();
 
                     // Common factors
                     {
@@ -92,7 +113,7 @@ namespace AlgebraBalancer
                             factorsPad3 = Math.Max(f.Item3.ToString().Length, factorsPad3);
                         }
                         
-                        OutputFactors.Text = "Common Factors:\n" + string.Join("\n", from f in factors select
+                        Output.Text += "\nCommon Factors:\n" + string.Join("\n", from f in factors select
                             f.Item1.ToString().PadLeft(factorsPad1) + " × " +
                             f.Item2.ToString().PadLeft(factorsPad2) + ", " +
                             f.Item3.ToString().PadLeft(factorsPad3));
@@ -101,9 +122,7 @@ namespace AlgebraBalancer
             }
             catch
             {
-                OutputGCF.Text = "GCF: ...";
-                OutputLCM.Text = "LCM: ...";
-                OutputFactors.Text = "...";
+                Output.Text = "...";
             }
         }
 
@@ -188,6 +207,22 @@ namespace AlgebraBalancer
             }
 
             return product;
+        }
+
+        private static string SimplifiedRoot(int x)
+        {
+            var factors = Factors(x);
+            factors.Reverse(); // largest to smallest
+            foreach (var (a, b) in factors)
+            {
+                double root = Math.Sqrt(b);
+                if (Math.Abs(root - Math.Round(root)) < 0.001)
+                {
+                    return $"{(int)root}√{a}";
+                }
+            }
+
+            return $"√{x}";
         }
     }
 }
