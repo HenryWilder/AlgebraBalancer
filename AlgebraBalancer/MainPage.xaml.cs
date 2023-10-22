@@ -31,6 +31,9 @@ namespace AlgebraBalancer
 
         private readonly static DataTable dt = new DataTable();
 
+        private static bool IsInt(double x) =>
+            Math.Abs(x % 1) <= (double.Epsilon * 100);
+
         private void Update(object sender, TextChangedEventArgs args)
         {
             try
@@ -62,8 +65,7 @@ namespace AlgebraBalancer
                     // Root
                     {
                         double root = Math.Sqrt(x);
-                        bool isRational = Math.Abs(root - Math.Round(root)) < (1.0 / 1024);
-                        Output.Text += $"\n√{x} = " + (isRational ? ((int)root).ToString() : SimplifiedRoot(x));
+                        Output.Text += $"\n√{x} = " + (IsInt(root) ? ((int)root).ToString() : SimplifiedRoot(x));
                     }
 
                     // Factors
@@ -217,10 +219,16 @@ namespace AlgebraBalancer
             factors.Reverse(); // largest to smallest
             foreach (var (a, b) in factors)
             {
-                double root = Math.Sqrt(b);
-                if (Math.Abs(root - Math.Round(root)) < 0.001)
+                double rootB = Math.Sqrt(b);
+                if (IsInt(rootB))
                 {
-                    return $"{(int)root}√{a}";
+                    return $"{(int)rootB}√{a}";
+                }
+
+                double rootA = Math.Sqrt(a);
+                if (IsInt(rootA))
+                {
+                    return $"{(int)rootA}√{b}";
                 }
             }
 
