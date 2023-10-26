@@ -1,0 +1,4 @@
+﻿[*.{cs,vb}]
+
+# IDE2003: Blank line required between block and subsequent statement
+dotnet_style_allow_statement_immediately_after_block_experimental = true

@@ -14,6 +14,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Data;
 using static System.Net.Mime.MediaTypeNames;
+using System.Diagnostics;
+using static AlgebraBalancer.Algebra;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -24,15 +26,113 @@ namespace AlgebraBalancer
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        public MainPage()
-        {
-            this.InitializeComponent();
-        }
+        public MainPage() => InitializeComponent();
 
         private readonly static DataTable dt = new DataTable();
 
-        private static bool IsInt(double x) =>
-            Math.Abs(x % 1) <= (double.Epsilon * 100);
+        private string GetUnaryOpsString(int x)
+        {
+            string result = string.Empty;
+
+            // Square
+            result += $"\n{x}² = " + (x * x).ToString();
+
+            // Root
+            result += $"\n√{x} = ";
+            try   { result += SimplifiedRoot(x).ToString(); }
+            catch { result += "..."; }
+
+            // Factors
+            result += "\nFactors:\n";
+            try
+            {
+                var factors = Factors(x);
+                int factorsPad1 = 0;
+                int factorsPad2 = 0;
+                int sumPad = 0;
+                int differencePad = 0;
+                foreach (var f in factors)
+                {
+                    factorsPad1 = Math.Max(f.Item1.ToString().Length, factorsPad1);
+                    factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
+                    sumPad = Math.Max((f.Item2 + f.Item1).ToString().Length, differencePad);
+                    differencePad = Math.Max((f.Item2 - f.Item1).ToString().Length, differencePad);
+                }
+
+                result += string.Join("\n", from f in factors
+                                                 select
+                        f.Item1.ToString().PadLeft(factorsPad1) + " × " +
+                        f.Item2.ToString().PadLeft(factorsPad2) + "; Σ=" +
+                        (f.Item2 + f.Item1).ToString().PadLeft(sumPad) + "; Δ=" +
+                        (f.Item2 - f.Item1).ToString().PadLeft(differencePad));
+            }
+            catch
+            {
+                result += "...";
+            }
+
+            return result;
+        }
+        
+        private string GetBinaryOpsString(int a, int b)
+        {
+            string result = string.Empty;
+
+            result += $"\n{a} + {b} = " + (a + b).ToString();
+            result += $"\n{a} - {b} = " + (a - b).ToString();
+            result += $"\n{a} × {b} = " + (a * b).ToString();
+            result += $"\n{a} ÷ {b} = ";
+            try   { result += SimplifiedFraction(a, b).ToString(); }
+            catch { result += "..."; }
+
+
+            result += "\nGCF: ";
+            try   { result += GCF(a, b).ToString(); }
+            catch { result += "..."; }
+
+            result += "\nLCM: ";
+            try   { result += LCM(a, b).ToString(); }
+            catch { result += "..."; }
+
+            // Common factors
+            result += "\nCommon Factors:";
+            try
+            {
+                // c = Common
+
+                var factors = CommonFactors(a, b);
+                var factorStrings = (
+                    from fac in factors
+                    select (
+                        fac.Item1.ToString(),
+                        fac.Item2.ToString(),
+                        fac.Item3.ToString()
+                    )).ToList();
+                
+                int cFacPad = 0, aFacPad = 0, bFacPad = 0;
+                foreach (var (cFacStr, aFacStr, bFacStr) in factorStrings)
+                {
+                    cFacPad = Math.Max(cFacStr.Length, cFacPad);
+                    aFacPad = Math.Max(aFacStr.Length, aFacPad);
+                    bFacPad = Math.Max(bFacStr.Length, bFacPad);
+                }
+
+                foreach (var (cFacStr, aFacStr, bFacStr) in factorStrings)
+                {
+                    string cStr = cFacStr.PadLeft(cFacPad);
+                    string aStr = aFacStr.PadLeft(aFacPad);
+                    string bStr = bFacStr.PadLeft(bFacPad);
+
+                    result += $"\n{cStr} × ({aStr}, {bStr})";
+                }
+            }
+            catch
+            {
+                result += "...";
+            }
+
+            return result;
+        }
 
         private void Update(object sender, TextChangedEventArgs args)
         {
@@ -41,14 +141,18 @@ namespace AlgebraBalancer
                 string aText = InputA.Text;
                 string bText = InputB.Text;
 
-                bool isBinary = aText != string.Empty && bText != string.Empty;
+                bool isUsingA = aText != string.Empty;
+                bool isUsingB = bText != string.Empty;
+                bool isBinary = isUsingA && isUsingB;
+
+                EchoInputA.Visibility = isUsingA || !isBinary ? Visibility.Visible : Visibility.Collapsed;
+                EchoInputB.Visibility = isUsingB &&  isBinary ? Visibility.Visible : Visibility.Collapsed;
 
                 Output.Text = "";
 
                 if (!isBinary) // Unary
                 {
-
-                    string text = aText == string.Empty ? bText : aText;
+                    string text = isUsingA ? aText : bText;
 
                     if (text.Length > 7)
                     {
@@ -56,39 +160,9 @@ namespace AlgebraBalancer
                     }
 
                     int x = (int)dt.Compute(text, "");
+                    EchoInputA.Text = x.ToString();
 
-                    // Square
-                    {
-                        Output.Text += $"\n{x}² = " + (x * x).ToString();
-                    }
-
-                    // Root
-                    {
-                        double root = Math.Sqrt(x);
-                        Output.Text += $"\n√{x} = " + (IsInt(root) ? ((int)root).ToString() : SimplifiedRoot(x));
-                    }
-
-                    // Factors
-                    {
-                        var factors = Factors(x);
-                        int factorsPad1 = 0;
-                        int factorsPad2 = 0;
-                        int sumPad = 0;
-                        int differencePad = 0;
-                        foreach (var f in factors)
-                        {
-                            factorsPad1 = Math.Max(f.Item1.ToString().Length, factorsPad1);
-                            factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
-                            sumPad = Math.Max((f.Item2 + f.Item1).ToString().Length, differencePad);
-                            differencePad = Math.Max((f.Item2 - f.Item1).ToString().Length, differencePad);
-                        }
-
-                        Output.Text += "\nFactors:\n" + string.Join("\n", from f in factors select
-                                f.Item1.ToString().PadLeft(factorsPad1) + " × " +
-                                f.Item2.ToString().PadLeft(factorsPad2) + "; Σ=" +
-                                (f.Item2 + f.Item1).ToString().PadLeft(sumPad) + "; Δ=" +
-                                (f.Item2 - f.Item1).ToString().PadLeft(differencePad));
-                    }
+                    Output.Text = GetUnaryOpsString(x);
                 }
                 else // Binary
                 {
@@ -99,151 +173,16 @@ namespace AlgebraBalancer
                                         
                     int a = (int)dt.Compute(aText, "");
                     int b = (int)dt.Compute(bText, "");
+                    EchoInputA.Text = a.ToString();
+                    EchoInputB.Text = b.ToString();
 
-                    int gcf = GCF(a, b);
-
-                    Output.Text += $"\n{a} + {b} = " + (a + b).ToString();
-                    Output.Text += $"\n{a} - {b} = " + (a - b).ToString();
-                    Output.Text += $"\n{a} × {b} = " + (a * b).ToString();
-                    Output.Text += $"\n{a} ÷ {b} = " + ((a % b == 0) ? (a / b).ToString() : $"{a / gcf}/{b / gcf}");
-                    Output.Text += "\nGCF: " + gcf.ToString();
-                    Output.Text += "\nLCM: " + LCM(a, b).ToString();
-
-                    // Common factors
-                    {
-                        var factors = CommonFactors(a, b);
-
-                        int factorsPad1 = 0;
-                        int factorsPad2 = 0;
-                        int factorsPad3 = 0;
-                        foreach (var f in factors)
-                        {
-                            factorsPad1 = Math.Max(f.Item1.ToString().Length, factorsPad1);
-                            factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
-                            factorsPad3 = Math.Max(f.Item3.ToString().Length, factorsPad3);
-                        }
-                        
-                        Output.Text += "\nCommon Factors:\n" + string.Join("\n", from f in factors select
-                            f.Item1.ToString().PadLeft(factorsPad1) + " × (" +
-                            f.Item2.ToString().PadLeft(factorsPad2) + ", " +
-                            f.Item3.ToString().PadLeft(factorsPad3) + ")");
-                    }
+                    Output.Text = GetBinaryOpsString(a, b);
                 }
             }
             catch
             {
                 Output.Text = "...";
             }
-        }
-
-        private static List<(int, int)> Factors(int n)
-        {
-            var factors = new List<(int, int)>
-            {
-                (1, n)
-            };
-
-            if (n > 0) // Positive
-            {
-                for (int i = 2; i <= (n / i); ++i)
-                {
-                    if (n % i != 0) { continue; }
-                    factors.Add((i, n / i));
-                }
-            }
-            else if (n < 0) // Negative
-            {
-                for (int i = 2; i <= -(n / i); ++i)
-                {
-                    if (n % i != 0) { continue; }
-                    factors.Add((i, n / i));
-                }
-            }
-
-            return factors;
-        }
-
-        private static List<(int, int, int)> CommonFactors(int a, int b)
-        {
-            var factors = new List<(int, int, int)>();
-
-            if (a < 0 || b < 0) // Not sure what to do in this case
-            {
-                return factors;
-            }
-
-            for (int i = 1; i <= Math.Min(a, b); ++i)
-            {
-                if (a % i != 0 || b % i != 0) { continue; }
-                factors.Add((i, a / i, b / i));
-            }
-
-            return factors;
-        }
-
-        private static int GCF(int a, int b)
-        {
-            if (a <= 0 || b <= 0) // Not sure what to do in this case
-            {
-                throw new NotImplementedException();
-            }
-
-            for (int gcf = Math.Min(a, b); gcf > 1; --gcf)
-            {
-                if (a % gcf == 0 && b % gcf == 0)
-                {
-                    return gcf;
-                }
-            }
-
-            return 1;
-        }
-
-        private static int LCM(int a, int b)
-        {
-            if (a <= 0 || b <= 0) // Not sure what to do in this case
-            {
-                throw new NotImplementedException();
-            }
-
-            int product = a * b;
-
-            for (int lcm = Math.Max(a, b); lcm < product; ++lcm)
-            {
-                if (lcm % a == 0 && lcm % b == 0)
-                {
-                    return lcm;
-                }
-            }
-
-            return product;
-        }
-
-        private static string SimplifiedRoot(int x)
-        {
-            var factors = Factors(x);
-            factors.Reverse(); // largest to smallest
-            foreach (var (a, b) in factors)
-            {
-                double rootB = Math.Sqrt(b);
-                if (IsInt(rootB) && (int)rootB != 1)
-                {
-                    return $"{(int)rootB}√{a}";
-                }
-
-                double rootA = Math.Sqrt(a);
-                if (IsInt(rootA) && (int)rootA != 1)
-                {
-                    return $"{(int)rootA}√{b}";
-                }
-            }
-
-            return $"√{x}";
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            Notes.Text += (sender as Button).Content.ToString();
         }
     }
 }

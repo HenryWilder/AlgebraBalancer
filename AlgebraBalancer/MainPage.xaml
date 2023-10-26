@@ -29,6 +29,10 @@
             </StackPanel>
         </Grid>
         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="18,0,18,0" Spacing="18" MinWidth="100">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock x:Name="EchoInputA" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?" Padding="9,0,9,0"/>
+                <TextBlock x:Name="EchoInputB" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?" Padding="9,0,9,0"/>
+            </StackPanel>
             <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="18" Text="..."/>
         </StackPanel>
     </Grid>
