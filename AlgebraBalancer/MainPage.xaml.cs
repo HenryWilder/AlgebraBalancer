@@ -240,5 +240,10 @@ namespace AlgebraBalancer
 
             return $"√{x}";
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Notes.Text += (sender as Button).Content.ToString();
+        }
     }
 }

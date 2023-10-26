@@ -4,4 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:AlgebraBalancer">
 
+    <Application.Resources>
+        <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Black" Opacity="0.5"/>
+        <SolidColorBrush x:Key="TextControlForegroundFocused" Color="White"/>
+    </Application.Resources>
+
 </Application>
