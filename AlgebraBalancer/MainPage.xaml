@@ -17,20 +17,12 @@
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="11" Padding="8,0,0,0">© 2023 Henry Wilder</TextBlock>
-            <VariableSizedWrapGrid Grid.Row="1" Orientation="Horizontal">
-                <Button Background="Transparent" FontFamily="Consolas" Click="Button_Click" Content="𝑥"/>
-                <Button Background="Transparent" FontFamily="Consolas" Click="Button_Click" Content="𝑦"/>
-                <Button Background="Transparent" FontFamily="Consolas" Click="Button_Click" Content="𝑧"/>
-                <!--<Button Background="Transparent" FontFamily="Consolas" Click="Button_Click" Content="𝜋"/>
-                <Button Background="Transparent" FontFamily="Consolas" Click="Button_Click" Content="𝜏"/>-->
-            </VariableSizedWrapGrid>
-            <TextBox x:Name="Notes" Grid.Row="2" AcceptsReturn="True" Padding="10,10,10,10" Margin="18,18,18,0" FontFamily="Consolas"></TextBox>
-            <StackPanel Grid.Row="3" Margin="18,18,18,18" Spacing="18" Orientation="Horizontal" HorizontalAlignment="Left">
+            <TextBox x:Name="Notes" Grid.Row="1" AcceptsReturn="True" Padding="10,10,10,10" Margin="11,0,11,0" FontFamily="Consolas"></TextBox>
+            <StackPanel Grid.Row="2" Margin="11,11,11,11" Spacing="18" Orientation="Horizontal" HorizontalAlignment="Left">
                 <TextBox Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputA" TextChanged="Update" TextAlignment="Right"/>
                 <TextBox Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputB" TextChanged="Update" TextAlignment="Right"/>
                 <TextBlock FontSize="20" Text="=" VerticalAlignment="Center"/>
