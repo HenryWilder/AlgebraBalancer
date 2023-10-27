@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 using Windows.ApplicationModel.Activation;
 
-using static AlgebraBalancer.Algebra;
-
 namespace AlgebraBalancer
 {
     internal class Algebra
@@ -226,7 +224,7 @@ namespace AlgebraBalancer
             if (SqrtI(n) is int root) { return new Radical(coefficient: root); }
 
             // Perfect squares
-            int gpsFactor = 1; // Greatest perfect factor
+            int gpsFactor = 1; // Greatest perfect square factor
             int gpsMultip = n; // Associated factor with gpsFactor
             foreach (var (a, b) in Factors(n))
             {

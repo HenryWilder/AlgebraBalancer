@@ -8,32 +8,33 @@
     mc:Ignorable="d"
     Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
-    <Grid>
+    <Grid Padding="9" ColumnSpacing="9" RowSpacing="9">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="23"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0">
+        <TextBlock HorizontalAlignment="Left" FontSize="11">© 2023 Henry Wilder</TextBlock>
+        <TextBox Grid.Row="1" x:Name="NotesL" AcceptsReturn="True" Padding="9" FontFamily="Consolas"></TextBox>
+        <Grid Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" ColumnSpacing="9" RowSpacing="9">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="32"/>
-                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="11" Padding="8,0,0,0">© 2023 Henry Wilder</TextBlock>
-            <TextBox x:Name="Notes" Grid.Row="1" AcceptsReturn="True" Padding="10,10,10,10" Margin="11,0,11,0" FontFamily="Consolas"></TextBox>
-            <StackPanel Grid.Row="2" Margin="11,11,11,11" Spacing="18" Orientation="Horizontal" HorizontalAlignment="Left">
-                <TextBox Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputA" TextChanged="Update" TextAlignment="Right"/>
-                <TextBox Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputB" TextChanged="Update" TextAlignment="Right"/>
-                <TextBlock FontSize="20" Text="=" VerticalAlignment="Center"/>
-            </StackPanel>
+            <TextBox Grid.Column="0" Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputA" TextChanged="Update" TextAlignment="Right" InputScope="Number" Width="64"/>
+            <TextBox Grid.Column="1" Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputB" TextChanged="Update" TextAlignment="Right" InputScope="Number" Width="64"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" x:Name="EchoInputA" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="EchoInputB" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?"/>
+            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" x:Name="Output" FontFamily="Consolas" FontSize="18" Text="..."/>
         </Grid>
-        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="18,0,18,0" Spacing="18" MinWidth="100">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <TextBlock x:Name="EchoInputA" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?" Padding="9,0,9,0"/>
-                <TextBlock x:Name="EchoInputB" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?" Padding="9,0,9,0"/>
-            </StackPanel>
-            <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="18" Text="..."/>
-        </StackPanel>
     </Grid>
 </Page>

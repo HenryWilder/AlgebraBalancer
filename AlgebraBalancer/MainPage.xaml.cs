@@ -32,14 +32,22 @@ namespace AlgebraBalancer
 
         private string GetUnaryOpsString(int x)
         {
-            string result = string.Empty;
+            string result = (x & 1) != 0 ? $"{x} is odd" : $"{x} is even";
 
             // Square
             result += $"\n{x}² = " + (x * x).ToString();
 
             // Root
             result += $"\n√{x} = ";
-            try   { result += SimplifiedRoot(x).ToString(); }
+            try
+            {
+                Radical radical = SimplifiedRoot(x);
+                if (radical.coefficient != 1 && radical.radicand != 1)
+                {
+                    result += $"(√{radical.coefficient * radical.coefficient})√{radical.radicand} = ";
+                }
+                result += radical.ToString();
+            }
             catch { result += "..."; }
 
             // Factors
@@ -76,7 +84,11 @@ namespace AlgebraBalancer
         
         private string GetBinaryOpsString(int a, int b)
         {
-            string result = string.Empty;
+            string result =
+                  a == b ? $"{a} = {b}"
+                : a >  b ? $"{a} > {b}"
+                : a <  b ? $"{a} < {b}"
+                         : $"{a} ≠ {b}";
 
             result += $"\n{a} + {b} = " + (a + b).ToString();
             result += $"\n{a} - {b} = " + (a - b).ToString();
@@ -136,30 +148,35 @@ namespace AlgebraBalancer
 
         private void Update(object sender, TextChangedEventArgs args)
         {
+            string aText = InputA.Text;
+            string bText = InputB.Text;
+
+            bool isUsingA = aText != string.Empty;
+            bool isUsingB = bText != string.Empty;
+            bool isBinary = isUsingA && isUsingB;
+            bool isUnary = isUsingA || isUsingB;
+
+            EchoInputA.Visibility = isUsingA || isUnary ? Visibility.Visible : Visibility.Collapsed;
+            EchoInputB.Visibility = isUsingB && isBinary ? Visibility.Visible : Visibility.Collapsed;
+
             try
             {
-                string aText = InputA.Text;
-                string bText = InputB.Text;
-
-                bool isUsingA = aText != string.Empty;
-                bool isUsingB = bText != string.Empty;
-                bool isBinary = isUsingA && isUsingB;
-
-                EchoInputA.Visibility = isUsingA || !isBinary ? Visibility.Visible : Visibility.Collapsed;
-                EchoInputB.Visibility = isUsingB &&  isBinary ? Visibility.Visible : Visibility.Collapsed;
-
-                Output.Text = "";
-
+                if (!isUsingA && !isUsingB)
+                {
+                    EchoInputA.Text = "";
+                    EchoInputB.Text = "";
+                    Output.Text = "...";
+                }
                 if (!isBinary) // Unary
                 {
-                    string text = isUsingA ? aText : bText;
+                    string xText = isUsingA ? aText : bText;
 
-                    if (text.Length > 7)
+                    if (xText.Length > 7)
                     {
                         throw new StackOverflowException();
                     }
 
-                    int x = (int)dt.Compute(text, "");
+                    int x = (int)dt.Compute(xText, "");
                     EchoInputA.Text = x.ToString();
 
                     Output.Text = GetUnaryOpsString(x);
