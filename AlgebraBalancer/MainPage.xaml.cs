@@ -30,12 +30,13 @@ namespace AlgebraBalancer
         public MainPage()
         {
             InitializeComponent();
-            Inputs.Children.Add(new AlgebraInput());
-            Inputs.Children.Add(new AlgebraInput());
-            Inputs.Children.Add(new AlgebraInput());
+            for (int i = 0; i < 3; ++i)
+            {
+                Inputs.Children.Add(new AlgebraInput());
+            }
         }
 
-        private static string GetUnaryOpsString(int x)
+        private static string Calculations(int x)
         {
             string result = "";
 
@@ -62,28 +63,28 @@ namespace AlgebraBalancer
             catch (Exception e) { result += e.Message; }
 
             // Factors
-            result += "\nFactors:\n";
+            result += "\nFactors:";
             try
             {
-                var factors = Factors(x);
-                int factorsPad1 = 0;
-                int factorsPad2 = 0;
-                int sumPad = 0;
-                int differencePad = 0;
-                foreach (var f in factors)
-                {
-                    factorsPad1 = Math.Max(f.Item1.ToString().Length, factorsPad1);
-                    factorsPad2 = Math.Max(f.Item2.ToString().Length, factorsPad2);
-                    sumPad = Math.Max((f.Item2 + f.Item1).ToString().Length, differencePad);
-                    differencePad = Math.Max((f.Item2 - f.Item1).ToString().Length, differencePad);
-                }
+                List<(string a, string b, string sum, string diff)>
+                    factorStrings = Factors(x)
+                        .Select((f) => ($"{f.a}", $"{f.b}", $"{f.a + f.b}", $"{f.b - f.a}"))
+                        .ToList();
 
-                result += string.Join("\n", from f in factors
-                                                 select
-                        f.Item1.ToString().PadLeft(factorsPad1) + " × " +
-                        f.Item2.ToString().PadLeft(factorsPad2) + "; Σ=" +
-                        (f.Item2 + f.Item1).ToString().PadLeft(sumPad) + "; Δ=" +
-                        (f.Item2 - f.Item1).ToString().PadLeft(differencePad));
+                int aPad    = factorStrings.Max((f) => f.a   .Length);
+                int bPad    = factorStrings.Max((f) => f.b   .Length);
+                int sumPad  = factorStrings.Max((f) => f.sum .Length);
+                int diffPad = factorStrings.Max((f) => f.diff.Length);
+
+                foreach (var (a, b, sum, diff) in factorStrings)
+                {
+                    string aPadded    =    a.PadLeft(   aPad);
+                    string bPadded    =    b.PadLeft(   bPad);
+                    string sumPadded  =  sum.PadLeft( sumPad);
+                    string diffPadded = diff.PadLeft(diffPad);
+
+                    result += $"\n{aPadded} × {bPadded}; Σ={sumPadded}; Δ={diffPadded})";
+                }
             }
             catch
             {
@@ -93,20 +94,29 @@ namespace AlgebraBalancer
             return result;
         }
         
-        private static string GetBinaryOpsString(int a, int b)
+        private static string Calculations(int a, int b)
         {
-            string result =
-                  a == b ? $"{a} = {b}"
-                : a >  b ? $"{a} > {b}"
-                : a <  b ? $"{a} < {b}"
-                         : $"{a} ≠ {b}";
+            string result = "";
 
-            result += $"\n{a} + {b} = " + (a + b).ToString();
-            result += $"\n{a} - {b} = " + (a - b).ToString();
-            result += $"\n{a} × {b} = " + (a * b).ToString();
+            {
+                string inequality = a > b ? ">" : a < b ? "<" : "=";
+                result += $"{a} {inequality} {b}";
+            }
+
+            result += $"\n{a} + {b} = {a + b}";
+            result += $"\n{a} - {b} = {a - b}";
+            result += $"\n{a} × {b} = {a * b}";
             result += $"\n{a} ÷ {b} = ";
-            try   { result += SimplifiedFraction(a, b).ToString(); }
-            catch { result += "..."; }
+            try
+            {
+                result += SimplifiedFraction(a, b).ToString();
+            }
+            catch (DivideByZeroException)
+            {
+                result += "undefined";
+            }
+            result += $"\n{a} % {b} = " + (b != 0 ? $"{a % b}" : "undefined");
+            result += $"\n{a} ^ {b} = {(int)Math.Pow(a, b)}";
 
 
             result += "\nGCF: ";
@@ -121,32 +131,22 @@ namespace AlgebraBalancer
             result += "\nCommon Factors:";
             try
             {
-                // c = Common
+                List<(string common, string a, string b)>
+                    factorStrings = CommonFactors(a, b)
+                        .Select((f) => ($"{f.common}", $"{f.a}", $"{f.b}"))
+                        .ToList();
 
-                var factors = CommonFactors(a, b);
-                var factorStrings = (
-                    from fac in factors
-                    select (
-                        fac.Item1.ToString(),
-                        fac.Item2.ToString(),
-                        fac.Item3.ToString()
-                    )).ToList();
-                
-                int cFacPad = 0, aFacPad = 0, bFacPad = 0;
-                foreach (var (cFacStr, aFacStr, bFacStr) in factorStrings)
-                {
-                    cFacPad = Math.Max(cFacStr.Length, cFacPad);
-                    aFacPad = Math.Max(aFacStr.Length, aFacPad);
-                    bFacPad = Math.Max(bFacStr.Length, bFacPad);
-                }
+                int commonPad = factorStrings.Max((f) => f.common.Length);
+                int aPad      = factorStrings.Max((f) => f.a.Length);
+                int bPad      = factorStrings.Max((f) => f.b.Length);
 
                 foreach (var (cFacStr, aFacStr, bFacStr) in factorStrings)
                 {
-                    string cStr = cFacStr.PadLeft(cFacPad);
-                    string aStr = aFacStr.PadLeft(aFacPad);
-                    string bStr = bFacStr.PadLeft(bFacPad);
+                    string commonPadded = cFacStr.PadLeft(commonPad);
+                    string aPadded      = aFacStr.PadLeft(aPad);
+                    string bPadded      = bFacStr.PadLeft(bPad);
 
-                    result += $"\n{cStr} × ({aStr}, {bStr})";
+                    result += $"\n{commonPadded} × ({aPadded}, {bPadded})";
                 }
             }
             catch
@@ -156,13 +156,37 @@ namespace AlgebraBalancer
 
             return result;
         }
+        
+        private static string Calculations(int a, int b, int c)
+        {
+            string result = "";
 
-        private static string GetNOpsString(List<int> parameters)
+            Radical magnitude = SimplifiedRoot(a * a + b * b + c * c);
+            result += $"|A| = {magnitude}";
+            {
+                RadicalFraction aRadFrac = SimplifiedRadicalFraction(a, magnitude);
+                RadicalFraction bRadFrac = SimplifiedRadicalFraction(b, magnitude);
+                RadicalFraction cRadFrac = SimplifiedRadicalFraction(c, magnitude);
+                result += $"\nÂ = ({aRadFrac}, {bRadFrac}, {cRadFrac})";
+            }
+            result += $"\nΣ({a}, {b}, {c}) = {a + b + c}";
+            result += $"\nΣ({a}, {b}, {c}) = {a + b + c}";
+            result += $"\n∏({a}, {b}, {c}) = {a * b * c}";
+
+            result += "\nGCF: ";
+            try   { result += GCF(GCF(a, b), c).ToString(); }
+            catch { result += "..."; }
+
+            return result;
+        }
+
+        private static string Calculations(List<int> parameters)
         {
             switch (parameters.Count)
             {
-                case 1: return GetUnaryOpsString(parameters[0]);
-                case 2: return GetBinaryOpsString(parameters[0], parameters[1]);
+                case 1: return Calculations(parameters[0]);
+                case 2: return Calculations(parameters[0], parameters[1]);
+                case 3: return Calculations(parameters[0], parameters[1], parameters[2]);
                 default: return "...";
             };
         }
@@ -177,7 +201,7 @@ namespace AlgebraBalancer
                     .Select((int? value) => value.Value)
                     .ToList();
 
-                Output.Text = GetNOpsString(parameters);
+                Output.Text = Calculations(parameters);
             }
             catch
             {

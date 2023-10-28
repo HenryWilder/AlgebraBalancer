@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using Windows.ApplicationModel.Activation;
 
+using static AlgebraBalancer.Algebra;
+
 namespace AlgebraBalancer
 {
     internal class Algebra
@@ -16,7 +18,7 @@ namespace AlgebraBalancer
         public static bool IsInt(double x) =>
             Math.Abs(x % 1) <= (double.Epsilon * 100);
 
-        public static List<(int, int)> Factors(int n)
+        public static List<(int a, int b)> Factors(int n)
         {
             int nAbs = Math.Abs(n);
 
@@ -33,7 +35,7 @@ namespace AlgebraBalancer
             return factors;
         }
 
-        public static List<(int, int, int)> CommonFactors(int a, int b)
+        public static List<(int common, int a, int b)> CommonFactors(int a, int b)
         {
             int aAbs = Math.Abs(a);
             int bAbs = Math.Abs(b);
@@ -209,6 +211,12 @@ namespace AlgebraBalancer
             public int coefficient;
             public int radicand;
 
+            public static Radical operator *(Radical radical, int mult) =>
+                new Radical(radical.coefficient * mult, radical.radicand);
+
+            public int Squared() =>
+                coefficient * coefficient + radicand;
+
             public override string ToString() =>
                 radicand == 1
                     ? $"{coefficient}"
@@ -242,6 +250,36 @@ namespace AlgebraBalancer
             }
 
             return new Radical(coefficient: gpsFactor, radicand: gpsMultip);
+        }
+
+        public struct RadicalFraction
+        {
+            public RadicalFraction(Radical numerator = default, int denominator = 1)
+            {
+                this.numerator   = numerator;
+                this.denominator = denominator;
+            }
+
+            public Radical numerator;
+            public int denominator;
+
+            public override string ToString() =>
+                denominator == 1
+                    ? $"{numerator}"
+                    : $"({numerator})/{denominator}";
+        }
+
+        public static RadicalFraction SimplifiedRadicalFraction(int numerator, Radical denominator)
+        {
+            RadicalFraction result = new RadicalFraction
+            {
+                numerator   = denominator * numerator,
+                denominator = denominator.Squared()
+            };
+            Fraction coefficient = SimplifiedFraction(result.numerator.coefficient, result.denominator);
+            result.numerator.coefficient = coefficient.numerator;
+            result.denominator = coefficient.denominator;
+            return result;
         }
     }
 }
