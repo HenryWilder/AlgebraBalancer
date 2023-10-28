@@ -17,6 +17,8 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Diagnostics;
 using static AlgebraBalancer.Algebra;
 using System.Xml.Linq;
+using Windows.Web.Syndication;
+using System.Threading.Tasks;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -117,7 +119,23 @@ namespace AlgebraBalancer
                 result += "undefined";
             }
             result += $"\n{a} % {b} = " + (b != 0 ? $"{a % b}" : "undefined");
-            result += $"\n{a} ^ {b} = {(int)Math.Pow(a, b)}";
+
+            {
+                result += $"\n{a} ^ {b} = ";
+                double powered = Math.Pow(a, Math.Abs(b));
+                if (powered > ulong.MaxValue)
+                {
+                    result += (b < 0)
+                        ? $"ε"
+                        : $"𝓗";
+                }
+                else
+                {
+                    result += (b < 0)
+                        ? $"1/{Convert.ToUInt64(powered)}"
+                        : $"{Convert.ToUInt64(powered)}";
+                }
+            }
 
 
             result += "\nGCF: ";
@@ -214,8 +232,11 @@ namespace AlgebraBalancer
             };
         }
 
-        private void Update(object sender, RoutedEventArgs args)
+        private string calculations;
+
+        private async void Update(object sender, RoutedEventArgs args)
         {
+            Output.Text = "Calculating...";
             try
             {
                 List<int> parameters = Inputs.Children
@@ -224,7 +245,9 @@ namespace AlgebraBalancer
                     .Select((int? value) => value.Value)
                     .ToList();
 
-                Output.Text = Calculations(parameters);
+                await Task.Run(() => calculations = Calculations(parameters));
+
+                Output.Text = calculations;
             }
             catch
             {

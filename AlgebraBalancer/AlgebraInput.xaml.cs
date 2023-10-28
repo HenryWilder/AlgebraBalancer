@@ -56,10 +56,14 @@ namespace AlgebraBalancer
         {
             try
             {
-                EchoInput.Text = Value.HasValue ? Value.Value.ToString() : string.Empty;
+                int? value = Value;
+                (EchoInput.Text, EchoInput.Opacity) = value.HasValue
+                    ? (value.Value.ToString(), 1.0)
+                    : ("∅", 0.5);
             }
             catch
             {
+                EchoInput.Opacity = 1.0;
                 EchoInput.Text = "...";
             }
         }

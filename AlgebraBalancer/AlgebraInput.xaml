@@ -12,6 +12,6 @@
 
     <StackPanel Orientation="Vertical" Width="64" Spacing="9">
         <TextBox x:Name="Input" Background="{ThemeResource SystemControlAcrylicElementBrush}" TextAlignment="Right" TextChanged="Input_TextChanged"/>
-        <TextBlock x:Name="EchoInput" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text=""/>
+        <TextBlock x:Name="EchoInput" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="∅" Opacity="0.5"/>
     </StackPanel>
 </UserControl>
