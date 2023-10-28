@@ -30,9 +30,10 @@ namespace AlgebraBalancer
         public MainPage()
         {
             InitializeComponent();
-            for (int i = 0; i < 3; ++i)
+            string[] headers = { "A", "B", "C" };
+            foreach (string header in headers)
             {
-                Inputs.Children.Add(new AlgebraInput());
+                Inputs.Children.Add(new AlgebraInput(header));
             }
         }
 
@@ -189,7 +190,7 @@ namespace AlgebraBalancer
                 quadratic.addSubNumerator = -b;
 
                 string unsimplified = $"\n  ({-b}±√{b * b - 4 * a * c})/{2 * a}";
-                string   simplified = $"\n  {quadratic}";
+                string   simplified = $"\n  {quadratic}"; // Currently inaccurate because b isn't getting simplified
 
                 result += unsimplified + (simplified != unsimplified ? simplified : string.Empty);
             }

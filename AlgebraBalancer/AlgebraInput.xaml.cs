@@ -24,6 +24,12 @@ namespace AlgebraBalancer
         public AlgebraInput() =>
             InitializeComponent();
 
+        public AlgebraInput(string header)
+        {
+            InitializeComponent();
+            Input.Header = header;
+        }
+
         private readonly static DataTable dt = new DataTable();
 
         // Null: no value (skip)
