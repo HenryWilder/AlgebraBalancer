@@ -120,6 +120,17 @@
     <Compile Include="AlgebraInput.xaml.cs">
       <DependentUpon>AlgebraInput.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AlgebraOutput\Exponent.xaml.cs">
+      <DependentUpon>Exponent.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AlgebraOutput\Fraction.xaml.cs">
+      <DependentUpon>Fraction.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AlgebraOutput\MakeAlgebraUI.cs" />
+    <Compile Include="AlgebraOutput\Radical.xaml.cs">
+      <DependentUpon>Radical.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AlgebraTypes.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -152,6 +163,18 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="AlgebraOutput\Exponent.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="AlgebraOutput\Fraction.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="AlgebraOutput\Radical.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -170,6 +193,9 @@
       <Link>.editorconfig</Link>
     </None>
   </ItemGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
