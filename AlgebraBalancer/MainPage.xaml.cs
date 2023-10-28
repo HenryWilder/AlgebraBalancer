@@ -177,6 +177,28 @@ namespace AlgebraBalancer
             try   { result += GCF(GCF(a, b), c).ToString(); }
             catch { result += "..."; }
 
+            result += "\nLCM: ";
+            try   { result += LCM(LCM(a, b), c).ToString(); }
+            catch { result += "..."; }
+
+            result += $"\n{a}𝑥² + {b}𝑥 + {c} =";
+            result += $"\n  (-({b})±√(({b})²-4({a})({c})))/2({a})";
+            try
+            {
+                var quadratic = SimplifiedRadicalFraction(SimplifiedRoot(b * b - 4 * a * c), 2 * a);
+                quadratic.addSubNumerator = -b;
+
+                string unsimplified = $"\n  ({-b}±√{b * b - 4 * a * c})/{2 * a}";
+                string   simplified = $"\n  {quadratic}";
+
+                result += unsimplified + (simplified != unsimplified ? simplified : string.Empty);
+            }
+            catch
+            {
+                result += $"\n  ({-b}±√{b * b - 4 * a * c})/{2 * a}";
+                result += $"\n  imaginary or undefined";
+            }
+
             return result;
         }
 

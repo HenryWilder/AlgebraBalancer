@@ -256,30 +256,53 @@ namespace AlgebraBalancer
         {
             public RadicalFraction(Radical numerator = default, int denominator = 1)
             {
-                this.numerator   = numerator;
-                this.denominator = denominator;
+                this.addSubNumerator = 0;
+                this.numerator    = numerator;
+                this.denominator  = denominator;
             }
 
+            public int addSubNumerator;
             public Radical numerator;
             public int denominator;
 
-            public override string ToString() =>
-                denominator == 1
-                    ? $"{numerator}"
-                    : $"({numerator})/{denominator}";
+            public override string ToString()
+            {
+                if (denominator == 1)
+                {
+                    if (addSubNumerator == 0)
+                    {
+                        return $"{numerator}";
+                    }
+                    else
+                    {
+                        return $"{addSubNumerator}±{numerator}";
+                    }
+                }
+                else
+                {
+                    if (addSubNumerator == 0)
+                    {
+                        return $"({numerator})/{denominator}";
+                    }
+                    else
+                    {
+                        return $"({addSubNumerator}±{numerator})/{denominator}";
+                    }
+                }
+            }
         }
 
-        public static RadicalFraction SimplifiedRadicalFraction(int numerator, Radical denominator)
+        public static RadicalFraction SimplifiedRadicalFraction(Radical numerator, int denominator)
         {
-            RadicalFraction result = new RadicalFraction
+            Fraction coefficient = SimplifiedFraction(numerator.coefficient, denominator);
+            return new RadicalFraction
             {
-                numerator   = denominator * numerator,
-                denominator = denominator.Squared()
+                numerator = new Radical(coefficient.numerator, numerator.radicand),
+                denominator = coefficient.denominator
             };
-            Fraction coefficient = SimplifiedFraction(result.numerator.coefficient, result.denominator);
-            result.numerator.coefficient = coefficient.numerator;
-            result.denominator = coefficient.denominator;
-            return result;
         }
+
+        public static RadicalFraction SimplifiedRadicalFraction(int numerator, Radical denominator) =>
+            SimplifiedRadicalFraction(denominator * numerator, denominator.Squared());
     }
 }
