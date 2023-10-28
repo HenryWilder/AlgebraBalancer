@@ -26,6 +26,7 @@
             <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
             <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3"/>
             <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="16" Text="..."/>
+            <ProgressRing x:Name="OutputProgress" Visibility="Collapsed"/>
         </StackPanel>
     </Grid>
 </Page>

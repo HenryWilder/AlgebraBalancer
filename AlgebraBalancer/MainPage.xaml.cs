@@ -236,9 +236,12 @@ namespace AlgebraBalancer
 
         private async void Update(object sender, RoutedEventArgs args)
         {
-            Output.Text = "Calculating...";
             try
             {
+                OutputProgress.IsActive = true;
+                OutputProgress.Visibility = Visibility.Visible;
+                Output.Text = "";
+
                 List<int> parameters = Inputs.Children
                     .Select((input) => (input as AlgebraInput).Value)
                     .Where((int? value) => value.HasValue)
@@ -247,10 +250,13 @@ namespace AlgebraBalancer
 
                 await Task.Run(() => calculations = Calculations(parameters));
 
+                OutputProgress.IsActive = false;
+                OutputProgress.Visibility = Visibility.Collapsed;
                 Output.Text = calculations;
             }
             catch
             {
+                OutputProgress.Visibility = Visibility.Collapsed;
                 Output.Text = "...";
             }
         }
