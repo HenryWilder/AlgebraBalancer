@@ -6,9 +6,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    d:DesignHeight="400"
+    d:DesignWidth="650"
     Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
-    <Grid Padding="9" ColumnSpacing="9" RowSpacing="9">
+    <Grid ColumnSpacing="9" RowSpacing="9" Padding="9">
         <Grid.RowDefinitions>
             <RowDefinition Height="23"/>
             <RowDefinition/>
@@ -18,23 +20,12 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <TextBlock HorizontalAlignment="Left" FontSize="11">© 2023 Henry Wilder</TextBlock>
-        <TextBox Grid.Row="1" x:Name="NotesL" AcceptsReturn="True" Padding="9" FontFamily="Consolas"></TextBox>
-        <Grid Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" ColumnSpacing="9" RowSpacing="9">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <TextBox Grid.Column="0" Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputA" TextChanged="Update" TextAlignment="Right" InputScope="Number" Width="64"/>
-            <TextBox Grid.Column="1" Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="InputB" TextChanged="Update" TextAlignment="Right" InputScope="Number" Width="64"/>
-            <TextBlock Grid.Row="1" Grid.Column="0" x:Name="EchoInputA" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?"/>
-            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="EchoInputB" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="?"/>
-            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" x:Name="Output" FontFamily="Consolas" FontSize="18" Text="..."/>
-        </Grid>
+        <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder"/>
+        <TextBox x:Name="Notes" Grid.Row="1" AcceptsReturn="True" FontFamily="Consolas"/>
+        <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Spacing="9">
+            <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
+            <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3"/>
+            <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="16" Text="..."/>
+        </StackPanel>
     </Grid>
 </Page>

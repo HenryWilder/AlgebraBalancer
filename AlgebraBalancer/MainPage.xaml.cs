@@ -16,6 +16,7 @@ using System.Data;
 using static System.Net.Mime.MediaTypeNames;
 using System.Diagnostics;
 using static AlgebraBalancer.Algebra;
+using System.Xml.Linq;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -26,13 +27,23 @@ namespace AlgebraBalancer
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        public MainPage() => InitializeComponent();
-
-        private readonly static DataTable dt = new DataTable();
-
-        private string GetUnaryOpsString(int x)
+        public MainPage()
         {
-            string result = (x & 1) != 0 ? $"{x} is odd" : $"{x} is even";
+            InitializeComponent();
+            Inputs.Children.Add(new AlgebraInput());
+            Inputs.Children.Add(new AlgebraInput());
+            Inputs.Children.Add(new AlgebraInput());
+        }
+
+        private static string GetUnaryOpsString(int x)
+        {
+            string result = "";
+
+            {
+                string oddOrEven = IsOdd(x) ? "odd" : "even";
+                string primeOrComposite = IsPrime(x) ? "prime" : "composite";
+                result += $"{x} is an {oddOrEven} {primeOrComposite}";
+            }
 
             // Square
             result += $"\n{x}² = " + (x * x).ToString();
@@ -48,7 +59,7 @@ namespace AlgebraBalancer
                 }
                 result += radical.ToString();
             }
-            catch { result += "..."; }
+            catch (Exception e) { result += e.Message; }
 
             // Factors
             result += "\nFactors:\n";
@@ -82,7 +93,7 @@ namespace AlgebraBalancer
             return result;
         }
         
-        private string GetBinaryOpsString(int a, int b)
+        private static string GetBinaryOpsString(int a, int b)
         {
             string result =
                   a == b ? $"{a} = {b}"
@@ -146,55 +157,27 @@ namespace AlgebraBalancer
             return result;
         }
 
-        private void Update(object sender, TextChangedEventArgs args)
+        private static string GetNOpsString(List<int> parameters)
         {
-            string aText = InputA.Text;
-            string bText = InputB.Text;
+            switch (parameters.Count)
+            {
+                case 1: return GetUnaryOpsString(parameters[0]);
+                case 2: return GetBinaryOpsString(parameters[0], parameters[1]);
+                default: return "...";
+            };
+        }
 
-            bool isUsingA = aText != string.Empty;
-            bool isUsingB = bText != string.Empty;
-            bool isBinary = isUsingA && isUsingB;
-            bool isUnary = isUsingA || isUsingB;
-
-            EchoInputA.Visibility = isUsingA || isUnary ? Visibility.Visible : Visibility.Collapsed;
-            EchoInputB.Visibility = isUsingB && isBinary ? Visibility.Visible : Visibility.Collapsed;
-
+        private void Update(object sender, RoutedEventArgs args)
+        {
             try
             {
-                if (!isUsingA && !isUsingB)
-                {
-                    EchoInputA.Text = "";
-                    EchoInputB.Text = "";
-                    Output.Text = "...";
-                }
-                if (!isBinary) // Unary
-                {
-                    string xText = isUsingA ? aText : bText;
+                List<int> parameters = Inputs.Children
+                    .Select((input) => (input as AlgebraInput).Value)
+                    .Where((int? value) => value.HasValue)
+                    .Select((int? value) => value.Value)
+                    .ToList();
 
-                    if (xText.Length > 7)
-                    {
-                        throw new StackOverflowException();
-                    }
-
-                    int x = (int)dt.Compute(xText, "");
-                    EchoInputA.Text = x.ToString();
-
-                    Output.Text = GetUnaryOpsString(x);
-                }
-                else // Binary
-                {
-                    if (aText.Length > 7 || bText.Length > 7)
-                    {
-                        throw new StackOverflowException();
-                    }
-                                        
-                    int a = (int)dt.Compute(aText, "");
-                    int b = (int)dt.Compute(bText, "");
-                    EchoInputA.Text = a.ToString();
-                    EchoInputB.Text = b.ToString();
-
-                    Output.Text = GetBinaryOpsString(a, b);
-                }
+                Output.Text = GetNOpsString(parameters);
             }
             catch
             {

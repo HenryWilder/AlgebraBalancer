@@ -10,6 +10,9 @@ namespace AlgebraBalancer
 {
     internal class Algebra
     {
+        public static bool IsOdd(int n) =>
+            (n & 1) != 0;
+
         public static bool IsInt(double x) =>
             Math.Abs(x % 1) <= (double.Epsilon * 100);
 
@@ -124,7 +127,7 @@ namespace AlgebraBalancer
             2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
         };
 
-        static bool IsPrime(int n) =>
+        public static bool IsPrime(int n) =>
             (n % 5 != 0) && (Factors(n).Count == 1);
 
         public static List<int> PrimeFactors(int n)
@@ -217,7 +220,7 @@ namespace AlgebraBalancer
         public static Radical SimplifiedRoot(int n)
         {
             // Very easy cases
-            if (n < 0) { throw  new Exception("Imaginary");  }
+            if (n < 0) { throw  new Exception("imaginary");  }
             if (n < 2) { return new Radical(coefficient: n); }
 
             // Simple
