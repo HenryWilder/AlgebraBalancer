@@ -234,7 +234,15 @@ public sealed partial class MainPage : Page
             {
                 case "FOIL":
                     var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
-                    macroText = $"\n{a}*{c} = \n{a}*{d} = \n{b}*{c} = \n{b}*{d} = \n";
+
+                    int abPad = Math.Max(a.Length, b.Length);
+                    a = a.PadLeft(abPad);
+                    b = b.PadLeft(abPad);
+                    int cdPad = Math.Max(a.Length, b.Length);
+                    c = c.PadLeft(cdPad);
+                    d = d.PadLeft(cdPad);
+
+                    macroText = $"\n{a} * {c} = \n{a} * {d} = \n{b} * {c} = \n{b} * {d} = \n";
                     break;
             }
             Notes.Text += macroText;
