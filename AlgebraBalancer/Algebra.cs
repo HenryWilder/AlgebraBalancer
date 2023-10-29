@@ -5,234 +5,219 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Windows.ApplicationModel.Activation;
+using Windows.Foundation.Metadata;
 
 using static AlgebraBalancer.Algebra;
 
-namespace AlgebraBalancer
+namespace AlgebraBalancer;
+
+internal class Algebra
 {
-    internal class Algebra
+    public interface IAlgebraicNotation
     {
-        public static bool IsOdd(int n) =>
-            (n & 1) != 0;
+        public abstract IAlgebraicNotation Simplified();
+        public abstract string ToString();
+    }
 
-        public static bool IsInt(double x) =>
-            Math.Abs(x % 1) <= (double.Epsilon * 100);
+    public struct Number : IAlgebraicNotation
+    {
+        public Number(int value) =>
+            this.value = value;
 
-        public static List<(int a, int b)> Factors(int n)
+        public int value;
+
+        public readonly IAlgebraicNotation Simplified() =>
+            this;
+
+        public static implicit operator int(Number num) =>
+            num.value;
+
+        public override readonly string ToString() =>
+            $"{value}";
+    }
+
+    public struct Complex : IAlgebraicNotation
+    {
+        // todo
+
+        public readonly IAlgebraicNotation Simplified() =>
+            throw new NotImplementedException();
+
+        public override readonly string ToString() =>
+            "𝑖";
+    }
+
+    public struct Undefined : IAlgebraicNotation
+    {
+        public readonly IAlgebraicNotation Simplified() => this;
+        public override readonly string ToString() => "∅";
+    }
+
+    public static bool IsOdd(int n) =>
+        (n & 1) != 0;
+
+    public static List<(int a, int b)> Factors(int n)
+    {
+        int nAbs = Math.Abs(n);
+
+        var factors = new List<(int, int)> { (1, n) };
+
+        for (int i = 2; (i * i) <= nAbs; ++i)
         {
-            int nAbs = Math.Abs(n);
-
-            var factors = new List<(int, int)> { (1, n) };
-
-            for (int i = 2; (i * i) <= nAbs; ++i)
+            if (nAbs % i == 0)
             {
-                if (nAbs % i == 0)
-                {
-                    factors.Add((i, n / i));
-                }
+                factors.Add((i, n / i));
             }
-
-            return factors;
         }
 
-        public static List<(int common, int a, int b)> CommonFactors(int a, int b)
+        return factors;
+    }
+
+    public static List<(int common, int a, int b)> CommonFactors(int a, int b)
+    {
+        int aAbs = Math.Abs(a);
+        int bAbs = Math.Abs(b);
+
+        var factors = new List<(int, int, int)>() { (1, a, b) };
+
+        for (int i = 2; i <= Math.Min(aAbs, bAbs); ++i)
         {
-            int aAbs = Math.Abs(a);
-            int bAbs = Math.Abs(b);
-
-            var factors = new List<(int, int, int)>() { (1, a, b) };
-
-            for (int i = 2; i <= Math.Min(aAbs, bAbs); ++i)
+            if (aAbs % i == 0 && bAbs % i == 0)
             {
-                if (aAbs % i == 0 && bAbs % i == 0)
-                {
-                    factors.Add((i, a / i, b / i));
-                }
+                factors.Add((i, a / i, b / i));
             }
-
-            return factors;
         }
 
-        public static int GCF(int a, int b)
+        return factors;
+    }
+
+    public static int GCF(int a, int b)
+    {
+        int aAbs = Math.Abs(a);
+        int bAbs = Math.Abs(b);
+
+        for (int gcf = Math.Min(aAbs, bAbs); gcf > 1; --gcf)
         {
-            int aAbs = Math.Abs(a);
-            int bAbs = Math.Abs(b);
-
-            for (int gcf = Math.Min(aAbs, bAbs); gcf > 1; --gcf)
+            if (aAbs % gcf == 0 && bAbs % gcf == 0)
             {
-                if (aAbs % gcf == 0 && bAbs % gcf == 0)
-                {
-                    return gcf;
-                }
+                return gcf;
             }
-
-            return 1;
         }
 
-        public static int LCM(int a, int b)
+        return 1;
+    }
+
+    public static int LCM(int a, int b)
+    {
+        int aAbs = Math.Abs(a);
+        int bAbs = Math.Abs(b);
+
+        int product = a * b;
+        for (int lcm = Math.Max(aAbs, bAbs); lcm < product; ++lcm)
         {
-            int aAbs = Math.Abs(a);
-            int bAbs = Math.Abs(b);
-
-            int product = a * b;
-            for (int lcm = Math.Max(aAbs, bAbs); lcm < product; ++lcm)
+            if (lcm % aAbs == 0 && lcm % bAbs == 0)
             {
-                if (lcm % aAbs == 0 && lcm % bAbs == 0)
-                {
-                    return lcm;
-                }
+                return lcm;
             }
-
-            return product;
         }
 
-        public struct Fraction
+        return product;
+    }
+
+    public struct Fraction : IAlgebraicNotation
+    {
+        public Fraction() { }
+        public Fraction(int numerator, int denominator) =>
+            (this.numerator, this.denominator) = (numerator, denominator);
+
+        public int numerator = 1;
+        public int denominator = 1;
+
+        public override readonly string ToString() =>
+            denominator == 1
+                ? $"{numerator}"
+                : $"{numerator}/{denominator}";
+
+        public readonly IAlgebraicNotation Simplified()
         {
-            public Fraction(int numerator = 1, int denominator = 1)
+            if (denominator == 0)
             {
-                this.numerator = numerator;
-                this.denominator = denominator;
+                return new Undefined();
             }
 
-            public int numerator;
-            public int denominator;
+            if (numerator % denominator == 0)
+            {
+                return new Number(numerator / denominator);
+            }
 
-            public override string ToString() =>
-                denominator == 1
-                    ? $"{numerator}"
-                    : $"{numerator}/{denominator}";
+            int sign = (numerator < 0 != denominator < 0) ? -1 : 1;
+
+            int numeratorAbs = Math.Abs(numerator);
+            int denominatorAbs = Math.Abs(denominator);
+
+            int gcf = GCF(numeratorAbs, denominatorAbs);
+            return new Fraction(sign * numeratorAbs / gcf, denominatorAbs / gcf);
+        }
+    }
+
+    public static bool IsPrime(int n) =>
+        (n % 5 != 0) && (Factors(n).Count == 1);
+
+    public static int? SqrtI(int n)
+    {
+        if      (n < 0) { return null; }
+        else if (n < 2) { return n; }
+
+        for (int root = 2; (root * root) <= n; ++root)
+        {
+            if (root * root == n) { return root; }
         }
 
-        public static Fraction SimplifiedFraction(int a, int b)
+        return null;
+    }
+
+    public struct Radical : IAlgebraicNotation
+    {
+        public Radical() { }
+
+        public Radical(int radicand) =>
+            this.radicand = radicand;
+
+        public Radical(int coefficient, int radicand) =>
+            (this.coefficient, this.radicand) = (coefficient, radicand);
+
+        public int coefficient = 1;
+        public int radicand    = 1;
+
+        public static Radical operator *(Radical radical, int mult) =>
+            new() { coefficient = radical.coefficient * mult, radicand = radical.radicand };
+
+        public readonly int Squared() =>
+            coefficient * coefficient * radicand;
+
+        public override readonly string ToString()
         {
-            if (b == 0)
-            {
-                throw new DivideByZeroException();
-            }
-
-            if (a % b == 0)
-            {
-                return new Fraction(numerator: a / b);
-            }
-
-            int sign = (a < 0 != b < 0) ? -1 : 1;
-
-            int aAbs = Math.Abs(a);
-            int bAbs = Math.Abs(b);
-
-            int gcf = GCF(aAbs, bAbs);
-            return new Fraction(sign * aAbs / gcf, bAbs / gcf);
+            if      (radicand    == 1) { return $"{coefficient}";            }
+            else if (coefficient == 1) { return              $"√{radicand}"; }
+            else                       { return $"{coefficient}√{radicand}"; }
         }
 
-        static readonly int[] PrimesUnder100 =
+        public readonly IAlgebraicNotation Simplified()
         {
-            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
-        };
-
-        public static bool IsPrime(int n) =>
-            (n % 5 != 0) && (Factors(n).Count == 1);
-
-        public static List<int> PrimeFactors(int n)
-        {
-            if (n == 0)
+            switch (radicand)
             {
-                throw new DivideByZeroException();
+                case < 0: return new Complex(); // todo
+                case 0: return new Number(0);
+                case 1: return new Number(coefficient);
             }
-
-            int remaining = Math.Abs(n);
-
-            if (remaining == 1)
-            {
-                return new List<int> { }; // Ø
-            }
-
-            var primeFactors = new List<int>();
-
-            while (remaining != 1)
-            {
-                int primeFactor = 1;
-
-                foreach (int prime in PrimesUnder100)
-                {
-                    if (remaining % prime == 0)
-                    {
-                        primeFactor = prime;
-                        break;
-                    }
-                }
-
-                // Need to brute force
-                if (remaining % primeFactor != 0)
-                {
-                    // Iterate over odd numbers only
-                    for (int prime = 101; prime < remaining && remaining % prime != 0; prime += 2)
-                    {
-                        if (!IsPrime(primeFactor)) { continue; }
-
-                        if (remaining % prime == 0)
-                        {
-                            primeFactor = prime;
-                            break;
-                        }
-                    }
-                }
-
-                remaining /= primeFactor;
-                primeFactors.Add(primeFactor);
-            }
-
-            return primeFactors;
-        }
-        
-        public static int? SqrtI(int n)
-        {
-            if      (n < 0) { return null; }
-            else if (n < 2) { return n; }
-
-            for (int root = 2; (root * root) <= n; ++root)
-            {
-                if (root * root == n) { return root; }
-            }
-
-            return null;
-        }
-
-        public static bool IsPerfectSquare(int n) =>
-            SqrtI(n).HasValue;
-
-        public struct Radical
-        {
-            public Radical(int coefficient = 1, int radicand = 1)
-            {
-                this.coefficient = coefficient;
-                this.radicand = radicand;
-            }
-
-            public int coefficient;
-            public int radicand;
-
-            public static Radical operator *(Radical radical, int mult) =>
-                new Radical(radical.coefficient * mult, radical.radicand);
-
-            public int Squared() =>
-                coefficient * coefficient + radicand;
-
-            public override string ToString() =>
-                radicand == 1
-                    ? $"{coefficient}"
-                    : coefficient == 1
-                        ? $"√{radicand}"
-                        : $"{coefficient}√{radicand}";
-        }
-
-        public static Radical SimplifiedRoot(int n)
-        {
-            // Very easy cases
-            if (n < 0) { throw  new Exception("imaginary");  }
-            if (n < 2) { return new Radical(coefficient: n); }
 
             // Simple
-            if (SqrtI(n) is int root) { return new Radical(coefficient: root); }
+            if (SqrtI(radicand) is int root)
+            {
+                return new Number(coefficient * root);
+            }
+
+            int n = Squared();
 
             // Perfect squares
             int gpsFactor = 1; // Greatest perfect square factor
@@ -249,60 +234,56 @@ namespace AlgebraBalancer
                 }
             }
 
-            return new Radical(coefficient: gpsFactor, radicand: gpsMultip);
+            return new Radical(gpsFactor, gpsMultip);
         }
+    }
 
-        public struct RadicalFraction
+    public struct RadicalFraction : IAlgebraicNotation
+    {
+        public RadicalFraction() { }
+
+        public RadicalFraction(Radical numerator, int denominator) =>
+            (this.numerator, this.denominator) = (numerator, denominator);
+
+        public RadicalFraction(int numerator, Radical denominator) =>
+            (this.numerator, this.denominator) = (denominator * numerator, denominator.Squared());
+
+        public RadicalFraction(int addSubNumerator, Radical numerator, int denominator) =>
+            (this.addSubNumerator, this.numerator, this.denominator) = (addSubNumerator, numerator, denominator);
+
+        public int     addSubNumerator = 0;
+        public Radical numerator       = default;
+        public int     denominator     = 1;
+
+        public override readonly string ToString()
         {
-            public RadicalFraction(Radical numerator = default, int denominator = 1)
-            {
-                this.addSubNumerator = 0;
-                this.numerator    = numerator;
-                this.denominator  = denominator;
-            }
+            bool isQuadratic = addSubNumerator != 0;
+            bool isIntegral  = denominator == 1;
+            string extendedNumerator = isQuadratic
+                ? $"{addSubNumerator}±{numerator}"
+                : $"{numerator}";
 
-            public int addSubNumerator;
-            public Radical numerator;
-            public int denominator;
-
-            public override string ToString()
-            {
-                if (denominator == 1)
-                {
-                    if (addSubNumerator == 0)
-                    {
-                        return $"{numerator}";
-                    }
-                    else
-                    {
-                        return $"{addSubNumerator}±{numerator}";
-                    }
-                }
-                else
-                {
-                    if (addSubNumerator == 0)
-                    {
-                        return $"({numerator})/{denominator}";
-                    }
-                    else
-                    {
-                        return $"({addSubNumerator}±{numerator})/{denominator}";
-                    }
-                }
-            }
+            return isIntegral
+                ? extendedNumerator
+                : $"({extendedNumerator})/{denominator}";
         }
 
-        public static RadicalFraction SimplifiedRadicalFraction(Radical numerator, int denominator)
+        public readonly IAlgebraicNotation Simplified()
         {
-            Fraction coefficient = SimplifiedFraction(numerator.coefficient, denominator);
-            return new RadicalFraction
+            var coefficient = new Fraction(numerator.coefficient, denominator).Simplified();
+            if (coefficient is Fraction fracCoefficient)
             {
-                numerator = new Radical(coefficient.numerator, numerator.radicand),
-                denominator = coefficient.denominator
-            };
+                var radNumerator = new Radical(fracCoefficient.numerator, numerator.radicand);
+                return new RadicalFraction(radNumerator, fracCoefficient.denominator);
+            }
+            else if (coefficient is Number numCoefficient)
+            {
+                return new Radical(numCoefficient, numerator.radicand);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
-
-        public static RadicalFraction SimplifiedRadicalFraction(int numerator, Radical denominator) =>
-            SimplifiedRadicalFraction(denominator * numerator, denominator.Squared());
     }
 }

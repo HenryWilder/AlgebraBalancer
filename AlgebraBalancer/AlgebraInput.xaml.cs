@@ -17,55 +17,51 @@ using Windows.UI.Xaml.Navigation;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace AlgebraBalancer
+namespace AlgebraBalancer;
+
+public sealed partial class AlgebraInput : UserControl
 {
-    public sealed partial class AlgebraInput : UserControl
+    public AlgebraInput() =>
+        InitializeComponent();
+
+    public AlgebraInput(string header)
     {
-        public AlgebraInput() =>
-            InitializeComponent();
+        InitializeComponent();
+        Input.Header = header;
+    }
 
-        public AlgebraInput(string header)
+    private readonly static DataTable dt = new();
+
+    // Null: no value (skip)
+    // StackOverflowException: cannot calculate
+    // int: valid value
+    public int? GetValue()
+    {
+        string text = Input.Text;
+        if (text.Length == 0)
         {
-            InitializeComponent();
-            Input.Header = header;
+            return null;
         }
-
-        private readonly static DataTable dt = new DataTable();
-
-        // Null: no value (skip)
-        // StackOverflowException: cannot calculate
-        // int: valid value
-        public int? Value
+        else if (text.Length > 7)
         {
-            get
-            {
-                string text = Input.Text;
-                if (text.Length == 0)
-                {
-                    return null;
-                }
-                else if (text.Length > 7)
-                {
-                    throw new StackOverflowException();
-                }
-                return (int)dt.Compute(text, "");
-            }
+            throw new StackOverflowException();
         }
+        return (int)dt.Compute(text, "");
+    }
 
-        private void Input_TextChanged(object sender, TextChangedEventArgs e)
+    private void Input_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        try
         {
-            try
-            {
-                int? value = Value;
-                (EchoInput.Text, EchoInput.Opacity) = value.HasValue
-                    ? (value.Value.ToString(), 1.0)
-                    : ("∅", 0.5);
-            }
-            catch
-            {
-                EchoInput.Opacity = 1.0;
-                EchoInput.Text = "...";
-            }
+            int? value = GetValue();
+            (EchoInput.Text, EchoInput.Opacity) = value.HasValue
+                ? (value.Value.ToString(), 1.0)
+                : ("∅", 0.5);
+        }
+        catch
+        {
+            EchoInput.Opacity = 1.0;
+            EchoInput.Text = "...";
         }
     }
 }
