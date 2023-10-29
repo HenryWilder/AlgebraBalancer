@@ -21,7 +21,7 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder"/>
-        <TextBox x:Name="Notes" Grid.Row="1" AcceptsReturn="True" FontFamily="Consolas"/>
+        <TextBox x:Name="Notes" Grid.Row="1" AcceptsReturn="True" FontFamily="Consolas" Padding="10,10,10,10"/>
         <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Spacing="9">
             <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
             <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3"/>
