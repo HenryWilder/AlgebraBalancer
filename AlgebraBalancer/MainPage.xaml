@@ -21,7 +21,38 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder"/>
-        <TextBox x:Name="Notes" Grid.Row="1" AcceptsReturn="True" FontFamily="Consolas" Padding="10,10,10,10"/>
+        <Grid Grid.Column="0" Grid.Row="1" RowSpacing="9">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBox x:Name="Notes" AcceptsReturn="True" FontFamily="Consolas" Padding="10,10,10,10"/>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
+                    <TextBox VerticalAlignment="Center"/>
+                    <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                    <TextBox VerticalAlignment="Center"/>
+                    <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
+                    <TextBox VerticalAlignment="Center"/>
+                    <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                    <TextBox VerticalAlignment="Center"/>
+                    <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
+                </StackPanel>
+                <ComboBox Grid.Column="2" VerticalAlignment="Center" SelectedIndex="0">
+                    <ComboBoxItem Content="FOIL"/>
+                    <ComboBoxItem Content="Factor"/>
+                </ComboBox>
+                <Button Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch"/>
+            </Grid>
+        </Grid>
+
         <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Spacing="9">
             <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
             <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3"/>
