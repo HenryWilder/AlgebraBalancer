@@ -20,13 +20,18 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Copyright -->
         <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder"/>
+        
         <Grid Grid.Column="0" Grid.Row="1" RowSpacing="9">
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TextBox x:Name="Notes" AcceptsReturn="True" FontFamily="Consolas" Padding="10,10,10,10"/>
+            
+            <!-- Notes -->
+            <TextBox x:Name="Notes" AcceptsReturn="True" FontFamily="Consolas" Padding="10,10,10,10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" />
+            
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -34,6 +39,8 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+                
+                <!-- FOIL Macro -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
                     <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
@@ -45,19 +52,31 @@
                     <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
                     <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
                 </StackPanel>
+                
+                <!-- Macro ComboBox -->
                 <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectedIndex="0">
                     <ComboBoxItem Content="FOIL"/>
                     <ComboBoxItem Content="Factor"/>
                 </ComboBox>
+                
+                <!-- Macro Button -->
                 <Button x:Name="MathMacroButton" Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch" Click="MathMacroButton_Click"/>
+                
             </Grid>
         </Grid>
 
         <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Spacing="9">
+            
+            <!-- Math Inputs -->
             <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
+            
+            <!-- Math Calculate Button -->
             <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3"/>
+            
+            <!-- Results -->
             <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="16" Text="..."/>
             <ProgressRing x:Name="OutputProgress" Visibility="Collapsed"/>
+            
         </StackPanel>
     </Grid>
 </Page>
