@@ -7,6 +7,7 @@
     <Application.Resources>
         <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Black" Opacity="0.5"/>
         <SolidColorBrush x:Key="TextControlForegroundFocused" Color="White"/>
+        <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="White" Opacity="0.5"/>
     </Application.Resources>
 
 </Application>

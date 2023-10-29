@@ -21,7 +21,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Copyright -->
-        <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder"/>
+        <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder" VerticalAlignment="Center"/>
         
         <Grid Grid.Column="0" Grid.Row="1" RowSpacing="9">
             <Grid.RowDefinitions>
@@ -30,8 +30,8 @@
             </Grid.RowDefinitions>
             
             <!-- Notes -->
-            <TextBox x:Name="Notes" AcceptsReturn="True" FontFamily="Consolas" Padding="10,10,10,10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" />
-            
+            <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Consolas" FontSize="12"/>
+
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -39,24 +39,38 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+
+                <!-- Macros -->
+                <Grid x:Name="Macros" VerticalAlignment="Center">
+                    
+                    <!-- FOIL Macro -->
+                    <StackPanel x:Name="Macro_FOIL" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
+                        <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
+                        <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                        <TextBox x:Name="Macro_FOIL_B" VerticalAlignment="Center"/>
+                        <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
+                        <TextBox x:Name="Macro_FOIL_C" VerticalAlignment="Center"/>
+                        <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                        <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
+                        <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
+                    </StackPanel>
+
+                    <!-- Factor -->
+                    <StackPanel>
+                        <!-- todo -->
+                    </StackPanel>
+
+                    <!-- Symbols -->
+                    <TextBox Text="±√⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" VerticalAlignment="Center"/>
                 
-                <!-- FOIL Macro -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
-                    <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox x:Name="Macro_FOIL_B" VerticalAlignment="Center"/>
-                    <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox x:Name="Macro_FOIL_C" VerticalAlignment="Center"/>
-                    <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
-                    <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
-                </StackPanel>
-                
+                </Grid>
+
                 <!-- Macro ComboBox -->
-                <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectedIndex="0">
+                <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectionChanged="MathMacroSelector_SelectionChanged">
                     <ComboBoxItem Content="FOIL"/>
                     <ComboBoxItem Content="Factor"/>
+                    <ComboBoxItem Content="Symbols"/>
                 </ComboBox>
                 
                 <!-- Macro Button -->
@@ -71,7 +85,7 @@
             <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
             
             <!-- Math Calculate Button -->
-            <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3"/>
+            <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3" CornerRadius="2,2,2,2"/>
             
             <!-- Results -->
             <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="16" Text="..."/>

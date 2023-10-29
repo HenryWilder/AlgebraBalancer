@@ -29,6 +29,16 @@ namespace AlgebraBalancer;
 /// </summary>
 public sealed partial class MainPage : Page
 {
+    private void SetVisibleMacro(int index)
+    {
+        foreach (var child in Macros.Children)
+        {
+            child.Visibility = Visibility.Collapsed;
+        }
+        if (index == -1) { return; }
+        Macros.Children[index].Visibility = Visibility.Visible;
+    }
+
     public MainPage()
     {
         InitializeComponent();
@@ -37,6 +47,7 @@ public sealed partial class MainPage : Page
         {
             Inputs.Children.Add(new AlgebraInput(header));
         }
+        SetVisibleMacro(-1);
     }
 
     private static string Calculations(int x)
@@ -226,26 +237,25 @@ public sealed partial class MainPage : Page
 
     private void MathMacroButton_Click(object sender, RoutedEventArgs e)
     {
-        if (MathMacroSelector.SelectedValue is ComboBoxItem selectedItem)
+        switch (MathMacroSelector.SelectedIndex)
         {
-            string selection = selectedItem.Content.ToString();
-            string macroText = string.Empty;
-            switch (selection)
-            {
-                case "FOIL":
-                    var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
+            case 0: // FOIL
+                var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
 
-                    int abPad = Math.Max(a.Length, b.Length);
-                    a = a.PadLeft(abPad);
-                    b = b.PadLeft(abPad);
-                    int cdPad = Math.Max(a.Length, b.Length);
-                    c = c.PadLeft(cdPad);
-                    d = d.PadLeft(cdPad);
+                int abPad = Math.Max(a.Length, b.Length);
+                a = a.PadLeft(abPad);
+                b = b.PadLeft(abPad);
+                int cdPad = Math.Max(a.Length, b.Length);
+                c = c.PadLeft(cdPad);
+                d = d.PadLeft(cdPad);
 
-                    macroText = $"\n{a} * {c} = \n{a} * {d} = \n{b} * {c} = \n{b} * {d} = \n";
-                    break;
-            }
-            Notes.Text += macroText;
+                Notes.Text += $"\n{a} * {c} = \n{a} * {d} = \n{b} * {c} = \n{b} * {d} = \n";
+                break;
         }
+    }
+
+    private void MathMacroSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        SetVisibleMacro(MathMacroSelector.SelectedIndex);
     }
 }
