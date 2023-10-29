@@ -223,4 +223,21 @@ public sealed partial class MainPage : Page
         Output.Text = calculations;
         CalcBtn.IsEnabled = true;
     }
+
+    private void MathMacroButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (MathMacroSelector.SelectedValue is ComboBoxItem selectedItem)
+        {
+            string selection = selectedItem.Content.ToString();
+            string macroText = string.Empty;
+            switch (selection)
+            {
+                case "FOIL":
+                    var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
+                    macroText = $"\n{a}*{c} = \n{a}*{d} = \n{b}*{c} = \n{b}*{d} = \n";
+                    break;
+            }
+            Notes.Text += macroText;
+        }
+    }
 }

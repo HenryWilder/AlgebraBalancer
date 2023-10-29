@@ -36,20 +36,20 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox VerticalAlignment="Center"/>
+                    <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
                     <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox VerticalAlignment="Center"/>
+                    <TextBox x:Name="Macro_FOIL_B" VerticalAlignment="Center"/>
                     <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox VerticalAlignment="Center"/>
+                    <TextBox x:Name="Macro_FOIL_C" VerticalAlignment="Center"/>
                     <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                    <TextBox VerticalAlignment="Center"/>
+                    <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
                     <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
                 </StackPanel>
-                <ComboBox Grid.Column="2" VerticalAlignment="Center" SelectedIndex="0">
+                <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectedIndex="0">
                     <ComboBoxItem Content="FOIL"/>
                     <ComboBoxItem Content="Factor"/>
                 </ComboBox>
-                <Button Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch"/>
+                <Button x:Name="MathMacroButton" Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch" Click="MathMacroButton_Click"/>
             </Grid>
         </Grid>
 
