@@ -65,7 +65,8 @@ public sealed partial class MainPage : Page
         result += "\nFactors:";
         List<(string a, string b, string sum, string diff)>
             factorStrings = Factors(x)
-                .Select((f) => ($"{f.a}", $"{f.b}", $"{f.a + f.b}", $"{f.b - f.a}"))
+                .Select((f) => ($"{f.common}", $"{f.associated}",
+                    $"{f.common + f.associated[0]}", $"{f.associated[0] - f.common}"))
                 .ToList();
 
         int aPad = factorStrings.Max((f) => f.a.Length);
@@ -97,26 +98,12 @@ public sealed partial class MainPage : Page
 
         result += $"\n{a} + {b} = {a + b}";
         result += $"\n{a} - {b} = {a - b}";
-        result += $"\n{a} × {b} = {a * b}";
+        result += $"\n{a} × {b} = ";
+        try { checked { result += a * b; } }
+        catch (OverflowException) { result += new Huge(); }
         result += $"\n{a} ÷ {b} = {new Fraction(a, b).Simplified()}";
         result += $"\n{a} % {b} = " + (b != 0 ? new Number(a % b) : new Undefined());
-
-        {
-            result += $"\n{a} ^ {b} = ";
-            double powered = Math.Pow(a, Math.Abs(b));
-            if (powered > ulong.MaxValue)
-            {
-                result += (b < 0)
-                    ? $"ε"
-                    : $"𝓗";
-            }
-            else
-            {
-                result += (b < 0)
-                    ? $"1/{Convert.ToUInt64(powered)}"
-                    : $"{Convert.ToUInt64(powered)}";
-            }
-        }
+        result += $"\n{a} ^ {b} = {Power(a, b)}";
 
 
         result += $"\nGCF: {GCF(a, b)}";
@@ -125,8 +112,8 @@ public sealed partial class MainPage : Page
         // Common factors
         result += "\nCommon Factors:";
         List<(string common, string a, string b)>
-            factorStrings = CommonFactors(a, b)
-                .Select((f) => ($"{f.common}", $"{f.a}", $"{f.b}"))
+            factorStrings = Factors(a, b)
+                .Select((f) => ($"{f.common}", $"{f.associated[0]}", $"{f.associated[1]}"))
                 .ToList();
 
         int commonPad = factorStrings.Max((f) => f.common.Length);
@@ -174,9 +161,9 @@ public sealed partial class MainPage : Page
         result += $"\nΣ({a}, {b}, {c}) = {a + b + c}";
         result += $"\n∏({a}, {b}, {c}) = {a * b * c}";
 
-        result += $"\nGCF: {GCF(GCF(a, b), c)}";
+        result += $"\nGCF: {GCF(a, b, c)}";
 
-        result += $"\nLCM: {LCM(LCM(a, b), c)}";
+        result += $"\nLCM: {LCM(a, b, c)}";
 
         result += $"\n{a}𝑥² + {b}𝑥 + {c} =";
         result += $"\n  (-({b})±√(({b})²-4({a})({c})))/2({a})";

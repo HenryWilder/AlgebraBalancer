@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,90 +16,72 @@ internal class Algebra
 {
     public interface IAlgebraicNotation
     {
-        public abstract IAlgebraicNotation Simplified();
         public abstract string ToString();
     }
 
-    public struct Number : IAlgebraicNotation
+    public interface IAlgebraicExpression : IAlgebraicNotation
+    {
+        public abstract IAlgebraicNotation Simplified();
+    }
+
+    public interface IAlgebraicAtomic : IAlgebraicNotation { }
+
+    public struct Number : IAlgebraicAtomic
     {
         public Number(int value) =>
             this.value = value;
 
         public int value;
 
-        public readonly IAlgebraicNotation Simplified() =>
-            this;
-
-        public static implicit operator int(Number num) =>
-            num.value;
-
-        public override readonly string ToString() =>
-            $"{value}";
+        public static implicit operator int(Number num) => num.value;
+        public static implicit operator Number(int value) => new(value);
+        public override readonly string ToString() => $"{value}";
     }
 
-    public struct Complex : IAlgebraicNotation
+    public struct Complex : IAlgebraicAtomic
     {
-        // todo
-
-        public readonly IAlgebraicNotation Simplified() =>
-            throw new NotImplementedException();
-
-        public override readonly string ToString() =>
-            "𝑖";
+        public override readonly string ToString() => "𝑖";
     }
-
-    public struct Undefined : IAlgebraicNotation
+    public struct Undefined : IAlgebraicAtomic
     {
-        public readonly IAlgebraicNotation Simplified() => this;
         public override readonly string ToString() => "∅";
+    }
+    public struct Huge : IAlgebraicAtomic
+    {
+        public override readonly string ToString() => "𝓗";
+    }
+    public struct Epsilon : IAlgebraicAtomic
+    {
+        public override readonly string ToString() => "ε";
     }
 
     public static bool IsOdd(int n) =>
         (n & 1) != 0;
 
-    public static List<(int a, int b)> Factors(int n)
+    public static List<(int common, int[] associated)> Factors(params int[] parameters)
     {
-        int nAbs = Math.Abs(n);
+        int[] absParams = parameters.Select(Math.Abs).ToArray();
 
-        var factors = new List<(int, int)> { (1, n) };
+        var factors = new List<(int, int[])>() { (1, parameters) };
 
-        for (int i = 2; (i * i) <= nAbs; ++i)
+        for (int i = 2; i <= absParams.Min(); ++i)
         {
-            if (nAbs % i == 0)
+            if (absParams.All((x) => x % i == 0))
             {
-                factors.Add((i, n / i));
+                factors.Add((i, parameters.Select((x) => x / i).ToArray()));
             }
         }
 
         return factors;
     }
 
-    public static List<(int common, int a, int b)> CommonFactors(int a, int b)
+    public static int GCF(params int[] parameters)
     {
-        int aAbs = Math.Abs(a);
-        int bAbs = Math.Abs(b);
+        int[] absParams = parameters.Select(Math.Abs).ToArray();
 
-        var factors = new List<(int, int, int)>() { (1, a, b) };
-
-        for (int i = 2; i <= Math.Min(aAbs, bAbs); ++i)
+        for (int gcf = absParams.Min(); gcf > 1; --gcf)
         {
-            if (aAbs % i == 0 && bAbs % i == 0)
-            {
-                factors.Add((i, a / i, b / i));
-            }
-        }
-
-        return factors;
-    }
-
-    public static int GCF(int a, int b)
-    {
-        int aAbs = Math.Abs(a);
-        int bAbs = Math.Abs(b);
-
-        for (int gcf = Math.Min(aAbs, bAbs); gcf > 1; --gcf)
-        {
-            if (aAbs % gcf == 0 && bAbs % gcf == 0)
+            if (absParams.All((x) => gcf % x == 0))
             {
                 return gcf;
             }
@@ -107,24 +90,35 @@ internal class Algebra
         return 1;
     }
 
-    public static int LCM(int a, int b)
+    public static IAlgebraicNotation LCM(params int[] parameters)
     {
-        int aAbs = Math.Abs(a);
-        int bAbs = Math.Abs(b);
+        int[] absParams = parameters.Select(Math.Abs).ToArray();
 
-        int product = a * b;
-        for (int lcm = Math.Max(aAbs, bAbs); lcm < product; ++lcm)
+        int product;
+        try
         {
-            if (lcm % aAbs == 0 && lcm % bAbs == 0)
+            checked
             {
-                return lcm;
+                product = parameters.Aggregate(1, (total, next) => total * next);
+            }
+        }
+        catch (OverflowException)
+        {
+            return new Huge();
+        }
+
+        for (int lcm = absParams.Max(); lcm < product; ++lcm)
+        {
+            if (absParams.All((x) => lcm % x == 0))
+            {
+                return new Number(lcm);
             }
         }
 
-        return product;
+        return new Number(product);
     }
 
-    public struct Fraction : IAlgebraicNotation
+    public struct Fraction : IAlgebraicExpression
     {
         public Fraction() { }
         public Fraction(int numerator, int denominator) =>
@@ -176,7 +170,7 @@ internal class Algebra
         return null;
     }
 
-    public struct Radical : IAlgebraicNotation
+    public struct Radical : IAlgebraicExpression
     {
         public Radical() { }
 
@@ -238,7 +232,7 @@ internal class Algebra
         }
     }
 
-    public struct RadicalFraction : IAlgebraicNotation
+    public struct RadicalFraction : IAlgebraicExpression
     {
         public RadicalFraction() { }
 
@@ -285,5 +279,28 @@ internal class Algebra
                 throw new NotImplementedException();
             }
         }
+    }
+
+    public static IAlgebraicNotation Power(int basePart, int exponent)
+    {
+        bool isNegativeExponent = exponent < 0;
+        int power = 1;
+
+        try
+        {
+            checked
+            {
+                for (int i = 0; i < Math.Abs(exponent); ++i)
+                {
+                    power *= basePart;
+                }
+            }
+        }
+        catch (OverflowException)
+        {
+            return isNegativeExponent ? new Epsilon() : new Huge();
+        }
+
+        return isNegativeExponent ? new Fraction(1, power) : new Number(power);
     }
 }
