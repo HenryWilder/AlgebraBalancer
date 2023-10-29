@@ -66,7 +66,7 @@ public sealed partial class MainPage : Page
         List<(string a, string b, string sum, string diff)>
             factorStrings = Factors(x)
                 .Select((f) => ($"{f.common}", $"{f.associated}",
-                    $"{f.common + f.associated[0]}", $"{f.associated[0] - f.common}"))
+                    $"{f.common + f.associated}", $"{f.associated - f.common}"))
                 .ToList();
 
         int aPad = factorStrings.Max((f) => f.a.Length);
@@ -112,7 +112,7 @@ public sealed partial class MainPage : Page
         // Common factors
         result += "\nCommon Factors:";
         List<(string common, string a, string b)>
-            factorStrings = Factors(a, b)
+            factorStrings = CommonFactors(a, b)
                 .Select((f) => ($"{f.common}", $"{f.associated[0]}", $"{f.associated[1]}"))
                 .ToList();
 

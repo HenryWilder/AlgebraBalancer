@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -58,7 +59,7 @@ internal class Algebra
     public static bool IsOdd(int n) =>
         (n & 1) != 0;
 
-    public static List<(int common, int[] associated)> Factors(params int[] parameters)
+    public static List<(int common, int[] associated)> CommonFactors(params int[] parameters)
     {
         int[] absParams = parameters.Select(Math.Abs).ToArray();
 
@@ -74,6 +75,9 @@ internal class Algebra
 
         return factors;
     }
+
+    public static List<(int common, int associated)> Factors(int n) =>
+        CommonFactors(n).Select((x) => (x.common, x.associated[0])).ToList();
 
     public static int GCF(params int[] parameters)
     {
@@ -216,15 +220,20 @@ internal class Algebra
             // Perfect squares
             int gpsFactor = 1; // Greatest perfect square factor
             int gpsMultip = n; // Associated factor with gpsFactor
-            foreach (var (a, b) in Factors(n))
+            foreach (var (common, associated) in Factors(n))
             {
-                if (SqrtI(a) is int aRoot && aRoot > gpsFactor)
+                var permutations = new (int, int)[]
                 {
-                    (gpsFactor, gpsMultip) = (aRoot, b);
-                }
-                else if (SqrtI(b) is int bRoot && bRoot > gpsFactor)
+                    (common, associated),
+                    (associated, common)
+                };
+
+                foreach ((int a, int b) in permutations)
                 {
-                    (gpsFactor, gpsMultip) = (bRoot, a);
+                    if (SqrtI(a) is int aRoot && aRoot > gpsFactor)
+                    {
+                        (gpsFactor, gpsMultip) = (aRoot, b);
+                    }
                 }
             }
 
