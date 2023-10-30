@@ -22,65 +22,69 @@
 
         <!-- Copyright -->
         <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder" VerticalAlignment="Center"/>
-        
+
         <Grid Grid.Column="0" Grid.Row="1" RowSpacing="9">
             <Grid.RowDefinitions>
-                <RowDefinition/>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            
+
             <!-- Notes -->
-            <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Consolas"/>
+            <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Consolas" Header="Notes"/>
+            
+            <!-- Macros Panel -->
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Macros" FontFamily="Consolas" Margin="0,0,0,4.5" FontSize="14"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                    <!-- Macros -->
+                    <Grid x:Name="Macros" VerticalAlignment="Center">
 
-                <!-- Macros -->
-                <Grid x:Name="Macros" VerticalAlignment="Center">
-                    
-                    <!-- FOIL Macro -->
-                    <StackPanel Orientation="Horizontal" Visibility="Collapsed">
-                        <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
-                        <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
-                        <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                        <TextBox x:Name="Macro_FOIL_B" VerticalAlignment="Center"/>
-                        <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
-                        <TextBox x:Name="Macro_FOIL_C" VerticalAlignment="Center"/>
-                        <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                        <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
-                        <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
-                    </StackPanel>
+                        <!-- FOIL Macro -->
+                        <StackPanel Orientation="Horizontal" Visibility="Collapsed">
+                            <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
+                            <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
+                            <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                            <TextBox x:Name="Macro_FOIL_B" VerticalAlignment="Center"/>
+                            <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
+                            <TextBox x:Name="Macro_FOIL_C" VerticalAlignment="Center"/>
+                            <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                            <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
+                            <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
+                        </StackPanel>
 
-                    <!-- Factor -->
-                    <StackPanel Orientation="Horizontal" Visibility="Collapsed" d:Visibility="Visible">
-                        <TextBox x:Name="Macro_Factor_A" VerticalAlignment="Center" PlaceholderText="A"/>
-                        <TextBlock Text="𝑥²+" VerticalAlignment="Center" FontSize="18"/>
-                        <TextBox x:Name="Macro_Factor_B" VerticalAlignment="Center" PlaceholderText="B"/>
-                        <TextBlock Text="𝑥+" VerticalAlignment="Center" FontSize="18"/>
-                        <TextBox x:Name="Macro_Factor_C" VerticalAlignment="Center" PlaceholderText="C"/>
-                    </StackPanel>
+                        <!-- Factor -->
+                        <StackPanel Orientation="Horizontal" Visibility="Collapsed" d:Visibility="Visible">
+                            <TextBox x:Name="Macro_Factor_A" VerticalAlignment="Center" PlaceholderText="A"/>
+                            <TextBlock Text="𝑥²+" VerticalAlignment="Center" FontSize="18"/>
+                            <TextBox x:Name="Macro_Factor_B" VerticalAlignment="Center" PlaceholderText="B"/>
+                            <TextBlock Text="𝑥+" VerticalAlignment="Center" FontSize="18"/>
+                            <TextBox x:Name="Macro_Factor_C" VerticalAlignment="Center" PlaceholderText="C"/>
+                        </StackPanel>
 
-                    <!-- Symbols -->
-                    <TextBox Text="±√⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed"/>
-                
+                        <!-- Symbols -->
+                        <TextBox Text="±√⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed"/>
+
+                    </Grid>
+
+                    <!-- Macro ComboBox -->
+                    <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectionChanged="MathMacroSelector_SelectionChanged">
+                        <ComboBoxItem Content="FOIL"/>
+                        <ComboBoxItem Content="Factor"/>
+                        <ComboBoxItem Content="Symbols"/>
+                    </ComboBox>
+
+                    <!-- Macro Button -->
+                    <Button x:Name="MathMacroButton" Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch" Click="MathMacroButton_Click"/>
+
                 </Grid>
-
-                <!-- Macro ComboBox -->
-                <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectionChanged="MathMacroSelector_SelectionChanged">
-                    <ComboBoxItem Content="FOIL"/>
-                    <ComboBoxItem Content="Factor"/>
-                    <ComboBoxItem Content="Symbols"/>
-                </ComboBox>
-                
-                <!-- Macro Button -->
-                <Button x:Name="MathMacroButton" Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch" Click="MathMacroButton_Click"/>
-                
-            </Grid>
+            </StackPanel>
         </Grid>
 
         <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Spacing="9">
