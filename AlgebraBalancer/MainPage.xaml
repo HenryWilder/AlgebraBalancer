@@ -67,7 +67,7 @@
                                 </StackPanel>
 
                                 <!-- Factor -->
-                                <StackPanel Orientation="Horizontal" Visibility="Collapsed" d:Visibility="Visible">
+                                <StackPanel Orientation="Horizontal" Visibility="Collapsed">
                                     <TextBox x:Name="Macro_Factor_A" VerticalAlignment="Center" PlaceholderText="A"/>
                                     <TextBlock Text="𝑥²+" VerticalAlignment="Center" FontSize="18"/>
                                     <TextBox x:Name="Macro_Factor_B" VerticalAlignment="Center" PlaceholderText="B"/>
@@ -76,7 +76,7 @@
                                 </StackPanel>
 
                                 <!-- Symbols -->
-                                <TextBox Text="×−±√⁻⁰¹²³⁴⁵⁶⁷⁸⁹₋₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed"/>
+                                <TextBox Text="×−±√⁻⁰¹²³⁴⁵⁶⁷⁸⁹₋₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed" d:Visibility="Visible" FontFamily="Consolas" CharacterSpacing="200"/>
 
                             </Grid>
 
