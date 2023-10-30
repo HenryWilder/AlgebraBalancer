@@ -7,11 +7,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     d:DesignHeight="64"
-    d:DesignWidth="64"
+    d:DesignWidth="80"
     DataContext="local">
 
-    <StackPanel Orientation="Vertical" Width="64" Spacing="9">
-        <TextBox x:Name="Input" Background="{ThemeResource SystemControlAcrylicElementBrush}" TextAlignment="Right" TextChanged="Input_TextChanged"/>
+    <StackPanel Orientation="Vertical" Spacing="9" Width="80">
+        <TextBox x:Name="Input" Background="{ThemeResource SystemControlAcrylicElementBrush}" TextAlignment="Right" TextChanged="Input_TextChanged" MaxLength="7" TextWrapping="Wrap"/>
         <TextBlock x:Name="EchoInput" FontFamily="Consolas" FontSize="18" HorizontalAlignment="Center" Text="∅" Opacity="0.5"/>
     </StackPanel>
 </UserControl>

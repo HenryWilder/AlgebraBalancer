@@ -42,7 +42,7 @@ public sealed partial class AlgebraInput : UserControl
         {
             return null;
         }
-        else if (text.Length > 7)
+        else if (text.Length > Input.MaxLength)
         {
             throw new StackOverflowException();
         }

@@ -111,9 +111,9 @@ public sealed partial class MainPage : Page
         result += $"\n{a} - {b} = {a - b}";
         result += $"\n{a} × {b} = ";
         try { checked { result += a * b; } }
-        catch (OverflowException) { result += new Huge(); }
+        catch (OverflowException) { result += huge; }
         result += $"\n{a} ÷ {b} = {new Fraction(a, b).Simplified()}";
-        result += $"\n{a} % {b} = " + (b != 0 ? new Number(a % b) : new Undefined());
+        result += $"\n{a} % {b} = " + (b != 0 ? new Number(a % b) : undefined);
         result += $"\n{a} ^ {b} = {Power(a, b)}";
 
 
@@ -147,27 +147,43 @@ public sealed partial class MainPage : Page
     {
         string result = "";
 
-        var magnitude = new Radical(a * a + b * b + c * c).Simplified();
-        result += $"|A| = {magnitude}";
+        var a2 = Power(a, 2);
+        var b2 = Power(b, 2);
+        var c2 = Power(c, 2);
+        if (a2 is Number a2Num && b2 is Number b2Num && c2 is Number c2Num)
         {
-            IAlgebraicNotation aPart, bPart, cPart;
-            if (magnitude is Radical radMag)
+            var magnitude = new Radical(a2Num + b2Num + c2Num).Simplified();
+            result += $"|A| = {magnitude}";
             {
-                aPart = new RadicalFraction(a, radMag).Simplified();
-                bPart = new RadicalFraction(b, radMag).Simplified();
-                cPart = new RadicalFraction(c, radMag).Simplified();
+                IAlgebraicNotation aPart, bPart, cPart;
+                if (magnitude is Radical radMag)
+                {
+                    aPart = new RadicalFraction(a, radMag).Simplified();
+                    bPart = new RadicalFraction(b, radMag).Simplified();
+                    cPart = new RadicalFraction(c, radMag).Simplified();
+                }
+                else if (magnitude is Number numMag)
+                {
+                    aPart = new Fraction(a, numMag).Simplified();
+                    bPart = new Fraction(b, numMag).Simplified();
+                    cPart = new Fraction(c, numMag).Simplified();
+                }
+                else if (magnitude is IAlgebraicAtomic atomMag)
+                {
+                    aPart = new Fraction(new Number(a), atomMag).Simplified();
+                    bPart = new Fraction(new Number(b), atomMag).Simplified();
+                    cPart = new Fraction(new Number(c), atomMag).Simplified();
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+                result += $"\nÂ = ({aPart}, {bPart}, {cPart})";
             }
-            else if (magnitude is Number numMag)
-            {
-                aPart = new Fraction(a, numMag).Simplified();
-                bPart = new Fraction(b, numMag).Simplified();
-                cPart = new Fraction(c, numMag).Simplified();
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-            result += $"\nÂ = ({aPart}, {bPart}, {cPart})";
+        }
+        else
+        {
+            result += $"|A| = ?\nÂ = ({a}, {b}, {c})(?⁻¹)";
         }
         result += $"\nΣ({a}, {b}, {c}) = {a + b + c}";
         result += $"\n∏({a}, {b}, {c}) = {a * b * c}";
@@ -223,7 +239,11 @@ public sealed partial class MainPage : Page
 
         if (parameters is not null)
         {
-            await Task.Run(() => calculations = Calculations(parameters));
+            var task = Task.Run(() => calculations = Calculations(parameters));
+            if (await Task.WhenAny(task, Task.Delay(5000)) != task)
+            {
+                calculations = "Calculation timed out";
+            }
         }
         else
         {
@@ -254,10 +274,10 @@ public sealed partial class MainPage : Page
                 d = d.PadLeft(cdPad);
 
                 Notes.Text += 
-                    $"{a} * {c} = ?₁\n" +
-                    $"{a} * {d} = ?₂\n" +
-                    $"{b} * {c} = ?₃\n" +
-                    $"{b} * {d} = ?₄\n" +
+                    $"{a} × {c} = ?₁\n" +
+                    $"{a} × {d} = ?₂\n" +
+                    $"{b} × {c} = ?₃\n" +
+                    $"{b} × {d} = ?₄\n" +
                     $"?₁ + ?₂ + ?₃ + ?₄\n";
             }
                 break;
@@ -268,7 +288,7 @@ public sealed partial class MainPage : Page
 
                 bool isANum = int.TryParse(aStr, out int a);
                 bool isCNum = int.TryParse(cStr, out int c);
-                string acStr = isANum && isCNum ? $"{a * c}" : $"({aStr}×{bStr})";
+                string acStr = isANum && isCNum ? $"{a * c}" : $"({aStr} × {bStr})";
 
                 Notes.Text +=
                     $"{aStr}𝑥² + {bStr}𝑥 + {cStr}\n" +
@@ -287,9 +307,9 @@ public sealed partial class MainPage : Page
 
     private void TogglePane_Click(object sender, RoutedEventArgs e)
     {
-        CalculationsPane.DisplayMode = CalculationsPane.DisplayMode == SplitViewDisplayMode.Overlay
-            ? SplitViewDisplayMode.Inline
-            : SplitViewDisplayMode.Overlay;
+        bool isBecomingInline = CalculationsPane.DisplayMode == SplitViewDisplayMode.Overlay;
+        CalculationsPane.DisplayMode  = isBecomingInline ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
+        CalculatorPane_PinIcon.Symbol = isBecomingInline ? Symbol.UnPin : Symbol.Pin;
     }
 
     private void ShowPane_Click(object sender, RoutedEventArgs e)

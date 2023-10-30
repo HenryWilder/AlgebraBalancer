@@ -41,18 +41,24 @@ public class Algebra
     {
         public override readonly string ToString() => "𝑖";
     }
+
     public struct Undefined : IAlgebraicAtomic
     {
         public override readonly string ToString() => "∅";
     }
+    public static Undefined undefined = new();
+
     public struct Huge : IAlgebraicAtomic
     {
         public override readonly string ToString() => "𝓗";
     }
+    public static Huge huge = new ();
+
     public struct Epsilon : IAlgebraicAtomic
     {
         public override readonly string ToString() => "ε";
     }
+    public static Epsilon epsilon = new();
 
     public static bool IsOdd(int n) =>
         (n & 1) != 0;
@@ -106,7 +112,7 @@ public class Algebra
         }
         catch (OverflowException)
         {
-            return new Huge();
+            return huge;
         }
 
         for (int lcm = absParams.Max(); lcm < product; ++lcm)
@@ -123,19 +129,37 @@ public class Algebra
     public struct Fraction : IAlgebraicExpression
     {
         public Fraction() { }
+
         public Fraction(int numerator, int denominator) =>
+            (this.numerator, this.denominator) = (new Number(numerator), new Number(denominator));
+
+        public Fraction(IAlgebraicAtomic numerator, IAlgebraicAtomic denominator) =>
             (this.numerator, this.denominator) = (numerator, denominator);
 
-        public int numerator = 1;
-        public int denominator = 1;
+        public IAlgebraicAtomic numerator   = new Number(1);
+        public IAlgebraicAtomic denominator = new Number(1);
 
         public override readonly string ToString() =>
-            denominator == 1
-                ? $"{numerator}"
-                : $"{numerator}/{denominator}";
+            $"{numerator}/{denominator}";
 
         public readonly IAlgebraicNotation Simplified()
         {
+            if (this.numerator is null || this.denominator is null)
+            {
+                throw new NullReferenceException("fractions should not contain null");
+            }
+            if (this.numerator is Undefined || this.denominator is Undefined)
+            {
+                return undefined;
+            }
+            if (this.numerator is not Number || this.denominator is not Number)
+            {
+                return this;
+            }
+
+            var numerator   = (Number)this.numerator;
+            var denominator = (Number)this.denominator;
+
             if (denominator == 0)
             {
                 return new Undefined();
@@ -148,7 +172,7 @@ public class Algebra
 
             int sign = (numerator < 0 != denominator < 0) ? -1 : 1;
 
-            int numeratorAbs = Math.Abs(numerator);
+            int numeratorAbs   = Math.Abs(numerator);
             int denominatorAbs = Math.Abs(denominator);
 
             int gcf = GCF(numeratorAbs, denominatorAbs);
@@ -274,8 +298,8 @@ public class Algebra
             var coefficient = new Fraction(numerator.coefficient, denominator).Simplified();
             if (coefficient is Fraction fracCoefficient)
             {
-                var radNumerator = new Radical(fracCoefficient.numerator, numerator.radicand);
-                return new RadicalFraction(radNumerator, fracCoefficient.denominator);
+                var radNumerator = new Radical((Number)fracCoefficient.numerator, numerator.radicand);
+                return new RadicalFraction(radNumerator, (Number)fracCoefficient.denominator);
             }
             else if (coefficient is Number numCoefficient)
             {
@@ -305,7 +329,7 @@ public class Algebra
         }
         catch (OverflowException)
         {
-            return isNegativeExponent ? new Epsilon() : new Huge();
+            return isNegativeExponent ? epsilon : huge;
         }
 
         return isNegativeExponent ? new Fraction(1, power) : new Number(power);
