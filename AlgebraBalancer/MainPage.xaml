@@ -10,95 +10,104 @@
     d:DesignWidth="650"
     Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
-    <Grid ColumnSpacing="9" RowSpacing="9" Padding="9">
+    <Grid ColumnSpacing="9" RowSpacing="9">
         <Grid.RowDefinitions>
             <RowDefinition Height="23"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-
+        
         <!-- Copyright -->
         <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder" VerticalAlignment="Center"/>
 
-        <Grid Grid.Row="1" RowSpacing="9">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <SplitView x:Name="CalculationsPane" Grid.Row="1" PanePlacement="Right" OpenPaneLength="400">
 
-            <!-- Notes -->
-            <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Consolas" Header="Notes"/>
-            
-            <!-- Macros Panel -->
-            <StackPanel Grid.Row="1">
-                <TextBlock Text="Macros" FontFamily="Consolas" Margin="0,0,0,4.5" FontSize="14"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+            <Grid RowSpacing="9" Padding="9">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                    <!-- Macros -->
-                    <Grid x:Name="Macros" VerticalAlignment="Center">
+                <!-- Notes -->
+                <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Consolas" Header="Notes"/>
 
-                        <!-- FOIL Macro -->
-                        <StackPanel Orientation="Horizontal" Visibility="Collapsed">
-                            <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
-                            <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
-                            <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                            <TextBox x:Name="Macro_FOIL_B" VerticalAlignment="Center"/>
-                            <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
-                            <TextBox x:Name="Macro_FOIL_C" VerticalAlignment="Center"/>
-                            <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
-                            <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
-                            <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
-                        </StackPanel>
+                <!-- Toggle Pin -->
+                <Button VerticalAlignment="Top" HorizontalAlignment="Right" Click="ShowPane_Click"/>
+                
+                <!-- Macros Panel -->
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="Macros" FontFamily="Consolas" Margin="0,0,0,4.5" FontSize="14"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                        <!-- Factor -->
-                        <StackPanel Orientation="Horizontal" Visibility="Collapsed" d:Visibility="Visible">
-                            <TextBox x:Name="Macro_Factor_A" VerticalAlignment="Center" PlaceholderText="A"/>
-                            <TextBlock Text="𝑥²+" VerticalAlignment="Center" FontSize="18"/>
-                            <TextBox x:Name="Macro_Factor_B" VerticalAlignment="Center" PlaceholderText="B"/>
-                            <TextBlock Text="𝑥+" VerticalAlignment="Center" FontSize="18"/>
-                            <TextBox x:Name="Macro_Factor_C" VerticalAlignment="Center" PlaceholderText="C"/>
-                        </StackPanel>
+                        <!-- Macros -->
+                        <Grid x:Name="Macros" VerticalAlignment="Center">
 
-                        <!-- Symbols -->
-                        <TextBox Text="±√⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed"/>
+                            <!-- FOIL Macro -->
+                            <StackPanel Orientation="Horizontal" Visibility="Collapsed">
+                                <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
+                                <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
+                                <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                                <TextBox x:Name="Macro_FOIL_B" VerticalAlignment="Center"/>
+                                <TextBlock Text=")(" VerticalAlignment="Center" FontSize="18"/>
+                                <TextBox x:Name="Macro_FOIL_C" VerticalAlignment="Center"/>
+                                <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
+                                <TextBox x:Name="Macro_FOIL_D" VerticalAlignment="Center"/>
+                                <TextBlock Text=")" VerticalAlignment="Center" FontSize="18"/>
+                            </StackPanel>
+
+                            <!-- Factor -->
+                            <StackPanel Orientation="Horizontal" Visibility="Collapsed" d:Visibility="Visible">
+                                <TextBox x:Name="Macro_Factor_A" VerticalAlignment="Center" PlaceholderText="A"/>
+                                <TextBlock Text="𝑥²+" VerticalAlignment="Center" FontSize="18"/>
+                                <TextBox x:Name="Macro_Factor_B" VerticalAlignment="Center" PlaceholderText="B"/>
+                                <TextBlock Text="𝑥+" VerticalAlignment="Center" FontSize="18"/>
+                                <TextBox x:Name="Macro_Factor_C" VerticalAlignment="Center" PlaceholderText="C"/>
+                            </StackPanel>
+
+                            <!-- Symbols -->
+                            <TextBox Text="±√⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed"/>
+
+                        </Grid>
+
+                        <!-- Macro ComboBox -->
+                        <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectionChanged="MathMacroSelector_SelectionChanged">
+                            <ComboBoxItem Content="FOIL"/>
+                            <ComboBoxItem Content="Factor"/>
+                            <ComboBoxItem Content="Symbols"/>
+                        </ComboBox>
+
+                        <!-- Macro Button -->
+                        <Button x:Name="MathMacroButton" Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch" Click="MathMacroButton_Click"/>
 
                     </Grid>
+                </StackPanel>
+            </Grid>
 
-                    <!-- Macro ComboBox -->
-                    <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectionChanged="MathMacroSelector_SelectionChanged">
-                        <ComboBoxItem Content="FOIL"/>
-                        <ComboBoxItem Content="Factor"/>
-                        <ComboBoxItem Content="Symbols"/>
-                    </ComboBox>
+            <SplitView.Pane>
+                <Grid Padding="9">
+                    <StackPanel VerticalAlignment="Top" Orientation="Vertical" Spacing="9">
+            
+                        <!-- Math Inputs -->
+                        <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
+            
+                        <!-- Math Calculate Button -->
+                        <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3" CornerRadius="2,2,2,2"/>
+            
+                        <!-- Results -->
+                        <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="16" Text="..."/>
+                        <ProgressRing x:Name="OutputProgress" Visibility="Collapsed"/>
 
-                    <!-- Macro Button -->
-                    <Button x:Name="MathMacroButton" Grid.Column="3" Content="⁕" Padding="3,0,3,0" VerticalAlignment="Stretch" Click="MathMacroButton_Click"/>
-
+                    </StackPanel>
+                    
+                    <!-- Toggle Pin -->
+                    <ToggleButton VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="TogglePane_Click"/>
                 </Grid>
-            </StackPanel>
-        </Grid>
-
-        <StackPanel Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" MinWidth="100" Orientation="Vertical" Spacing="9">
-            
-            <!-- Math Inputs -->
-            <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
-            
-            <!-- Math Calculate Button -->
-            <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch" Padding="0,0,0,3" CornerRadius="2,2,2,2"/>
-            
-            <!-- Results -->
-            <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="16" Text="..."/>
-            <ProgressRing x:Name="OutputProgress" Visibility="Collapsed"/>
-            
-        </StackPanel>
+            </SplitView.Pane>
+        </SplitView>
     </Grid>
 </Page>

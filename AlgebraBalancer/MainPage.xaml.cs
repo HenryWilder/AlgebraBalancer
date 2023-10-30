@@ -284,4 +284,16 @@ public sealed partial class MainPage : Page
     {
         SetVisibleMacro(MathMacroSelector.SelectedIndex);
     }
+
+    private void TogglePane_Click(object sender, RoutedEventArgs e)
+    {
+        CalculationsPane.DisplayMode = CalculationsPane.DisplayMode == SplitViewDisplayMode.Overlay
+            ? SplitViewDisplayMode.Inline
+            : SplitViewDisplayMode.Overlay;
+    }
+
+    private void ShowPane_Click(object sender, RoutedEventArgs e)
+    {
+        CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
+    }
 }
