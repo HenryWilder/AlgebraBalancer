@@ -23,7 +23,7 @@
         <!-- Copyright -->
         <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder" VerticalAlignment="Center"/>
 
-        <Grid Grid.Column="0" Grid.Row="1" RowSpacing="9">
+        <Grid Grid.Row="1" RowSpacing="9">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>

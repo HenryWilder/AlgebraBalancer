@@ -240,22 +240,42 @@ public sealed partial class MainPage : Page
         switch (MathMacroSelector.SelectedIndex)
         {
             case 0: // FOIL
+            {
                 var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
+
+                Notes.Text += $"({a} + {b})({c} + {d})\n";
 
                 int abPad = Math.Max(a.Length, b.Length);
                 a = a.PadLeft(abPad);
                 b = b.PadLeft(abPad);
+
                 int cdPad = Math.Max(a.Length, b.Length);
                 c = c.PadLeft(cdPad);
                 d = d.PadLeft(cdPad);
 
-                Notes.Text += $"\n{a} * {c} = \n{a} * {d} = \n{b} * {c} = \n{b} * {d} = \n";
+                Notes.Text += 
+                    $"{a} * {c} = ?₁\n" +
+                    $"{a} * {d} = ?₂\n" +
+                    $"{b} * {c} = ?₃\n" +
+                    $"{b} * {d} = ?₄\n" +
+                    $"?₁ + ?₂ + ?₃ + ?₄\n";
+            }
                 break;
 
             case 1: // Factor
-                var (A, B, C) = (Macro_Factor_A.Text, Macro_Factor_B.Text, Macro_Factor_C.Text);
-                
-                Notes.Text += $"\n?₁ × ?₂ = factor({A}×{C})\n?₁ + ?₂ = {B}\n(𝑥 ± ?₁)(𝑥 ± ?₂)\n";
+            {
+                var (aStr, bStr, cStr) = (Macro_Factor_A.Text, Macro_Factor_B.Text, Macro_Factor_C.Text);
+
+                bool isANum = int.TryParse(aStr, out int a);
+                bool isCNum = int.TryParse(cStr, out int c);
+                string acStr = isANum && isCNum ? $"{a * c}" : $"({aStr}×{bStr})";
+
+                Notes.Text +=
+                    $"{aStr}𝑥² + {bStr}𝑥 + {cStr}\n" +
+                    $"?₁ + ?₂ = {bStr.PadLeft(acStr.Length)}\n" +
+                    $"?₁ × ?₂ = {acStr.PadLeft(bStr.Length)}\n" +
+                    $"(𝑥 + ?₁)(𝑥 + ?₂)\n";
+            }
                 break;
         }
     }
