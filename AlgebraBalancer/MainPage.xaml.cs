@@ -47,7 +47,7 @@ public sealed partial class MainPage : Page
         {
             Inputs.Children.Add(new AlgebraInput(header));
         }
-        SetVisibleMacro(-1);
+        //SetVisibleMacro(-1);
     }
 
     private static string Calculations(int x)
@@ -250,6 +250,12 @@ public sealed partial class MainPage : Page
                 d = d.PadLeft(cdPad);
 
                 Notes.Text += $"\n{a} * {c} = \n{a} * {d} = \n{b} * {c} = \n{b} * {d} = \n";
+                break;
+
+            case 1: // Factor
+                var (A, B, C) = (Macro_Factor_A.Text, Macro_Factor_B.Text, Macro_Factor_C.Text);
+                
+                Notes.Text += $"\n?₁ × ?₂ = factor({A}×{C})\n?₁ + ?₂ = {B}\n(𝑥 ± ?₁)(𝑥 ± ?₂)\n";
                 break;
         }
     }

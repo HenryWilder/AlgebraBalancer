@@ -9,11 +9,9 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation.Metadata;
 
-using static AlgebraBalancer.Algebra;
-
 namespace AlgebraBalancer;
 
-internal class Algebra
+public class Algebra
 {
     public interface IAlgebraicNotation
     {

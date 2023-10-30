@@ -44,7 +44,7 @@
                 <Grid x:Name="Macros" VerticalAlignment="Center">
                     
                     <!-- FOIL Macro -->
-                    <StackPanel x:Name="Macro_FOIL" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Visibility="Collapsed">
                         <TextBlock Text="(" VerticalAlignment="Center" FontSize="18"/>
                         <TextBox x:Name="Macro_FOIL_A" VerticalAlignment="Center"/>
                         <TextBlock Text="+" VerticalAlignment="Center" FontSize="18"/>
@@ -57,12 +57,16 @@
                     </StackPanel>
 
                     <!-- Factor -->
-                    <StackPanel>
-                        <!-- todo -->
+                    <StackPanel Orientation="Horizontal" Visibility="Collapsed" d:Visibility="Visible">
+                        <TextBox x:Name="Macro_Factor_A" VerticalAlignment="Center" PlaceholderText="A"/>
+                        <TextBlock Text="𝑥²+" VerticalAlignment="Center" FontSize="18"/>
+                        <TextBox x:Name="Macro_Factor_B" VerticalAlignment="Center" PlaceholderText="B"/>
+                        <TextBlock Text="𝑥+" VerticalAlignment="Center" FontSize="18"/>
+                        <TextBox x:Name="Macro_Factor_C" VerticalAlignment="Center" PlaceholderText="C"/>
                     </StackPanel>
 
                     <!-- Symbols -->
-                    <TextBox Text="±√⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" VerticalAlignment="Center"/>
+                    <TextBox Text="±√⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed"/>
                 
                 </Grid>
 
