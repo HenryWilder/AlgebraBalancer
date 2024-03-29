@@ -75,6 +75,16 @@
                                     <TextBox x:Name="Macro_Factor_C" VerticalAlignment="Center" PlaceholderText="C"/>
                                 </StackPanel>
 
+                                <!-- Matrix -->
+                                <StackPanel Orientation="Horizontal" Visibility="Collapsed">
+                                    <TextBlock Text="A" VerticalAlignment="Center" FontSize="18"/>
+                                    <TextBox x:Name="Macro_Matrix_ACols" VerticalAlignment="Center" PlaceholderText="cols"/>
+                                    <TextBox x:Name="Macro_Matrix_ARows" VerticalAlignment="Center" PlaceholderText="rows"/>
+                                    <TextBlock Text="B" VerticalAlignment="Center" FontSize="18"/>
+                                    <TextBox x:Name="Macro_Matrix_BCols" VerticalAlignment="Center" PlaceholderText="cols"/>
+                                    <TextBox x:Name="Macro_Matrix_BRows" VerticalAlignment="Center" PlaceholderText="rows"/>
+                                </StackPanel>
+
                                 <!-- Symbols -->
                                 <TextBox Text="×−±√⁻⁰¹²³⁴⁵⁶⁷⁸⁹₋₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed" d:Visibility="Visible" FontFamily="Consolas" CharacterSpacing="200"/>
 
@@ -84,6 +94,7 @@
                             <ComboBox x:Name="MathMacroSelector" Grid.Column="2" VerticalAlignment="Center" SelectionChanged="MathMacroSelector_SelectionChanged">
                                 <ComboBoxItem Content="FOIL"/>
                                 <ComboBoxItem Content="Factor"/>
+                                <ComboBoxItem Content="Matrix"/>
                                 <ComboBoxItem Content="Symbols"/>
                             </ComboBox>
 

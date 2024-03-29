@@ -297,6 +297,44 @@ public sealed partial class MainPage : Page
                     $"(𝑥 + ?₁)(𝑥 + ?₂)\n";
             }
                 break;
+
+            case 2: // Matrix
+            {
+                var (aColStr, aRowStr) = (Macro_Matrix_ACols.Text, Macro_Matrix_ARows.Text);
+                var (bColStr, bRowStr) = (Macro_Matrix_BCols.Text, Macro_Matrix_BRows.Text);
+
+                if (
+                    int.TryParse(aColStr, out int aCol) && aCol > 0 &&
+                    int.TryParse(aRowStr, out int aRow) && aRow > 0 &&
+                    int.TryParse(bColStr, out int bCol) && bCol > 0 &&
+                    int.TryParse(bRowStr, out int bRow) && bRow > 0 &&
+                    aCol == bRow
+                )
+                {
+                    for (int tblRow = 0; tblRow <= aRow; ++tblRow) {
+                        for (int tblCol = 0; tblCol < bCol; ++tblCol)
+                        {
+                            Notes.Text += "( ";
+                            for (int cellComp = 1; cellComp < bRow; ++cellComp)
+                            {
+                                Notes.Text += tblRow == 0 ? ", " : "+ ";
+                            }
+                            Notes.Text += ") ";
+                        }
+                        if (tblRow > 0)
+                        {
+                            Notes.Text += "( ";
+                            for (int cellComp = 1; cellComp < bRow; ++cellComp)
+                            {
+                                Notes.Text += ", ";
+                            }
+                            Notes.Text += ")";
+                        }
+                        Notes.Text += "\n";
+                    }
+                }
+            }
+                break;
         }
     }
 
