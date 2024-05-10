@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <!-- Copyright -->
-        <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2023 Henry Wilder" VerticalAlignment="Top" Padding="9" Height="32"/>
+        <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2024 Amy Wilder" VerticalAlignment="Top" Padding="9" Height="32"/>
 
         <SplitView x:Name="CalculationsPane" Grid.Row="1" PanePlacement="Right" OpenPaneLength="400" DisplayMode="Inline">
 
@@ -37,11 +37,11 @@
                     </Grid.RowDefinitions>
                 
                     <!-- Notes -->
-                    <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Consolas" Header="Notes"/>
+                    <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" Header="Notes"/>
 
                     <!-- Macros Panel -->
                     <StackPanel Grid.Row="1">
-                        <TextBlock Text="Macros" FontFamily="Consolas" Margin="0,0,0,4.5" FontSize="14"/>
+                        <TextBlock Text="Macros" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" Margin="0,0,0,4.5" FontSize="14"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -78,15 +78,15 @@
                                 <!-- Matrix -->
                                 <StackPanel Orientation="Horizontal" Visibility="Collapsed">
                                     <TextBlock Text="A" VerticalAlignment="Center" FontSize="18"/>
-                                    <TextBox x:Name="Macro_Matrix_ACols" VerticalAlignment="Center" PlaceholderText="cols"/>
                                     <TextBox x:Name="Macro_Matrix_ARows" VerticalAlignment="Center" PlaceholderText="rows"/>
+                                    <TextBox x:Name="Macro_Matrix_ACols" VerticalAlignment="Center" PlaceholderText="cols"/>
                                     <TextBlock Text="B" VerticalAlignment="Center" FontSize="18"/>
-                                    <TextBox x:Name="Macro_Matrix_BCols" VerticalAlignment="Center" PlaceholderText="cols"/>
                                     <TextBox x:Name="Macro_Matrix_BRows" VerticalAlignment="Center" PlaceholderText="rows"/>
+                                    <TextBox x:Name="Macro_Matrix_BCols" VerticalAlignment="Center" PlaceholderText="cols"/>
                                 </StackPanel>
 
                                 <!-- Symbols -->
-                                <TextBox Text="×−±√⁻⁰¹²³⁴⁵⁶⁷⁸⁹₋₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed" d:Visibility="Visible" FontFamily="Consolas" CharacterSpacing="200"/>
+                                <TextBox Text="×−±√⁻⁰¹²³⁴⁵⁶⁷⁸⁹₋₀₁₂₃₄₅₆₇₈₉∅∞𝑖𝜋𝜏αβλθεϕ𝑛𝑒" IsReadOnly="True" Visibility="Collapsed" d:Visibility="Visible" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" CharacterSpacing="200"/>
 
                             </Grid>
 
@@ -117,10 +117,10 @@
                         <StackPanel x:Name="Inputs" Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center"/>
 
                         <!-- Math Calculate Button -->
-                        <Button x:Name="CalcBtn" Click="Update" Content="𝑓" HorizontalAlignment="Stretch"/>
+                        <Button x:Name="CalcBtn" Click="Update" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" FontSize="16" Content="Solve" HorizontalAlignment="Stretch"/>
 
                         <!-- Results -->
-                        <TextBlock x:Name="Output" FontFamily="Consolas" FontSize="16" Text="..."/>
+                        <TextBlock x:Name="Output" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" FontSize="14" Text="..."/>
                         <ProgressRing x:Name="OutputProgress" Visibility="Collapsed"/>
 
                     </StackPanel>
