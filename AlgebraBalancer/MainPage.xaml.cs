@@ -686,8 +686,8 @@ public sealed partial class MainPage : Page
         return alignPass;
     }
 
-    private static readonly string rxSource = @"@\[([^\]]*" + CURSOR_SAVER + @"[^\]]*)\]";
-    private static readonly string rxCopy = @"@\[(?!" + CURSOR_SAVER + @")((?:[^\]](?!" + CURSOR_SAVER + @"))*)\]";
+    private static readonly string rxSource = $@"@{{{{((?:(?!}}}}).)*?{CURSOR_SAVER}.*?)}}}}";
+    private static readonly string rxCopy = $@"@{{{{((?:(?!{CURSOR_SAVER}).)*?)}}}}";
 
     private string ApplyDuplications(string text)
     {
@@ -700,19 +700,24 @@ public sealed partial class MainPage : Page
         return text;
     }
 
+    private static readonly string rxEndDuplicationFront = $@"@(?:{{{CURSOR_SAVER}|{CURSOR_SAVER}{{)(.*?)}}}}";
+    private static readonly string rxEndDuplicationBack = $@"@{{{{((?:(?!}}}}).)*?)@{CURSOR_SAVER}}}}}";
+
     private string InlineMacros(string text)
     {
         // Remove all duplicators
-        string duplicatorRemoverSequence = $"@{CURSOR_SAVER}]";
-        if (text.Contains(duplicatorRemoverSequence))
+
+        if (Regex.IsMatch(text, rxEndDuplicationFront + "|" + rxEndDuplicationBack))
         {
-            text = text.Replace(duplicatorRemoverSequence, $"@]{CURSOR_SAVER}");
-            text = Regex.Replace(text, @"@\[(.*?)@\]", "$1");
+            text = Regex.Replace(text, rxEndDuplicationFront, $"{CURSOR_SAVER}@{{{{$1}}}}");
+            text = Regex.Replace(text, rxEndDuplicationBack, $"@{{{{$1}}}}{CURSOR_SAVER}");
+            text = Regex.Replace(text, @"@{{?(.*?)@?}}", "@{{$1}}");
+            text = Regex.Replace(text, @"@{{(.*?)}}", "$1");
         }
 
         // Add duplicator
-        text = Regex.Replace(text, @"@" + CURSOR_SAVER + @"(?!\[.*?\])", $"@[{CURSOR_SAVER}]");
-        text = Regex.Replace(text, @"@(?!\[.*?\])", "@[]");
+        text = Regex.Replace(text, $@"@{CURSOR_SAVER}(?!{{{{)", $"@{{{{{CURSOR_SAVER}}}}}");
+        //text = Regex.Replace(text, @"@(?!{{)", "@{{}}");
 
         return text;
     }
@@ -721,9 +726,9 @@ public sealed partial class MainPage : Page
     {
         int selectionStart = Notes.SelectionStart;
         string updated = Notes.Text.Insert(selectionStart, CURSOR_SAVER);
-        updated = UnicodeReplacements(updated);
         updated = ApplyDuplications(updated);
         updated = InlineMacros(updated);
+        updated = UnicodeReplacements(updated);
         int cursorPos = updated.IndexOf(CURSOR_SAVER);
         Notes.Text = updated.Replace(CURSOR_SAVER, "");
         Notes.SelectionStart = cursorPos;
