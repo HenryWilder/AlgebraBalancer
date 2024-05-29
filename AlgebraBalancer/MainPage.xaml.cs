@@ -359,6 +359,8 @@ public sealed partial class MainPage : Page
         CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
     }
 
+    private static readonly string CURSOR_SAVER = "$CURSOR_POSITION$";
+
     private static readonly Dictionary<string, string> unicodeReplacements = new Dictionary<string, string>{
         { @"\implies", "⇒" },
         { @"¬\implies", "⇏" },
@@ -569,7 +571,9 @@ public sealed partial class MainPage : Page
             }
             for (int i = 0; i < line.Count() - 1; ++i)
             {
-                int partLen = line[i].Length;
+                string part = line[i];
+                int partLen = part.Length;
+                if (part.Contains(CURSOR_SAVER)) partLen -= CURSOR_SAVER.Length;
                 if (partLen > alignments[i]) alignments[i] = partLen;
             }
         }
@@ -577,7 +581,7 @@ public sealed partial class MainPage : Page
             alignLines.Select((line, i) => string.Join('&',
                 line.Select((part, j) => {
                     return j < line.Count() - 1
-                        ? part.PadRight(alignments[j])
+                        ? part.PadRight(alignments[j] + (part.Contains(CURSOR_SAVER) ? CURSOR_SAVER.Length : 0))
                         : part;
                 })
             ))
@@ -586,6 +590,8 @@ public sealed partial class MainPage : Page
 
     private string UnicodeReplacements(string str)
     {
+        // Assume that only one pass can exist at a time, and will either come before the cursor or after. Not both.
+
         string macroPass = Regex.Replace(str, rxUnicodeRelpacement, (Match match) =>
         {
             string capture = match.Captures[0].Value;
@@ -685,9 +691,9 @@ public sealed partial class MainPage : Page
     private void Notes_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         int selectionStart = Notes.SelectionStart;
-        string pre = Notes.Text.Substring(0, selectionStart);
-        int newStart = UnicodeReplacements(pre).Length;
-        Notes.Text = UnicodeReplacements(Notes.Text);
-        Notes.SelectionStart = newStart;
+        string updated = UnicodeReplacements(Notes.Text.Insert(selectionStart, CURSOR_SAVER));
+        int cursorPos = updated.IndexOf(CURSOR_SAVER);
+        Notes.Text = updated.Replace(CURSOR_SAVER, "");
+        Notes.SelectionStart = cursorPos;
     }
 }
