@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Windows.UI.Xaml.Documents;
 using System.Collections;
+using Windows.UI.Xaml.Shapes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -381,6 +382,7 @@ public sealed partial class MainPage : Page
         { @"¬\to", "↛" },
         { @"¬\gets", "↚" },
         { @"\neg", "¬" },
+        { @"\not", "¬" },
         { @"\invneg", "⌐" },
         { @"\ge", "≥" },
         { @"\gg", "≫" },
@@ -396,6 +398,8 @@ public sealed partial class MainPage : Page
         { @"\equiv", "≡" },
         { @"\nequiv", "≢" },
         { @"\ne", "≠" },
+        { @"\empty", "∅" },
+        { @"\emptyset", "∅" },
         { @"\exists", "∃" },
         { @"\nexists", "∄" },
         { @"\in", "∈" },
@@ -549,7 +553,36 @@ public sealed partial class MainPage : Page
     private static readonly List<string> unicodeReplacementKeys =
         unicodeReplacements.Keys.Select((key) => key.Replace(@"\", @"\\")).ToList();
 
-    private static readonly string rxUnicodeRelpacement = @"(?<!\\)(" + string.Join("|", unicodeReplacementKeys) + @")(?=\s|\\)";
+    private static readonly string rxUnicodeRelpacement =
+        @"(?<!\\)(" + string.Join("|", unicodeReplacementKeys) + @")(?= |\\)";
+
+    private string AlignMath(string str)
+    {
+        var lines = str.Split('\r').Select((line) => Regex.Replace(line, @" +&", " &")).ToList();
+        var alignLines = lines.Select((line) => line.Split('&'));
+        var alignments = new List<int>();
+        foreach (string[] line in alignLines)
+        {
+            while (alignments.Count() < line.Count() - 1)
+            {
+                alignments.Add(-1);
+            }
+            for (int i = 0; i < line.Count() - 1; ++i)
+            {
+                int partLen = line[i].Length;
+                if (partLen > alignments[i]) alignments[i] = partLen;
+            }
+        }
+        return string.Join('\r',
+            alignLines.Select((line, i) => string.Join('&',
+                line.Select((part, j) => {
+                    return j < line.Count() - 1
+                        ? part.PadRight(alignments[j])
+                        : part;
+                })
+            ))
+        );
+    }
 
     private string UnicodeReplacements(string str)
     {
@@ -642,7 +675,11 @@ public sealed partial class MainPage : Page
             ;
         });
 
-        return subscriptPass;
+        string alignPass = Regex.IsMatch(subscriptPass, @"^\\align\b")
+            ? AlignMath(subscriptPass)
+            : subscriptPass;
+
+        return alignPass;
     }
 
     private void Notes_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
