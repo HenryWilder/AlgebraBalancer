@@ -19,6 +19,9 @@ using static AlgebraBalancer.Algebra;
 using System.Xml.Linq;
 using Windows.Web.Syndication;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using Windows.UI.Xaml.Documents;
+using System.Collections;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -353,5 +356,301 @@ public sealed partial class MainPage : Page
     private void ShowPane_Click(object sender, RoutedEventArgs e)
     {
         CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
+    }
+
+    private static readonly Dictionary<string, string> unicodeReplacements = new Dictionary<string, string>{
+        { @"\implies", "⇒" },
+        { @"¬\implies", "⇏" },
+        { @"\impliedby", "⇐" },
+        { @"¬\impliedby", "⇍" },
+        { @"\iff", "⇔" },
+        { @"¬\iff", "⇎" },
+        { @"\uArr", "⇑" },
+        { @"\dArr", "⇓" },
+        { @"\viff", "⇕" },
+        { @"\mapsto", "↦" },
+        { @"\MapsUp", "↥" },
+        { @"\MapsDown", "↧" },
+        { @"\mapsfrom", "↤" },
+        { @"\Mapsfrom", "⤆" },
+        { @"\Mapsto", "⤇" },
+        { @"\to", "→" },
+        { @"\gets", "←" },
+        { @"\uarr", "↑" },
+        { @"\darr", "↓" },
+        { @"¬\to", "↛" },
+        { @"¬\gets", "↚" },
+        { @"\neg", "¬" },
+        { @"\invneg", "⌐" },
+        { @"\ge", "≥" },
+        { @"\gg", "≫" },
+        { @"\ggg", "⋙" },
+        { @"\le", "≤" },
+        { @"\ll", "≪" },
+        { @"\lll", "⋘" },
+        { @"\approx", "≈" },
+        { @"\triangleq", "≜" },
+        { @"\defeq", "≝" },
+        { @"\meq", "≞" },
+        { @"\?eq", "≟" },
+        { @"\equiv", "≡" },
+        { @"\nequiv", "≢" },
+        { @"\ne", "≠" },
+        { @"\exists", "∃" },
+        { @"\nexists", "∄" },
+        { @"\in", "∈" },
+        { @"\notin", "∉" },
+        { @"\ni", "∋" },
+        { @"\nni", "∌" },
+        { @"\cup", "∪" },
+        { @"\union", "∪" },
+        { @"\cap", "∩" },
+        { @"\intersection", "∩" },
+        { @"\land", "∧" },
+        { @"\wedge", "∧" },
+        { @"\lor", "∨" },
+        { @"\vee", "∨" },
+        { @"\subset", "⊂" },
+        { @"\supset", "⊃" },
+        { @"\nsubset", "⊄" },
+        { @"\nsupset", "⊅" },
+        { @"\subseteq", "⊆" },
+        { @"\supseteq", "⊇" },
+        { @"\nsubseteq", "⊈" },
+        { @"\nsupseteq", "⊉" },
+        { @"\subsetneq", "⊊" },
+        { @"\supsetneq", "⊋" },
+        { @"\complement", "∁" },
+        { @"\forall", "∀" },
+        { @"\partial", "∂" },
+        { @"\setminus", "⧵" },
+        { @"\oplus", "⊕" },
+        { @"\ominus", "⊖" },
+        { @"\otimes", "⊗" },
+        { @"\oslash", "⊘" },
+        { @"\odot", "⊙" },
+        { @"\circledcirc", "⊚" },
+        { @"\vdash", "⊢" },
+        { @"\dashv", "⊣" },
+        { @"\top", "⊤" },
+        { @"\bot", "⊥" },
+        { @"\circ", "∘" },
+        { @"\ast", "∗" },
+        { @"\times", "·" },
+        { @"\cdot", "⨯" },
+        { @"\div", "÷" },
+        { @"\prod", "∏" },
+        { @"\coprod", "∐" },
+        { @"\sum", "∑" },
+        { @"\int", "∫" },
+        { @"\iint", "∬" },
+        { @"\iiint", "∭" },
+        { @"\therefore", "∴" },
+        { @"\because", "∵" },
+        { @"\coloneq", "≔" },
+        { @"\between", "≬" },
+        { @"\succ", "≺" },
+        { @"\prec", "≻" },
+        { @"\pm", "±" },
+        { @"\mp", "∓" },
+        { @"\minus", "−" },
+        { @"\propto", "∝" },
+        { @"\infty", "∞" },
+        { @"\ldots", "…" },
+        { @"\vdots", "⋮" },
+        { @"\cdots", "⋯" },
+        { @"\iddots", "⋰" },
+        { @"\ddots", "⋱" },
+        { @"\frac", "⁄" },
+        { @"\sqrt", "√" },
+        { @"\deg", "°" },
+        { @"\pi", "π" },
+        { @"\Pi", "Π" },
+        { @"\tau", "τ" },
+        { @"\lambda", "λ" },
+        // I think varphi and phi are swapped in VS, they look correct if you copy and paste them elsewhere
+        { @"\varphi", "φ" },
+        { @"\phi", "ϕ" },
+        { @"\Phi", "Φ" },
+        { @"\epsilon", "ϵ" },
+        { @"\varepsilon", "ε" },
+        { @"\gamma", "γ" },
+        { @"\alpha", "α" },
+        { @"\omega", "ω" },
+        { @"\Omega", "Ω" },
+        { @"\beta", "β" },
+        { @"\sigma", "σ" },
+        { @"\Sigma", "Σ" },
+        { @"\delta", "δ" },
+        { @"\Delta", "Δ" },
+        { @"\nabla", "∇" },
+        { @"\varsigma", "ς" },
+        { @"\mu", "μ" },
+        { @"\theta", "θ" },
+        { @"\Theta", "Θ" },
+        { @"\a", "𝑎" },
+        { @"\b", "𝑏" },
+        { @"\c", "𝑐" },
+        { @"\d", "𝑑" },
+        { @"\e", "𝑒" },
+        { @"\f", "𝑓" },
+        { @"\g", "𝑔" },
+        { @"\i", "𝑖" },
+        { @"\j", "𝑗" },
+        { @"\k", "𝑘" },
+        { @"\l", "𝑙" },
+        { @"\m", "𝑚" },
+        { @"\n", "𝑛" },
+        { @"\o", "𝑜" },
+        { @"\p", "𝑝" },
+        { @"\q", "𝑞" },
+        { @"\r", "𝑟" },
+        { @"\s", "𝑠" },
+        { @"\t", "𝑡" },
+        { @"\u", "𝑢" },
+        { @"\v", "𝑣" },
+        { @"\w", "𝑤" },
+        { @"\x", "𝑥" },
+        { @"\y", "𝑦" },
+        { @"\z", "𝑧" },
+        { @"\O", "𝓞" },
+        { @"\bbA", "𝔸" },
+        { @"\bbB", "𝔹" },
+        { @"\bbD", "𝔻" },
+        { @"\bbE", "𝔼" },
+        { @"\bbF", "𝔽" },
+        { @"\bbG", "𝔾" },
+        { @"\bbH", "ℍ" },
+        { @"\bbI", "𝕀" },
+        { @"\bbJ", "𝕁" },
+        { @"\bbK", "𝕂" },
+        { @"\bbL", "𝕃" },
+        { @"\bbM", "𝕄" },
+        { @"\bbN", "ℕ" },
+        { @"\N", "ℕ" },
+        { @"\bbO", "𝕆" },
+        { @"\bbP", "ℙ" },
+        { @"\bbQ", "ℚ" },
+        { @"\Q", "ℚ" },
+        { @"\bbR", "ℝ" },
+        { @"\R", "ℝ" },
+        { @"\bbS", "𝕊" },
+        { @"\bbT", "𝕋" },
+        { @"\bbU", "𝕌" },
+        { @"\bbV", "𝕍" },
+        { @"\bbW", "𝕎" },
+        { @"\bbX", "𝕏" },
+        { @"\bbY", "𝕐" },
+        { @"\bbZ", "ℤ" },
+        { @"\Z", "ℤ" },
+    };
+
+    // Escape prefix-"\" on macros to make them a literal "\" instead of an escape of its own
+    private static readonly List<string> unicodeReplacementKeys =
+        unicodeReplacements.Keys.Select((key) => key.Replace(@"\", @"\\")).ToList();
+
+    private static readonly string rxUnicodeRelpacement = @"(?<!\\)(" + string.Join("|", unicodeReplacementKeys) + @")(?=\s|\\)";
+
+    private string UnicodeReplacements(string str)
+    {
+        string macroPass = Regex.Replace(str, rxUnicodeRelpacement, (Match match) =>
+        {
+            string capture = match.Captures[0].Value;
+            return unicodeReplacements.TryGetValue(capture, out string replacement)
+                ? replacement
+                : capture; // no change
+        });
+
+        string superscriptPass = Regex.Replace(macroPass, @"(\^{[0-9a-pr-z\-+=()]+})", (Match match) =>
+        {
+            string capture = match.Captures[0].Value;
+            return capture.Substring("^{".Length, capture.Length - "^{}".Length)
+                .Replace("0", "⁰")
+                .Replace("1", "¹")
+                .Replace("2", "²")
+                .Replace("3", "³")
+                .Replace("4", "⁴")
+                .Replace("5", "⁵")
+                .Replace("6", "⁶")
+                .Replace("7", "⁷")
+                .Replace("8", "⁸")
+                .Replace("9", "⁹")
+                .Replace("+", "⁺")
+                .Replace("-", "⁻")
+                .Replace("=", "⁼")
+                .Replace("(", "⁽")
+                .Replace(")", "⁾")
+                .Replace("a", "ᵃ")
+                .Replace("b", "ᵇ")
+                .Replace("c", "ᶜ")
+                .Replace("d", "ᵈ")
+                .Replace("e", "ᵉ")
+                .Replace("f", "ᶠ")
+                .Replace("g", "ᵍ")
+                .Replace("h", "ʰ")
+                .Replace("i", "ⁱ")
+                .Replace("j", "ʲ")
+                .Replace("k", "ᵏ")
+                .Replace("l", "ˡ")
+                .Replace("m", "ᵐ")
+                .Replace("n", "ⁿ")
+                .Replace("o", "ᵒ")
+                .Replace("p", "ᵖ")
+                .Replace("r", "ʳ")
+                .Replace("s", "ˢ")
+                .Replace("t", "ᵗ")
+                .Replace("u", "ᵘ")
+                .Replace("v", "ᵛ")
+                .Replace("w", "ʷ")
+                .Replace("x", "ˣ")
+                .Replace("y", "ʸ")
+                .Replace("z", "ᶻ")
+            ;
+        });
+
+        string subscriptPass = Regex.Replace(superscriptPass, @"(_{[0-9aexhklnopst\-+=()]+})", (Match match) =>
+        {
+            string capture = match.Captures[0].Value;
+            return capture.Substring("_{".Length, capture.Length - "_{}".Length)
+                .Replace("0", "₀")
+                .Replace("1", "₁")
+                .Replace("2", "₂")
+                .Replace("3", "₃")
+                .Replace("4", "₄")
+                .Replace("5", "₅")
+                .Replace("6", "₆")
+                .Replace("7", "₇")
+                .Replace("8", "₈")
+                .Replace("9", "₉")
+                .Replace("+", "₊")
+                .Replace("-", "₋")
+                .Replace("=", "₌")
+                .Replace("(", "₍")
+                .Replace(")", "₎")
+                .Replace("a", "ₐ")
+                .Replace("e", "ₑ")
+                .Replace("x", "ₓ")
+                .Replace("h", "ₕ")
+                .Replace("k", "ₖ")
+                .Replace("l", "ₗ")
+                .Replace("m", "ₘ")
+                .Replace("n", "ₙ")
+                .Replace("o", "ₒ")
+                .Replace("p", "ₚ")
+                .Replace("s", "ₛ")
+                .Replace("t", "ₜ")
+            ;
+        });
+
+        return subscriptPass;
+    }
+
+    private void Notes_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    {
+        int selectionStart = Notes.SelectionStart;
+        string pre = Notes.Text.Substring(0, selectionStart);
+        int newStart = UnicodeReplacements(pre).Length;
+        Notes.Text = UnicodeReplacements(Notes.Text);
+        Notes.SelectionStart = newStart;
     }
 }

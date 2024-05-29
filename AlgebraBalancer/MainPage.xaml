@@ -37,7 +37,7 @@
                     </Grid.RowDefinitions>
                 
                     <!-- Notes -->
-                    <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" Header="Notes"/>
+                    <TextBox x:Name="Notes" AcceptsReturn="True" Padding="10" PlaceholderText="𝑓(𝑥) = { ∑(𝑎𝑥² + 𝑏𝑥 + 𝑐)  √𝑥 ∈ ℕ" ManipulationMode="None" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" Header="Notes" TextChanging="Notes_TextChanging"/>
 
                     <!-- Macros Panel -->
                     <StackPanel Grid.Row="1">
