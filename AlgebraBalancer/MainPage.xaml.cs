@@ -396,7 +396,7 @@ public sealed partial class MainPage : Page
         { @"\triangleq\", "≜" },
         { @"\defeq\", "≝" },
         { @"\meq\", "≞" },
-        { @"\?eq\", "≟" },
+        { @"\qeq\", "≟" },
         { @"\equiv\", "≡" },
         { @"\nequiv\", "≢" },
         { @"\ne\", "≠" },
