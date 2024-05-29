@@ -560,7 +560,15 @@ public sealed partial class MainPage : Page
 
     private string AlignMath(string str)
     {
-        var lines = str.Split('\r').Select((line) => Regex.Replace(line, @" +&", " &")).ToList();
+        static string MinimizePadding(string part)
+        {
+            part = Regex.Replace(part, $@"^ *{CURSOR_SAVER} *$", CURSOR_SAVER);
+            part = Regex.Replace(part, @" +", " ");
+            part = Regex.Replace(part, @"^ +$", "");
+            return part;
+        }
+
+        var lines = str.Split("\r").Select((line) => Regex.Replace(line, @" +&", " &")).ToList();
         var alignLines = lines.Select((line) => line.Split('&'));
         var alignments = new List<int>();
         foreach (string[] line in alignLines)
@@ -571,18 +579,24 @@ public sealed partial class MainPage : Page
             }
             for (int i = 0; i < line.Count() - 1; ++i)
             {
-                string part = line[i];
+                string part = MinimizePadding(line[i]).Replace(CURSOR_SAVER, "");
+                if (i == 0) part = Regex.Replace(part, @"^ +", "");
                 int partLen = part.Length;
-                if (part.Contains(CURSOR_SAVER)) partLen -= CURSOR_SAVER.Length;
                 if (partLen > alignments[i]) alignments[i] = partLen;
             }
         }
-        return string.Join('\r',
+        return string.Join("\r",
             alignLines.Select((line, i) => string.Join('&',
                 line.Select((part, j) => {
-                    return j < line.Count() - 1
-                        ? part.PadRight(alignments[j] + (part.Contains(CURSOR_SAVER) ? CURSOR_SAVER.Length : 0))
-                        : part;
+                    if (j < line.Count() - 1 && j < alignments.Count())
+                    {
+                        int accountForCursor = part.Contains(CURSOR_SAVER) ? CURSOR_SAVER.Length : 0;
+                        int partWidth = alignments[j] + accountForCursor;
+                        part = MinimizePadding(part);
+                        if (j == 0) part = Regex.Replace(part, @"^ +", "");
+                        part = (j & 1) == 0 ? part.PadLeft(partWidth) : part.PadRight(partWidth);
+                    }
+                    return part;
                 })
             ))
         );
