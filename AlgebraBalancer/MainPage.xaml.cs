@@ -359,7 +359,7 @@ public sealed partial class MainPage : Page
         CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
     }
 
-    private static readonly string CURSOR_SAVER = "$CURSOR_POSITION$";
+    private static readonly string CURSOR_SAVER = "\f";
 
     private static readonly Dictionary<string, string> unicodeReplacements = new Dictionary<string, string>{
         { @"\implies", "⇒" },
@@ -590,8 +590,6 @@ public sealed partial class MainPage : Page
 
     private string UnicodeReplacements(string str)
     {
-        // Assume that only one pass can exist at a time, and will either come before the cursor or after. Not both.
-
         string macroPass = Regex.Replace(str, rxUnicodeRelpacement, (Match match) =>
         {
             string capture = match.Captures[0].Value;
@@ -688,10 +686,44 @@ public sealed partial class MainPage : Page
         return alignPass;
     }
 
+    private static readonly string rxSource = @"@\[([^\]]*" + CURSOR_SAVER + @"[^\]]*)\]";
+    private static readonly string rxCopy = @"@\[(?!" + CURSOR_SAVER + @")((?:[^\]](?!" + CURSOR_SAVER + @"))*)\]";
+
+    private string ApplyDuplications(string text)
+    {
+        var sourceMatch = Regex.Match(text, rxSource);
+        if (sourceMatch.Success)
+        {
+            string replacement = sourceMatch.Captures[0].Value.Replace(CURSOR_SAVER, "");
+            text = Regex.Replace(text, rxCopy, replacement);
+        }
+        return text;
+    }
+
+    private string InlineMacros(string text)
+    {
+        // Remove all duplicators
+        string duplicatorRemoverSequence = $"@{CURSOR_SAVER}]";
+        if (text.Contains(duplicatorRemoverSequence))
+        {
+            text = text.Replace(duplicatorRemoverSequence, $"@]{CURSOR_SAVER}");
+            text = Regex.Replace(text, @"@\[(.*?)@\]", "$1");
+        }
+
+        // Add duplicator
+        text = Regex.Replace(text, @"@" + CURSOR_SAVER + @"(?!\[.*?\])", $"@[{CURSOR_SAVER}]");
+        text = Regex.Replace(text, @"@(?!\[.*?\])", "@[]");
+
+        return text;
+    }
+
     private void Notes_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         int selectionStart = Notes.SelectionStart;
-        string updated = UnicodeReplacements(Notes.Text.Insert(selectionStart, CURSOR_SAVER));
+        string updated = Notes.Text.Insert(selectionStart, CURSOR_SAVER);
+        updated = UnicodeReplacements(updated);
+        updated = ApplyDuplications(updated);
+        updated = InlineMacros(updated);
         int cursorPos = updated.IndexOf(CURSOR_SAVER);
         Notes.Text = updated.Replace(CURSOR_SAVER, "");
         Notes.SelectionStart = cursorPos;
