@@ -679,7 +679,7 @@ public sealed partial class MainPage : Page
             ;
         });
 
-        string alignPass = Regex.IsMatch(subscriptPass, @"^\\align\b")
+        string alignPass = !Regex.IsMatch(subscriptPass, @"^\\noalign\b")
             ? AlignMath(subscriptPass)
             : subscriptPass;
 
