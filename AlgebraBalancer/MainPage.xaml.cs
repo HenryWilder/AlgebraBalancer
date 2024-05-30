@@ -750,11 +750,155 @@ public sealed partial class MainPage : Page
         Notes.SelectionStart = cursorPos;
     }
 
+    private string StringFOIL(string str)
+    {
+        str = Regex.Replace(str, @" *", "");
+
+        Match match;
+
+        if ((match = Regex.Match(str, @"^\((-?[0-9a-z]+)([+-][0-9a-z]+)\)\^2$")).Success)
+        {
+            string aStr = match.Groups[1].Value;
+            string bStr = match.Groups[2].Value;
+            
+            bool isAInt = int.TryParse(aStr, out int a);
+            bool isBInt = int.TryParse(bStr, out int b);
+
+            if (isAInt && isBInt)
+            {
+                return $"{a*a+2*a*b+b*b}";
+            }
+            else if (isAInt)
+            {
+                return $"{a*a} + {2*a}({bStr}) + ({bStr})^2";
+            }
+            else if (isBInt)
+            {
+                return $"({aStr})^2 + {2*b}({aStr}) + {b*b}";
+            }
+            else
+            {
+                return $"({aStr})^2 + 2({aStr})({bStr}) + ({bStr})^2";
+            }
+        }
+
+        if ((match = Regex.Match(str, @"^\((-?[0-9a-z]+)([+-][0-9a-z]+)\)\((-?[0-9a-z]+)([+-][0-9a-z]+)\)$")).Success)
+        {
+            string aStr = match.Groups[1].Value;
+            string bStr = match.Groups[2].Value;
+            string cStr = match.Groups[3].Value;
+            string dStr = match.Groups[4].Value;
+
+            bool isAInt = int.TryParse(aStr, out int a);
+            bool isBInt = int.TryParse(bStr, out int b);
+            bool isCInt = int.TryParse(cStr, out int c);
+            bool isDInt = int.TryParse(dStr, out int d);
+
+            if (isAInt && isBInt && isCInt && isDInt)
+            {
+                return $"{a * c + b * c + a * d + b * d}";
+            }
+            if (isAInt && isBInt && isCInt && !isDInt)
+            {
+                return $"{a + b}({dStr}) + {a * c + b * c} ";
+            }
+            if (isAInt && isBInt && !isCInt && isDInt)
+            {
+                return $"{a + b}({cStr}) + {a * d + b * d} ";
+            }
+            if (isAInt && !isBInt && isCInt && isDInt)
+            {
+                return $"{c + d}({bStr}) + {c * a + d * a} ";
+            }
+            if (!isAInt && isBInt && isCInt && isDInt)
+            {
+                return $"{c + d}({aStr}) + {b * a + b * a} ";
+            }
+            if (!isAInt && isBInt && !isCInt && isDInt)
+            {
+                return $"({aStr})({cStr}) + {b}({cStr}) + {d}({aStr}) + {b * d}";
+            }
+            if (isAInt && !isBInt && isCInt && !isDInt)
+            {
+                return $"({bStr})({dStr}) + {a}({dStr}) + {c}({bStr}) + {a * c}";
+            }
+            if (isAInt && isBInt && !isCInt && !isDInt)
+            {
+                return $"{a + b}({cStr}) + {a + b}({dStr})";
+            }
+            if (!isAInt && !isBInt && isCInt && isDInt)
+            {
+                return $"{c + d}({aStr}) + {c + d}({bStr})";
+            }
+            if (!isAInt && !isBInt && !isCInt && !isDInt)
+            {
+                return $"({aStr})({cStr}) + ({bStr})({cStr}) + ({dStr})({aStr}) + ({bStr})({dStr})";
+            }
+        }
+
+        return str;
+    }
+
+    private string StringFactor(string str)
+    {
+        str = Regex.Replace(str, @" *", "");
+        Match match;
+        if ((match = Regex.Match(str, @"^\((-?[0-9a-z]+)([+-][0-9a-z]+)\)\^2$")).Success)
+        {
+            string aStr = match.Groups[1].Value;
+            string bStr = match.Groups[2].Value;
+
+            bool isAInt = int.TryParse(aStr, out int a);
+            bool isBInt = int.TryParse(bStr, out int b);
+
+            if (isAInt && isBInt)
+            {
+                return $"{a * a + 2 * a * b + b * b}";
+            }
+            else if (isAInt)
+            {
+                return $"{a * a} + {2 * a}{bStr} + {bStr}^2";
+            }
+            else if (isBInt)
+            {
+                return $"{aStr}^2 + {2 * b}{aStr} + {b * b}";
+            }
+            else
+            {
+                return $"{aStr}^2 + 2{aStr}{bStr} + {bStr}^2";
+            }
+        }
+        return str;
+    }
+
     private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
     {
         var shiftState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift);
         bool isShifting = (shiftState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
-        if (e.Key == VirtualKey.Tab)
+        if (e.Key == VirtualKey.F && Notes.SelectionLength > 0)
+        {
+            int selectionStart = Notes.SelectionStart;
+            int selectionLength = Notes.SelectionLength;
+            string polytext = Notes.SelectedText;
+
+            // FOIL
+            if (isShifting)
+            {
+                polytext = StringFOIL(polytext);
+            }
+
+            // Factor
+            else
+            {
+                polytext = StringFactor(polytext);
+            }
+
+            Notes.Text = Notes.Text.Remove(selectionStart, selectionLength).Insert(selectionStart, polytext);
+            Notes.SelectionStart = selectionStart;
+            Notes.SelectionLength = polytext.Length;
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.Tab)
         {
             int selectionStart = Notes.SelectionStart;
             int selectionLength = Notes.SelectionLength;
