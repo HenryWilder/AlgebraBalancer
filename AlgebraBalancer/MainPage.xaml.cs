@@ -23,6 +23,8 @@ using System.Text.RegularExpressions;
 using Windows.UI.Xaml.Documents;
 using System.Collections;
 using Windows.UI.Xaml.Shapes;
+using Windows.UI.Core;
+using Windows.System;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -746,5 +748,80 @@ public sealed partial class MainPage : Page
         int cursorPos = updated.IndexOf(CURSOR_SAVER);
         Notes.Text = updated.Replace(CURSOR_SAVER, "");
         Notes.SelectionStart = cursorPos;
+    }
+
+    private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        var shiftState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift);
+        bool isShifting = (shiftState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+        if (e.Key == VirtualKey.Tab)
+        {
+            int selectionStart = Notes.SelectionStart;
+            int selectionLength = Notes.SelectionLength;
+            if (isShifting)
+            {
+                int lineStart = Math.Max(Notes.Text.Substring(0, selectionStart).LastIndexOf('\r'), 0);
+                int erasing = 0;
+                for (; erasing < 4
+                    && lineStart + erasing < Notes.Text.Length
+                    && Notes.Text[lineStart + erasing] == ' ';
+                    ++erasing) { }
+                if (erasing > 0)
+                {
+                    Notes.Text = Notes.Text.Remove(lineStart, erasing);
+                    Notes.SelectionStart = selectionStart - erasing;
+                    Notes.SelectionLength = selectionLength;
+                }
+            }
+            else
+            {
+                Notes.Text = Notes.Text.Insert(selectionStart, "    ");
+                Notes.SelectionStart = selectionStart + 4;
+                Notes.SelectionLength = selectionLength;
+            }
+            e.Handled = true;
+        }
+        else if ((e.Key == VirtualKey.Number9 && isShifting) || e.Key == ((VirtualKey)0xDB))
+        {
+            string open, close;
+            if (e.Key == VirtualKey.Number9 && isShifting) (open, close) = ("(", ")");
+            else if (e.Key == ((VirtualKey)0xDB)) (open, close) = isShifting ? ("{", "}") : ("[", "]");
+            else throw new Exception("Unreachable");
+            string text = Notes.Text;
+            text = text
+                .Insert(Notes.SelectionStart + Notes.SelectionLength, close)
+                .Insert(Notes.SelectionStart, open);
+            int start = Notes.SelectionStart + 1;
+            int length = Notes.SelectionLength;
+            Notes.Text = text;
+            Notes.SelectionStart = start;
+            Notes.SelectionLength = length;
+            e.Handled = true;
+        }
+        else if ((e.Key == VirtualKey.Number0 && isShifting) || e.Key == ((VirtualKey)0xDD))
+        {
+            int selectionPosition = Notes.SelectionStart;
+            if (selectionPosition < Notes.Text.Length && Notes.Text[selectionPosition] is ')' or ']' or '}')
+            {
+                string replacement;
+                if (e.Key == VirtualKey.Number0 && isShifting) replacement = ")";
+                else if (e.Key == ((VirtualKey)0xDD)) replacement = isShifting ? "}" : "]";
+                else throw new Exception("Unreachable");
+                Notes.Text = Notes.Text.Remove(selectionPosition, 1).Insert(selectionPosition, replacement);
+                Notes.SelectionStart = selectionPosition + 1;
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == VirtualKey.Back)
+        {
+            int newSelectPosition = Math.Max(Notes.SelectionStart - 1, 0);
+            if (Notes.SelectionLength == 0 && Notes.Text.Length >= newSelectPosition + 2 &&
+                Notes.Text.Substring(newSelectPosition, 2) is "()" or "[]" or "{}" or "<>" or "[)" or "(]")
+            {
+                Notes.Text = Notes.Text.Remove(newSelectPosition, 2);
+                Notes.SelectionStart = newSelectPosition;
+                e.Handled = true;
+            }
+        }
     }
 }
