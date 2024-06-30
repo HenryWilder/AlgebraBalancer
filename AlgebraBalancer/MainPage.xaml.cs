@@ -35,15 +35,15 @@ namespace AlgebraBalancer;
 /// </summary>
 public sealed partial class MainPage : Page
 {
-    private void SetVisibleMacro(int index)
-    {
-        foreach (var child in Macros.Children)
-        {
-            child.Visibility = Visibility.Collapsed;
-        }
-        if (index == -1) { return; }
-        Macros.Children[index].Visibility = Visibility.Visible;
-    }
+    //private void SetVisibleMacro(int index)
+    //{
+    //    foreach (var child in Macros.Children)
+    //    {
+    //        child.Visibility = Visibility.Collapsed;
+    //    }
+    //    if (index == -1) { return; }
+    //    Macros.Children[index].Visibility = Visibility.Visible;
+    //}
 
     public MainPage()
     {
@@ -52,6 +52,16 @@ public sealed partial class MainPage : Page
         foreach (string header in headers)
         {
             Inputs.Children.Add(new AlgebraInput(header));
+        }
+        foreach (var item in Inputs.Children)
+        {
+            item.PreviewKeyDown += (object sender, KeyRoutedEventArgs e) => {
+                if (e.Key == VirtualKey.Enter)
+                {
+                    Update(null, new());
+                    e.Handled = true;
+                }
+            };
         }
         //SetVisibleMacro(-1);
     }
@@ -271,93 +281,93 @@ public sealed partial class MainPage : Page
         CalcBtn.IsEnabled = true;
     }
 
-    private void MathMacroButton_Click(object sender, RoutedEventArgs e)
-    {
-        switch (MathMacroSelector.SelectedIndex)
-        {
-            case 0: // FOIL
-            {
-                var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
+    //private void MathMacroButton_Click(object sender, RoutedEventArgs e)
+    //{
+    //    switch (MathMacroSelector.SelectedIndex)
+    //    {
+    //        case 0: // FOIL
+    //        {
+    //            var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
 
-                Notes.Text += $"({a} + {b})({c} + {d})\n";
+    //            Notes.Text += $"({a} + {b})({c} + {d})\n";
 
-                int abPad = Math.Max(a.Length, b.Length);
-                a = a.PadLeft(abPad);
-                b = b.PadLeft(abPad);
+    //            int abPad = Math.Max(a.Length, b.Length);
+    //            a = a.PadLeft(abPad);
+    //            b = b.PadLeft(abPad);
 
-                int cdPad = Math.Max(a.Length, b.Length);
-                c = c.PadLeft(cdPad);
-                d = d.PadLeft(cdPad);
+    //            int cdPad = Math.Max(a.Length, b.Length);
+    //            c = c.PadLeft(cdPad);
+    //            d = d.PadLeft(cdPad);
 
-                Notes.Text += 
-                    $"{a} × {c} = ?₁\n" +
-                    $"{a} × {d} = ?₂\n" +
-                    $"{b} × {c} = ?₃\n" +
-                    $"{b} × {d} = ?₄\n" +
-                    $"?₁ + ?₂ + ?₃ + ?₄\n";
-            }
-                break;
+    //            Notes.Text += 
+    //                $"{a} × {c} = ?₁\n" +
+    //                $"{a} × {d} = ?₂\n" +
+    //                $"{b} × {c} = ?₃\n" +
+    //                $"{b} × {d} = ?₄\n" +
+    //                $"?₁ + ?₂ + ?₃ + ?₄\n";
+    //        }
+    //            break;
 
-            case 1: // Factor
-            {
-                var (aStr, bStr, cStr) = (Macro_Factor_A.Text, Macro_Factor_B.Text, Macro_Factor_C.Text);
+    //        case 1: // Factor
+    //        {
+    //            var (aStr, bStr, cStr) = (Macro_Factor_A.Text, Macro_Factor_B.Text, Macro_Factor_C.Text);
 
-                bool isANum = int.TryParse(aStr, out int a);
-                bool isCNum = int.TryParse(cStr, out int c);
-                string acStr = isANum && isCNum ? $"{a * c}" : $"({aStr} × {bStr})";
+    //            bool isANum = int.TryParse(aStr, out int a);
+    //            bool isCNum = int.TryParse(cStr, out int c);
+    //            string acStr = isANum && isCNum ? $"{a * c}" : $"({aStr} × {bStr})";
 
-                Notes.Text +=
-                    $"{aStr}𝑥² + {bStr}𝑥 + {cStr}\n" +
-                    $"?₁ + ?₂ = {bStr.PadLeft(acStr.Length)}\n" +
-                    $"?₁ × ?₂ = {acStr.PadLeft(bStr.Length)}\n" +
-                    $"(𝑥 + ?₁)(𝑥 + ?₂)\n";
-            }
-                break;
+    //            Notes.Text +=
+    //                $"{aStr}𝑥² + {bStr}𝑥 + {cStr}\n" +
+    //                $"?₁ + ?₂ = {bStr.PadLeft(acStr.Length)}\n" +
+    //                $"?₁ × ?₂ = {acStr.PadLeft(bStr.Length)}\n" +
+    //                $"(𝑥 + ?₁)(𝑥 + ?₂)\n";
+    //        }
+    //            break;
 
-            case 2: // Matrix
-            {
-                var (aColStr, aRowStr) = (Macro_Matrix_ACols.Text, Macro_Matrix_ARows.Text);
-                var (bColStr, bRowStr) = (Macro_Matrix_BCols.Text, Macro_Matrix_BRows.Text);
+    //        case 2: // Matrix
+    //        {
+    //            var (aColStr, aRowStr) = (Macro_Matrix_ACols.Text, Macro_Matrix_ARows.Text);
+    //            var (bColStr, bRowStr) = (Macro_Matrix_BCols.Text, Macro_Matrix_BRows.Text);
 
-                if (
-                    int.TryParse(aColStr, out int aCol) && aCol > 0 &&
-                    int.TryParse(aRowStr, out int aRow) && aRow > 0 &&
-                    int.TryParse(bColStr, out int bCol) && bCol > 0 &&
-                    int.TryParse(bRowStr, out int bRow) && bRow > 0 &&
-                    aCol == bRow
-                )
-                {
-                    for (int tblRow = 0; tblRow <= aRow; ++tblRow) {
-                        for (int tblCol = 0; tblCol < bCol; ++tblCol)
-                        {
-                            Notes.Text += "( ";
-                            for (int cellComp = 1; cellComp < bRow; ++cellComp)
-                            {
-                                Notes.Text += tblRow == 0 ? ", " : "+ ";
-                            }
-                            Notes.Text += ") ";
-                        }
-                        if (tblRow > 0)
-                        {
-                            Notes.Text += "( ";
-                            for (int cellComp = 1; cellComp < bRow; ++cellComp)
-                            {
-                                Notes.Text += ", ";
-                            }
-                            Notes.Text += ")";
-                        }
-                        Notes.Text += "\n";
-                    }
-                }
-            }
-                break;
-        }
-    }
+    //            if (
+    //                int.TryParse(aColStr, out int aCol) && aCol > 0 &&
+    //                int.TryParse(aRowStr, out int aRow) && aRow > 0 &&
+    //                int.TryParse(bColStr, out int bCol) && bCol > 0 &&
+    //                int.TryParse(bRowStr, out int bRow) && bRow > 0 &&
+    //                aCol == bRow
+    //            )
+    //            {
+    //                for (int tblRow = 0; tblRow <= aRow; ++tblRow) {
+    //                    for (int tblCol = 0; tblCol < bCol; ++tblCol)
+    //                    {
+    //                        Notes.Text += "( ";
+    //                        for (int cellComp = 1; cellComp < bRow; ++cellComp)
+    //                        {
+    //                            Notes.Text += tblRow == 0 ? ", " : "+ ";
+    //                        }
+    //                        Notes.Text += ") ";
+    //                    }
+    //                    if (tblRow > 0)
+    //                    {
+    //                        Notes.Text += "( ";
+    //                        for (int cellComp = 1; cellComp < bRow; ++cellComp)
+    //                        {
+    //                            Notes.Text += ", ";
+    //                        }
+    //                        Notes.Text += ")";
+    //                    }
+    //                    Notes.Text += "\n";
+    //                }
+    //            }
+    //        }
+    //            break;
+    //    }
+    //}
 
-    private void MathMacroSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        SetVisibleMacro(MathMacroSelector.SelectedIndex);
-    }
+    //private void MathMacroSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    //{
+    //    SetVisibleMacro(MathMacroSelector.SelectedIndex);
+    //}
 
     private void TogglePane_Click(object sender, RoutedEventArgs e)
     {
