@@ -83,6 +83,30 @@ public class Algebra
     public static List<(int common, int associated)> Factors(int n) =>
         CommonFactors(n).Select((x) => (x.common, x.associated[0])).ToList();
 
+    public static List<(int prime, int exponent)> PrimeFactors(int n)
+    {
+        var factors = Factors(n);
+        if (factors.Count > 2)
+        {
+            var (a, b) = factors[1];
+            var primes = PrimeFactors(b);
+            primes.Insert(0, (a, 1));
+            return primes
+                .Select(x => x.prime)
+                .Distinct()
+                .Select(p =>
+                    (p, primes
+                        .Where(x => x.prime == p)
+                        .Sum(x => x.exponent)
+                    )
+                ).ToList();
+        }
+        else
+        {
+            return [(n, 1)];
+        }
+    }
+
     public static int GCF(params int[] parameters)
     {
         int[] absParams = parameters.Select(Math.Abs).ToArray();
