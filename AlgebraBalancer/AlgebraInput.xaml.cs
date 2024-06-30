@@ -49,6 +49,11 @@ public sealed partial class AlgebraInput : UserControl
         return (int)dt.Compute(text, "");
     }
 
+    public void SetValue(string value)
+    {
+        Input.Text = value;
+    }
+
     private void Input_TextChanged(object sender, TextChangedEventArgs e)
     {
         try

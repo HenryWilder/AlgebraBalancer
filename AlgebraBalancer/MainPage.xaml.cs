@@ -107,7 +107,7 @@ public sealed partial class MainPage : Page
         result += string.Join(" × ", pfac
             .Select(p =>
                 p.prime.ToString() +
-                (p.exponent == 1 ? "" : ToSuperscript(p.exponent.ToString()))
+                (p.exponent == 1 ? "" : LatexUnicode.ToSuperscript(p.exponent.ToString()))
             )
         );
 
@@ -373,13 +373,6 @@ public sealed partial class MainPage : Page
 
     private static readonly string CURSOR_SAVER = "\f";
 
-    // Escape prefix-"\" on macros to make them a literal "\" instead of an escape of its own
-    private static readonly List<string> unicodeReplacementKeys =
-        LatexUnicode.unicodeReplacements.Keys.Select((key) => key.Replace(@"\", @"(?<!\\)\\")).ToList();
-
-    private static readonly string rxUnicodeRelpacement =
-        @"(" + string.Join("|", unicodeReplacementKeys) + @")";
-
     private string AlignMath(string str)
     {
         static string MinimizePadding(string part)
@@ -424,156 +417,61 @@ public sealed partial class MainPage : Page
         );
     }
 
-    private static string ToSuperscript(string str)
-    {
-        return str
-            .Replace("0", "⁰")
-            .Replace("1", "¹")
-            .Replace("2", "²")
-            .Replace("3", "³")
-            .Replace("4", "⁴")
-            .Replace("5", "⁵")
-            .Replace("6", "⁶")
-            .Replace("7", "⁷")
-            .Replace("8", "⁸")
-            .Replace("9", "⁹")
-            .Replace("+", "⁺")
-            .Replace("-", "⁻")
-            .Replace("=", "⁼")
-            .Replace("(", "⁽")
-            .Replace(")", "⁾")
-            .Replace("a", "ᵃ")
-            .Replace("b", "ᵇ")
-            .Replace("c", "ᶜ")
-            .Replace("d", "ᵈ")
-            .Replace("e", "ᵉ")
-            .Replace("f", "ᶠ")
-            .Replace("g", "ᵍ")
-            .Replace("h", "ʰ")
-            .Replace("i", "ⁱ")
-            .Replace("j", "ʲ")
-            .Replace("k", "ᵏ")
-            .Replace("l", "ˡ")
-            .Replace("m", "ᵐ")
-            .Replace("n", "ⁿ")
-            .Replace("o", "ᵒ")
-            .Replace("p", "ᵖ")
-            .Replace("r", "ʳ")
-            .Replace("s", "ˢ")
-            .Replace("t", "ᵗ")
-            .Replace("u", "ᵘ")
-            .Replace("v", "ᵛ")
-            .Replace("w", "ʷ")
-            .Replace("x", "ˣ")
-            .Replace("y", "ʸ")
-            .Replace("z", "ᶻ")
-        ;
-    }
-
-    private static string ToSubscript(string str)
-    {
-        return str
-            .Replace("0", "₀")
-            .Replace("1", "₁")
-            .Replace("2", "₂")
-            .Replace("3", "₃")
-            .Replace("4", "₄")
-            .Replace("5", "₅")
-            .Replace("6", "₆")
-            .Replace("7", "₇")
-            .Replace("8", "₈")
-            .Replace("9", "₉")
-            .Replace("+", "₊")
-            .Replace("-", "₋")
-            .Replace("=", "₌")
-            .Replace("(", "₍")
-            .Replace(")", "₎")
-            .Replace("a", "ₐ")
-            .Replace("e", "ₑ")
-            .Replace("x", "ₓ")
-            .Replace("h", "ₕ")
-            .Replace("k", "ₖ")
-            .Replace("l", "ₗ")
-            .Replace("m", "ₘ")
-            .Replace("n", "ₙ")
-            .Replace("o", "ₒ")
-            .Replace("p", "ₚ")
-            .Replace("s", "ₛ")
-            .Replace("t", "ₜ")
-        ;
-    }
-
     private string UnicodeReplacements(string str)
     {
-        string macroPass = Regex.Replace(str, rxUnicodeRelpacement, (Match match) =>
-        {
-            string capture = match.Captures[0].Value;
-            return LatexUnicode.unicodeReplacements.TryGetValue(capture, out string replacement)
-                ? replacement
-                : capture; // no change
-        });
+        string macroPass = LatexUnicode.ApplyUnicodeReplacements(str);
 
-        string superscriptPass = Regex.Replace(macroPass, @"(\^{[0-9a-pr-z\-+=()]+})", (Match match) =>
-        {
-            string capture = match.Captures[0].Value;
-            return ToSuperscript(capture.Substring("^{".Length, capture.Length - "^{}".Length));
-        });
+        string remapPass = LatexUnicode.ApplyRemapPatterns(macroPass);
 
-        string subscriptPass = Regex.Replace(superscriptPass, @"(_{[0-9aexhklnopst\-+=()]+})", (Match match) =>
-        {
-            string capture = match.Captures[0].Value;
-            return ToSubscript(capture.Substring("_{".Length, capture.Length - "_{}".Length));
-        });
-
-        string alignPass = !Regex.IsMatch(subscriptPass, @"^\\noalign\b")
-            ? AlignMath(subscriptPass)
-            : subscriptPass;
+        string alignPass = !Regex.IsMatch(remapPass, @"^\\noalign\b")
+            ? AlignMath(remapPass)
+            : remapPass;
 
         return alignPass;
     }
 
-    private static readonly string rxSource = $@"@{{{{((?:(?!}}}}).)*?{CURSOR_SAVER}.*?)}}}}";
-    private static readonly string rxCopy = $@"@{{{{((?:(?!{CURSOR_SAVER}).)*?)}}}}";
+    //private static readonly string rxSource = $@"@{{{{((?:(?!}}}}).)*?{CURSOR_SAVER}.*?)}}}}";
+    //private static readonly string rxCopy = $@"@{{{{((?:(?!{CURSOR_SAVER}).)*?)}}}}";
 
-    private string ApplyDuplications(string text)
-    {
-        var sourceMatch = Regex.Match(text, rxSource);
-        if (sourceMatch.Success)
-        {
-            string replacement = sourceMatch.Captures[0].Value.Replace(CURSOR_SAVER, "");
-            text = Regex.Replace(text, rxCopy, replacement);
-        }
-        return text;
-    }
+    //private string ApplyDuplications(string text)
+    //{
+    //    var sourceMatch = Regex.Match(text, rxSource);
+    //    if (sourceMatch.Success)
+    //    {
+    //        string replacement = sourceMatch.Captures[0].Value.Replace(CURSOR_SAVER, "");
+    //        text = Regex.Replace(text, rxCopy, replacement);
+    //    }
+    //    return text;
+    //}
 
-    private static readonly string rxEndDuplicationFront = $@"@(?:{{{CURSOR_SAVER}|{CURSOR_SAVER}{{)(.*?)}}}}";
-    private static readonly string rxEndDuplicationBack = $@"@{{{{((?:(?!}}}}).)*?)@{CURSOR_SAVER}}}}}";
+    //private static readonly string rxEndDuplicationFront = $@"@(?:{{{CURSOR_SAVER}|{CURSOR_SAVER}{{)(.*?)}}}}";
+    //private static readonly string rxEndDuplicationBack = $@"@{{{{((?:(?!}}}}).)*?)@{CURSOR_SAVER}}}}}";
 
-    private string InlineMacros(string text)
-    {
-        // Remove all duplicators
+    //private string InlineMacros(string text)
+    //{
+    //    // Remove all duplicators
 
-        if (Regex.IsMatch(text, rxEndDuplicationFront + "|" + rxEndDuplicationBack))
-        {
-            text = Regex.Replace(text, rxEndDuplicationFront, $"{CURSOR_SAVER}@{{{{$1}}}}");
-            text = Regex.Replace(text, rxEndDuplicationBack, $"@{{{{$1}}}}{CURSOR_SAVER}");
-            text = Regex.Replace(text, @"@{{?(.*?)@?}}", "@{{$1}}");
-            text = Regex.Replace(text, @"@{{(.*?)}}", "$1");
-        }
+    //    if (Regex.IsMatch(text, rxEndDuplicationFront + "|" + rxEndDuplicationBack))
+    //    {
+    //        text = Regex.Replace(text, rxEndDuplicationFront, $"{CURSOR_SAVER}@{{{{$1}}}}");
+    //        text = Regex.Replace(text, rxEndDuplicationBack, $"@{{{{$1}}}}{CURSOR_SAVER}");
+    //        text = Regex.Replace(text, @"@{{?(.*?)@?}}", "@{{$1}}");
+    //        text = Regex.Replace(text, @"@{{(.*?)}}", "$1");
+    //    }
 
-        // Add duplicator
-        text = Regex.Replace(text, $@"@{CURSOR_SAVER}(?!{{{{)", $"@{{{{{CURSOR_SAVER}}}}}");
-        //text = Regex.Replace(text, @"@(?!{{)", "@{{}}");
+    //    // Add duplicator
+    //    text = Regex.Replace(text, $@"@{CURSOR_SAVER}(?!{{{{)", $"@{{{{{CURSOR_SAVER}}}}}");
+    //    //text = Regex.Replace(text, @"@(?!{{)", "@{{}}");
 
-        return text;
-    }
+    //    return text;
+    //}
 
     private void Notes_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         int selectionStart = Notes.SelectionStart;
         string updated = Notes.Text.Insert(selectionStart, CURSOR_SAVER);
-        updated = ApplyDuplications(updated);
-        updated = InlineMacros(updated);
+        //updated = ApplyDuplications(updated);
+        //updated = InlineMacros(updated);
         updated = UnicodeReplacements(updated);
         int cursorPos = updated.IndexOf(CURSOR_SAVER);
         Notes.Text = updated.Replace(CURSOR_SAVER, "");
@@ -705,29 +603,72 @@ public sealed partial class MainPage : Page
     {
         var shiftState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift);
         bool isShifting = (shiftState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
-        if (e.Key == VirtualKey.F && Notes.SelectionLength > 0)
+
+        var ctrlState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Control);
+        bool isCtrling = (ctrlState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+
+        var altState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Menu);
+        bool isAlting = (altState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+
+        // Duplicate line
+        if ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting)
         {
             int selectionStart = Notes.SelectionStart;
-            int selectionLength = Notes.SelectionLength;
-            string polytext = Notes.SelectedText;
+            string notesText = Notes.Text;
+            int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
 
-            // FOIL
-            if (isShifting)
+            int startOfLine = notesText.LastIndexOf('\n', selectionIndex - 1);
+            if (startOfLine == -1) startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
+            if (startOfLine == -1) startOfLine = 0;
+
+            int endOfLine = notesText.IndexOf('\r', selectionIndex);
+            if (endOfLine == -1) endOfLine = notesText.IndexOf('\r', selectionIndex);
+            if (endOfLine == -1) endOfLine = notesText.Length;
+
+            string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
+            if (lineText[0] is not '\n' and not '\r')
             {
-                polytext = StringFOIL(polytext);
+                lineText = lineText.Insert(0, "\n");
             }
+            int cursorOffset = e.Key == VirtualKey.Down ? lineText.Length : 0;
 
-            // Factor
-            else
-            {
-                polytext = StringFactor(polytext);
-            }
-
-            Notes.Text = Notes.Text.Remove(selectionStart, selectionLength).Insert(selectionStart, polytext);
-            Notes.SelectionStart = selectionStart;
-            Notes.SelectionLength = polytext.Length;
+            Notes.Text = notesText.Insert(endOfLine, lineText);
+            Notes.SelectionStart = selectionStart + cursorOffset;
             e.Handled = true;
         }
+        // Put selection in math input
+        else if (isCtrling && (e.Key is VirtualKey.Number1 or VirtualKey.Number2 or VirtualKey.Number3))
+        {
+            int index = e.Key - VirtualKey.Number1;
+            (Inputs.Children[index] as AlgebraInput).SetValue(Notes.SelectedText);
+            Update(null, new());
+            e.Handled = true;
+        }
+        // FOIL selection
+        //else if (e.Key == VirtualKey.F && Notes.SelectionLength > 0)
+        //{
+        //    int selectionStart = Notes.SelectionStart;
+        //    int selectionLength = Notes.SelectionLength;
+        //    string polytext = Notes.SelectedText;
+
+        //    // FOIL
+        //    if (isShifting)
+        //    {
+        //        polytext = StringFOIL(polytext);
+        //    }
+
+        //    // Factor
+        //    else
+        //    {
+        //        polytext = StringFactor(polytext);
+        //    }
+
+        //    Notes.Text = Notes.Text.Remove(selectionStart, selectionLength).Insert(selectionStart, polytext);
+        //    Notes.SelectionStart = selectionStart;
+        //    Notes.SelectionLength = polytext.Length;
+        //    e.Handled = true;
+        //}
+        // Insert 4 spaces when tab is pressed
         else if (e.Key == VirtualKey.Tab)
         {
             int selectionStart = Notes.SelectionStart;
@@ -755,6 +696,7 @@ public sealed partial class MainPage : Page
             }
             e.Handled = true;
         }
+        // Create brackets in pairs and surround the selection with them
         else if ((e.Key == VirtualKey.Number9 && isShifting) || e.Key == ((VirtualKey)0xDB))
         {
             string open, close;
@@ -772,6 +714,7 @@ public sealed partial class MainPage : Page
             Notes.SelectionLength = length;
             e.Handled = true;
         }
+        // Overwrite bracket pair closer (overwriting paren with brack, etc. IS intended)
         else if ((e.Key == VirtualKey.Number0 && isShifting) || e.Key == ((VirtualKey)0xDD))
         {
             int selectionPosition = Notes.SelectionStart;
@@ -786,6 +729,7 @@ public sealed partial class MainPage : Page
                 e.Handled = true;
             }
         }
+        // Delete bracket pair together
         else if (e.Key == VirtualKey.Back)
         {
             int newSelectPosition = Math.Max(Notes.SelectionStart - 1, 0);
