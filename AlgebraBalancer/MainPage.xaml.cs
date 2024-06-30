@@ -71,10 +71,27 @@ public sealed partial class MainPage : Page
         string result = "";
 
         {
-            string oddOrEven = IsOdd(x) ? "odd" : "even";
-            string primeOrComposite = IsPrime(x) ? "prime" : "composite";
-            result += $"{x} is an {oddOrEven} {primeOrComposite}";
+            string posOrNeg = x > 0 ? "⁺" : x < 0 ? "⁻" : "";
+            if (x > 0 && IsPrime(x))
+            {
+                result += $"{x}  ∈ ℙ";
+            }
+            else
+            {
+                string oddOrEven = IsOdd(x) ? "+1" : "";
+                result += $"{x}  ∈ 2ℤ{posOrNeg}{oddOrEven}";
+            }
         }
+
+        // Prime Factors
+        result += $"\n{x}  = ";
+        var pfac = PrimeFactors(x);
+        result += string.Join(" × ", pfac
+            .Select(p =>
+                p.prime.ToString() +
+                (p.exponent == 1 ? "" : LatexUnicode.ToSuperscript(p.exponent.ToString()))
+            )
+        );
 
         // Square
         result += $"\n{x}² = {x * x}";
@@ -98,28 +115,18 @@ public sealed partial class MainPage : Page
 
         int aPad = factorStrings.Max((f) => f.a.Length);
         int bPad = factorStrings.Max((f) => f.b.Length);
-        int sumPad = factorStrings.Max((f) => f.sum.Length);
-        int diffPad = factorStrings.Max((f) => f.diff.Length);
+        //int sumPad = factorStrings.Max((f) => f.sum.Length);
+        //int diffPad = factorStrings.Max((f) => f.diff.Length);
 
         foreach (var (a, b, sum, diff) in factorStrings)
         {
             string aPadded    =    a.PadLeft(   aPad);
             string bPadded    =    b.PadLeft(   bPad);
-            string sumPadded  =  sum.PadLeft( sumPad);
-            string diffPadded = diff.PadLeft(diffPad);
+            //string sumPadded  =  sum.PadLeft( sumPad);
+            //string diffPadded = diff.PadLeft(diffPad);
 
-            result += $"\n{aPadded} × {bPadded}; Σ={sumPadded}; Δ={diffPadded}";
+            result += $"\n{aPadded} × {bPadded}";// "; Σ={sumPadded}; Δ={diffPadded}";
         }
-
-        // Prime Factors
-        result += "\nPrime Factorization: ";
-        var pfac = PrimeFactors(x);
-        result += string.Join(" × ", pfac
-            .Select(p =>
-                p.prime.ToString() +
-                (p.exponent == 1 ? "" : LatexUnicode.ToSuperscript(p.exponent.ToString()))
-            )
-        );
 
         return result;
     }
@@ -143,8 +150,8 @@ public sealed partial class MainPage : Page
         result += $"\n{a} ^ {b} = {Power(a, b)}";
 
 
-        result += $"\nGCF: {GCF(a, b)}";
-        result += $"\nLCM: {LCM(a, b)}";
+        result += $"\nGCF({a}, {b}) = {GCF(a, b)}";
+        result += $"\nLCM({a}, {b}) = {LCM(a, b)}";
 
         // Common factors
         result += "\nCommon Factors:";

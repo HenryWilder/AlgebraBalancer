@@ -25,12 +25,9 @@ public class Algebra
 
     public interface IAlgebraicAtomic : IAlgebraicNotation { }
 
-    public struct Number : IAlgebraicAtomic
+    public struct Number(int value) : IAlgebraicAtomic
     {
-        public Number(int value) =>
-            this.value = value;
-
-        public int value;
+        public int value = value;
 
         public static implicit operator int(Number num) => num.value;
         public static implicit operator Number(int value) => new(value);
@@ -39,24 +36,24 @@ public class Algebra
 
     public struct Complex : IAlgebraicAtomic
     {
-        public override readonly string ToString() => "𝑖";
+        public override readonly string ToString() => "√(-)";
     }
 
     public struct Undefined : IAlgebraicAtomic
     {
-        public override readonly string ToString() => "∅";
+        public override readonly string ToString() => "∄";
     }
     public static Undefined undefined = new();
 
     public struct Huge : IAlgebraicAtomic
     {
-        public override readonly string ToString() => "𝓗";
+        public override readonly string ToString() => ">2³²";
     }
     public static Huge huge = new ();
 
     public struct Epsilon : IAlgebraicAtomic
     {
-        public override readonly string ToString() => "ε";
+        public override readonly string ToString() => "<2⁻³²";
     }
     public static Epsilon epsilon = new();
 
@@ -205,7 +202,7 @@ public class Algebra
     }
 
     public static bool IsPrime(int n) =>
-        (n % 5 != 0) && (Factors(n).Count == 1);
+        Factors(n).Count == 2;
 
     public static int? SqrtI(int n)
     {
