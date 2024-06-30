@@ -366,7 +366,6 @@ internal static class LatexUnicode
         { @"\increment\", "∆" },
         { @"\nabla\", "∇" },
         { @"\in\", "∈" },
-        { @" in ", "∈" },
         { @"̸∈", "∈" },
         { @"\notin\", "∉" },
         { @"\smallin\", "∊" },
