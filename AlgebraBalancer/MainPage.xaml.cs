@@ -1,28 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-using System.Data;
-using static System.Net.Mime.MediaTypeNames;
-using System.Diagnostics;
 using static AlgebraBalancer.Algebra;
-using System.Xml.Linq;
-using Windows.Web.Syndication;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
-using Windows.UI.Xaml.Documents;
-using System.Collections;
-using Windows.UI.Xaml.Shapes;
 using Windows.UI.Core;
 using Windows.System;
 
@@ -35,15 +19,6 @@ namespace AlgebraBalancer;
 /// </summary>
 public sealed partial class MainPage : Page
 {
-    //private void SetVisibleMacro(int index)
-    //{
-    //    foreach (var child in Macros.Children)
-    //    {
-    //        child.Visibility = Visibility.Collapsed;
-    //    }
-    //    if (index == -1) { return; }
-    //    Macros.Children[index].Visibility = Visibility.Visible;
-    //}
 
     public MainPage()
     {
@@ -63,7 +38,6 @@ public sealed partial class MainPage : Page
                 }
             };
         }
-        //SetVisibleMacro(-1);
     }
 
     private static string Calculations(int x)
@@ -225,16 +199,19 @@ public sealed partial class MainPage : Page
 
         result += $"\nLCM: {LCM(a, b, c)}";
 
-        result += $"\n{a}𝑥² + {b}𝑥 + {c} =";
-        result += $"\n  (-({b})±√(({b})²-4({a})({c})))/2({a})";
+        // Quadratic
+        {
+            result += $"\n{a}𝑥² + {b}𝑥 + {c} = 0 => 𝑥 = ";
+            result += $"\n  (-({b})±√(({b})²-4({a})({c})))/2({a})";
 
-        var formula = new RadicalFraction(-b, new Radical(b * b - 4 * a * c), 2 * a);
+            var formula = new RadicalFraction(-b, new Radical(b * b - 4 * a * c), 2 * a);
 
-        string unsimplified = $"\n  {formula}";
-        result += unsimplified;
+            string unsimplified = $"\n  {formula}";
+            result += unsimplified;
 
-        string simplified   = $"\n  {formula.Simplified()}";
-        if (simplified != unsimplified) { result += simplified; }
+            string simplified = $"\n  {formula.Simplified()}";
+            if (simplified != unsimplified) { result += simplified; }
+        }
 
         return result;
     }
@@ -288,94 +265,6 @@ public sealed partial class MainPage : Page
         CalcBtn.IsEnabled = true;
     }
 
-    //private void MathMacroButton_Click(object sender, RoutedEventArgs e)
-    //{
-    //    switch (MathMacroSelector.SelectedIndex)
-    //    {
-    //        case 0: // FOIL
-    //        {
-    //            var (a, b, c, d) = (Macro_FOIL_A.Text, Macro_FOIL_B.Text, Macro_FOIL_C.Text, Macro_FOIL_D.Text);
-
-    //            Notes.Text += $"({a} + {b})({c} + {d})\n";
-
-    //            int abPad = Math.Max(a.Length, b.Length);
-    //            a = a.PadLeft(abPad);
-    //            b = b.PadLeft(abPad);
-
-    //            int cdPad = Math.Max(a.Length, b.Length);
-    //            c = c.PadLeft(cdPad);
-    //            d = d.PadLeft(cdPad);
-
-    //            Notes.Text += 
-    //                $"{a} × {c} = ?₁\n" +
-    //                $"{a} × {d} = ?₂\n" +
-    //                $"{b} × {c} = ?₃\n" +
-    //                $"{b} × {d} = ?₄\n" +
-    //                $"?₁ + ?₂ + ?₃ + ?₄\n";
-    //        }
-    //            break;
-
-    //        case 1: // Factor
-    //        {
-    //            var (aStr, bStr, cStr) = (Macro_Factor_A.Text, Macro_Factor_B.Text, Macro_Factor_C.Text);
-
-    //            bool isANum = int.TryParse(aStr, out int a);
-    //            bool isCNum = int.TryParse(cStr, out int c);
-    //            string acStr = isANum && isCNum ? $"{a * c}" : $"({aStr} × {bStr})";
-
-    //            Notes.Text +=
-    //                $"{aStr}𝑥² + {bStr}𝑥 + {cStr}\n" +
-    //                $"?₁ + ?₂ = {bStr.PadLeft(acStr.Length)}\n" +
-    //                $"?₁ × ?₂ = {acStr.PadLeft(bStr.Length)}\n" +
-    //                $"(𝑥 + ?₁)(𝑥 + ?₂)\n";
-    //        }
-    //            break;
-
-    //        case 2: // Matrix
-    //        {
-    //            var (aColStr, aRowStr) = (Macro_Matrix_ACols.Text, Macro_Matrix_ARows.Text);
-    //            var (bColStr, bRowStr) = (Macro_Matrix_BCols.Text, Macro_Matrix_BRows.Text);
-
-    //            if (
-    //                int.TryParse(aColStr, out int aCol) && aCol > 0 &&
-    //                int.TryParse(aRowStr, out int aRow) && aRow > 0 &&
-    //                int.TryParse(bColStr, out int bCol) && bCol > 0 &&
-    //                int.TryParse(bRowStr, out int bRow) && bRow > 0 &&
-    //                aCol == bRow
-    //            )
-    //            {
-    //                for (int tblRow = 0; tblRow <= aRow; ++tblRow) {
-    //                    for (int tblCol = 0; tblCol < bCol; ++tblCol)
-    //                    {
-    //                        Notes.Text += "( ";
-    //                        for (int cellComp = 1; cellComp < bRow; ++cellComp)
-    //                        {
-    //                            Notes.Text += tblRow == 0 ? ", " : "+ ";
-    //                        }
-    //                        Notes.Text += ") ";
-    //                    }
-    //                    if (tblRow > 0)
-    //                    {
-    //                        Notes.Text += "( ";
-    //                        for (int cellComp = 1; cellComp < bRow; ++cellComp)
-    //                        {
-    //                            Notes.Text += ", ";
-    //                        }
-    //                        Notes.Text += ")";
-    //                    }
-    //                    Notes.Text += "\n";
-    //                }
-    //            }
-    //        }
-    //            break;
-    //    }
-    //}
-
-    //private void MathMacroSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    //{
-    //    SetVisibleMacro(MathMacroSelector.SelectedIndex);
-    //}
-
     private void TogglePane_Click(object sender, RoutedEventArgs e)
     {
         bool isBecomingInline = CalculationsPane.DisplayMode == SplitViewDisplayMode.Overlay;
@@ -390,17 +279,23 @@ public sealed partial class MainPage : Page
 
     private static readonly string CURSOR_SAVER = "\f";
 
+    private static readonly Regex rxAlignAroundCursor = new ($@"^ *{CURSOR_SAVER} *$");
+    private static readonly Regex rxMultipleSpaces = new (@" +");
+    private static readonly Regex rxSpacesBeforeAmp = new (@" +&");
+    private static readonly Regex rxOnlySpaces = new (@"^ +$");
+    private static readonly Regex rxLeadingSpaces = new (@"^ +"); // TODO: Check if this can just be TrimLeft or somethin
+
     private string AlignMath(string str)
     {
         static string MinimizePadding(string part)
         {
-            part = Regex.Replace(part, $@"^ *{CURSOR_SAVER} *$", CURSOR_SAVER);
-            part = Regex.Replace(part, @" +", " ");
-            part = Regex.Replace(part, @"^ +$", "");
+            part = rxAlignAroundCursor.Replace(part, CURSOR_SAVER);
+            part = rxMultipleSpaces.Replace(part, " ");
+            part = rxOnlySpaces.Replace(part, "");
             return part;
         }
 
-        var lines = str.Split("\r").Select((line) => Regex.Replace(line, @" +&", " &")).ToList();
+        var lines = str.Split("\r").Select((line) => rxSpacesBeforeAmp.Replace(line, " &")).ToList();
         var alignLines = lines.Select((line) => line.Split('&'));
         var alignments = new List<int>();
         foreach (string[] line in alignLines)
@@ -412,7 +307,7 @@ public sealed partial class MainPage : Page
             for (int i = 0; i < line.Count() - 1; ++i)
             {
                 string part = MinimizePadding(line[i]).Replace(CURSOR_SAVER, "");
-                if (i == 0) part = Regex.Replace(part, @"^ +", "");
+                if (i == 0) part = rxLeadingSpaces.Replace(part, "");
                 int partLen = part.Length;
                 if (partLen > alignments[i]) alignments[i] = partLen;
             }
@@ -425,7 +320,7 @@ public sealed partial class MainPage : Page
                         int accountForCursor = part.Contains(CURSOR_SAVER) ? CURSOR_SAVER.Length : 0;
                         int partWidth = alignments[j] + accountForCursor;
                         part = MinimizePadding(part);
-                        if (j == 0) part = Regex.Replace(part, @"^ +", "");
+                        if (j == 0) part = rxLeadingSpaces.Replace(part, "");
                         part = (j & 1) == 0 ? part.PadLeft(partWidth) : part.PadRight(partWidth);
                     }
                     return part;
@@ -434,187 +329,32 @@ public sealed partial class MainPage : Page
         );
     }
 
+    private static readonly Regex rxNoalign = new(@"^\\noalign\b");
+
     private string UnicodeReplacements(string str)
     {
         string macroPass = LatexUnicode.ApplyUnicodeReplacements(str);
 
         string remapPass = LatexUnicode.ApplyRemapPatterns(macroPass);
 
-        string alignPass = !Regex.IsMatch(remapPass, @"^\\noalign\b")
+        string alignPass = !rxNoalign.IsMatch(remapPass)
             ? AlignMath(remapPass)
             : remapPass;
 
         return alignPass;
     }
 
-    //private static readonly string rxSource = $@"@{{{{((?:(?!}}}}).)*?{CURSOR_SAVER}.*?)}}}}";
-    //private static readonly string rxCopy = $@"@{{{{((?:(?!{CURSOR_SAVER}).)*?)}}}}";
-
-    //private string ApplyDuplications(string text)
-    //{
-    //    var sourceMatch = Regex.Match(text, rxSource);
-    //    if (sourceMatch.Success)
-    //    {
-    //        string replacement = sourceMatch.Captures[0].Value.Replace(CURSOR_SAVER, "");
-    //        text = Regex.Replace(text, rxCopy, replacement);
-    //    }
-    //    return text;
-    //}
-
-    //private static readonly string rxEndDuplicationFront = $@"@(?:{{{CURSOR_SAVER}|{CURSOR_SAVER}{{)(.*?)}}}}";
-    //private static readonly string rxEndDuplicationBack = $@"@{{{{((?:(?!}}}}).)*?)@{CURSOR_SAVER}}}}}";
-
-    //private string InlineMacros(string text)
-    //{
-    //    // Remove all duplicators
-
-    //    if (Regex.IsMatch(text, rxEndDuplicationFront + "|" + rxEndDuplicationBack))
-    //    {
-    //        text = Regex.Replace(text, rxEndDuplicationFront, $"{CURSOR_SAVER}@{{{{$1}}}}");
-    //        text = Regex.Replace(text, rxEndDuplicationBack, $"@{{{{$1}}}}{CURSOR_SAVER}");
-    //        text = Regex.Replace(text, @"@{{?(.*?)@?}}", "@{{$1}}");
-    //        text = Regex.Replace(text, @"@{{(.*?)}}", "$1");
-    //    }
-
-    //    // Add duplicator
-    //    text = Regex.Replace(text, $@"@{CURSOR_SAVER}(?!{{{{)", $"@{{{{{CURSOR_SAVER}}}}}");
-    //    //text = Regex.Replace(text, @"@(?!{{)", "@{{}}");
-
-    //    return text;
-    //}
-
     private void Notes_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         int selectionStart = Notes.SelectionStart;
         string updated = Notes.Text.Insert(selectionStart, CURSOR_SAVER);
-        //updated = ApplyDuplications(updated);
-        //updated = InlineMacros(updated);
         updated = UnicodeReplacements(updated);
         int cursorPos = updated.IndexOf(CURSOR_SAVER);
         Notes.Text = updated.Replace(CURSOR_SAVER, "");
         Notes.SelectionStart = cursorPos;
     }
 
-    private string StringFOIL(string str)
-    {
-        str = Regex.Replace(str, @" *", "");
-
-        Match match;
-
-        if ((match = Regex.Match(str, @"^\((-?[0-9a-z]+)([+-][0-9a-z]+)\)\^2$")).Success)
-        {
-            string aStr = match.Groups[1].Value;
-            string bStr = match.Groups[2].Value;
-            
-            bool isAInt = int.TryParse(aStr, out int a);
-            bool isBInt = int.TryParse(bStr, out int b);
-
-            if (isAInt && isBInt)
-            {
-                return $"{a*a+2*a*b+b*b}";
-            }
-            else if (isAInt)
-            {
-                return $"{a*a} + {2*a}({bStr}) + ({bStr})^2";
-            }
-            else if (isBInt)
-            {
-                return $"({aStr})^2 + {2*b}({aStr}) + {b*b}";
-            }
-            else
-            {
-                return $"({aStr})^2 + 2({aStr})({bStr}) + ({bStr})^2";
-            }
-        }
-
-        if ((match = Regex.Match(str, @"^\((-?[0-9a-z]+)([+-][0-9a-z]+)\)\((-?[0-9a-z]+)([+-][0-9a-z]+)\)$")).Success)
-        {
-            string aStr = match.Groups[1].Value;
-            string bStr = match.Groups[2].Value;
-            string cStr = match.Groups[3].Value;
-            string dStr = match.Groups[4].Value;
-
-            bool isAInt = int.TryParse(aStr, out int a);
-            bool isBInt = int.TryParse(bStr, out int b);
-            bool isCInt = int.TryParse(cStr, out int c);
-            bool isDInt = int.TryParse(dStr, out int d);
-
-            if (isAInt && isBInt && isCInt && isDInt)
-            {
-                return $"{a * c + b * c + a * d + b * d}";
-            }
-            if (isAInt && isBInt && isCInt && !isDInt)
-            {
-                return $"{a + b}({dStr}) + {a * c + b * c} ";
-            }
-            if (isAInt && isBInt && !isCInt && isDInt)
-            {
-                return $"{a + b}({cStr}) + {a * d + b * d} ";
-            }
-            if (isAInt && !isBInt && isCInt && isDInt)
-            {
-                return $"{c + d}({bStr}) + {c * a + d * a} ";
-            }
-            if (!isAInt && isBInt && isCInt && isDInt)
-            {
-                return $"{c + d}({aStr}) + {b * a + b * a} ";
-            }
-            if (!isAInt && isBInt && !isCInt && isDInt)
-            {
-                return $"({aStr})({cStr}) + {b}({cStr}) + {d}({aStr}) + {b * d}";
-            }
-            if (isAInt && !isBInt && isCInt && !isDInt)
-            {
-                return $"({bStr})({dStr}) + {a}({dStr}) + {c}({bStr}) + {a * c}";
-            }
-            if (isAInt && isBInt && !isCInt && !isDInt)
-            {
-                return $"{a + b}({cStr}) + {a + b}({dStr})";
-            }
-            if (!isAInt && !isBInt && isCInt && isDInt)
-            {
-                return $"{c + d}({aStr}) + {c + d}({bStr})";
-            }
-            if (!isAInt && !isBInt && !isCInt && !isDInt)
-            {
-                return $"({aStr})({cStr}) + ({bStr})({cStr}) + ({dStr})({aStr}) + ({bStr})({dStr})";
-            }
-        }
-
-        return str;
-    }
-
-    private string StringFactor(string str)
-    {
-        str = Regex.Replace(str, @" *", "");
-        Match match;
-        if ((match = Regex.Match(str, @"^\((-?[0-9a-z]+)([+-][0-9a-z]+)\)\^2$")).Success)
-        {
-            string aStr = match.Groups[1].Value;
-            string bStr = match.Groups[2].Value;
-
-            bool isAInt = int.TryParse(aStr, out int a);
-            bool isBInt = int.TryParse(bStr, out int b);
-
-            if (isAInt && isBInt)
-            {
-                return $"{a * a + 2 * a * b + b * b}";
-            }
-            else if (isAInt)
-            {
-                return $"{a * a} + {2 * a}{bStr} + {bStr}^2";
-            }
-            else if (isBInt)
-            {
-                return $"{aStr}^2 + {2 * b}{aStr} + {b * b}";
-            }
-            else
-            {
-                return $"{aStr}^2 + 2{aStr}{bStr} + {bStr}^2";
-            }
-        }
-        return str;
-    }
+    private static readonly Regex rxWS = new(@"\s+");
 
     private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
     {
@@ -627,8 +367,14 @@ public sealed partial class MainPage : Page
         var altState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Menu);
         bool isAlting = (altState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
 
+        // Toggle calculator
+        if (e.Key == VirtualKey.Enter && isAlting)
+        {
+            CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
+        }
         // Duplicate line
-        if ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting)
+        else if ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting
+            || (e.Key == VirtualKey.Enter && (isShifting || isAlting)))
         {
             int selectionStart = Notes.SelectionStart;
             string notesText = Notes.Text;
@@ -647,7 +393,7 @@ public sealed partial class MainPage : Page
             {
                 lineText = lineText.Insert(0, "\n");
             }
-            int cursorOffset = e.Key == VirtualKey.Down ? lineText.Length : 0;
+            int cursorOffset = e.Key == VirtualKey.Up ? 0 : lineText.Length;
 
             Notes.Text = notesText.Insert(endOfLine, lineText);
             Notes.SelectionStart = selectionStart + cursorOffset;
@@ -658,33 +404,20 @@ public sealed partial class MainPage : Page
         {
             int index = e.Key - VirtualKey.Number1;
             (Inputs.Children[index] as AlgebraInput).SetValue(Notes.SelectedText);
+            CalculationsPane.IsPaneOpen = true;
             Update(null, new());
             e.Handled = true;
         }
-        // FOIL selection
-        //else if (e.Key == VirtualKey.F && Notes.SelectionLength > 0)
-        //{
-        //    int selectionStart = Notes.SelectionStart;
-        //    int selectionLength = Notes.SelectionLength;
-        //    string polytext = Notes.SelectedText;
-
-        //    // FOIL
-        //    if (isShifting)
-        //    {
-        //        polytext = StringFOIL(polytext);
-        //    }
-
-        //    // Factor
-        //    else
-        //    {
-        //        polytext = StringFactor(polytext);
-        //    }
-
-        //    Notes.Text = Notes.Text.Remove(selectionStart, selectionLength).Insert(selectionStart, polytext);
-        //    Notes.SelectionStart = selectionStart;
-        //    Notes.SelectionLength = polytext.Length;
-        //    e.Handled = true;
-        //}
+        // Calculate just the selection
+        else if (isCtrling && (e.Key is VirtualKey.Enter))
+        {
+            (Inputs.Children[0] as AlgebraInput).SetValue(rxWS.Replace(Notes.SelectedText, ""));
+            (Inputs.Children[1] as AlgebraInput).SetValue("");
+            (Inputs.Children[2] as AlgebraInput).SetValue("");
+            CalculationsPane.IsPaneOpen = true;
+            Update(null, new());
+            e.Handled = true;
+        }
         // Insert 4 spaces when tab is pressed
         else if (e.Key == VirtualKey.Tab)
         {

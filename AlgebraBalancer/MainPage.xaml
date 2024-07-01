@@ -17,9 +17,9 @@
         </Grid.RowDefinitions>
 
         <!-- Copyright -->
-        <TextBlock HorizontalAlignment="Left" FontSize="11" Text="© 2024 Amy Wilder" VerticalAlignment="Top" Padding="9" Height="32"/>
+        <TextBlock HorizontalAlignment="Left" FontSize="11" Text="AlgebraBalancer © 2024 Amy Wilder" VerticalAlignment="Top" Padding="9" Height="32"/>
 
-        <SplitView x:Name="CalculationsPane" Grid.Row="1" PanePlacement="Right" OpenPaneLength="400" DisplayMode="Inline">
+        <SplitView x:Name="CalculationsPane" Grid.Row="1" PanePlacement="Right" OpenPaneLength="400" DisplayMode="Overlay">
 
             <Grid>
 
@@ -60,7 +60,7 @@
 
                     <!-- Toggle Pin -->
                     <ToggleButton VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="TogglePane_Click">
-                        <SymbolIcon x:Name="CalculatorPane_PinIcon" Symbol="UnPin"/>
+                        <SymbolIcon x:Name="CalculatorPane_PinIcon" Symbol="Pin"/>
                     </ToggleButton>
                 </Grid>
             </SplitView.Pane>

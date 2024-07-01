@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Xml.Serialization;
 
-using Windows.UI.Xaml.Controls;
+using Windows.Devices.Power;
 
 namespace AlgebraBalancer;
 internal static class LatexUnicode
@@ -2920,19 +2919,33 @@ expr & otherwise & ⎭" },
             mapping)
         );
 
+    private static readonly (Regex pattern, Dictionary<char, string> mapping)[] patternMaps = [
+        (superscriptPattern,  superscriptMapping),
+        (superscriptPattern1, superscriptMapping),
+        (subscriptPattern,    subscriptMapping),
+        (subscriptPattern1,   subscriptMapping),
+        (ttPattern,           ttMapping),
+        (bfPattern,           bfMapping),
+        (bbPattern,           bbMapping),
+        (sfPattern,           sfMapping),
+        (itPattern,           itMapping),
+        (frakPattern,         frakMapping),
+        (calPattern,          calMapping),
+        (sfbfPattern,         sfbfMapping),
+        (sfbfitPattern,       sfbfitMapping),
+        (bfitPattern,         bfitMapping),
+        (bfscrPattern,        bfscrMapping),
+        (sfitPattern,         sfitMapping),
+        (bffrakPattern,       bffrakMapping),
+    ];
+
     public static string ApplyRemapPatterns(string str)
     {
-        str = RemapInPattern(str, superscriptPattern,  superscriptMapping);
-        str = RemapInPattern(str, superscriptPattern1, superscriptMapping);
-        str = RemapInPattern(str, subscriptPattern,    subscriptMapping);
-        str = RemapInPattern(str, subscriptPattern1,   subscriptMapping);
-        str = RemapInPattern(str, ttPattern,           ttMapping);
-        str = RemapInPattern(str, bfPattern,           bfMapping);
-        str = RemapInPattern(str, bbPattern,           bbMapping);
-        str = RemapInPattern(str, sfPattern,           sfMapping);
-        str = RemapInPattern(str, itPattern,           itMapping);
-        str = RemapInPattern(str, frakPattern,         frakMapping);
-        str = RemapInPattern(str, calPattern,          calMapping);
+        foreach (var (pattern, mapping) in patternMaps)
+        {
+            str = RemapInPattern(str, pattern, mapping);
+        }
+
         return str;
     }
 
