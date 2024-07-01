@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Windows.UI.Core;
 using Windows.System;
+using System.Data;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -356,6 +357,8 @@ public sealed partial class MainPage : Page
 
     private static readonly Regex rxWS = new(@"\s+");
 
+    private readonly static DataTable dt = new();
+
     private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
     {
         var shiftState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift);
@@ -373,8 +376,8 @@ public sealed partial class MainPage : Page
             CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
         }
         // Duplicate line
-        else if ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting
-            || (e.Key == VirtualKey.Enter && (isShifting || isAlting)))
+        else if (!string.IsNullOrWhiteSpace(Notes.Text) && ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting
+            || (e.Key == VirtualKey.Enter && (isShifting || isAlting))))
         {
             int selectionStart = Notes.SelectionStart;
             string notesText = Notes.Text;
@@ -409,13 +412,32 @@ public sealed partial class MainPage : Page
             e.Handled = true;
         }
         // Calculate just the selection
-        else if (isCtrling && (e.Key is VirtualKey.Enter))
+        else if (isCtrling && e.Key == VirtualKey.Enter)
         {
             (Inputs.Children[0] as AlgebraInput).SetValue(rxWS.Replace(Notes.SelectedText, ""));
             (Inputs.Children[1] as AlgebraInput).SetValue("");
             (Inputs.Children[2] as AlgebraInput).SetValue("");
             CalculationsPane.IsPaneOpen = true;
             Update(null, new());
+            e.Handled = true;
+        }
+        // Calculate the selection and set it equal to the solution
+        else if (isCtrling && e.Key == VirtualKey.Space && Notes.SelectionLength > 0)
+        {
+            string addText;
+            try
+            {
+                double value = Convert.ToDouble(dt.Compute(Notes.SelectedText, ""));
+                addText = $" = {value}";
+            }
+            catch (Exception err)
+            {
+                addText = $" = <{err.Message}>";
+            }
+            int insertAt = Notes.SelectionStart + Notes.SelectionLength;
+            int insertEnd = insertAt + addText.Length;
+            Notes.Text = Notes.Text.Insert(insertAt, addText);
+            Notes.SelectionStart = insertEnd;
             e.Handled = true;
         }
         // Insert 4 spaces when tab is pressed
