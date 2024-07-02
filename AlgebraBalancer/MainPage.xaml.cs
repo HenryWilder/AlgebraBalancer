@@ -10,41 +10,44 @@ using System.Text.RegularExpressions;
 using Windows.UI.Core;
 using Windows.System;
 using System.Data;
+using System.Collections.ObjectModel;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace AlgebraBalancer;
 
-/// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
-/// </summary>
 public sealed partial class MainPage : Page
 {
+    private readonly ObservableCollection<string> UnicodeButtonSymbols = [];
 
     public MainPage()
     {
         InitializeComponent();
-        string[] headers = { "A", "B", "C" };
+
+        // Math buttons
+        string[] headers = ["A", "B", "C"];
         foreach (string header in headers)
         {
-            Inputs.Children.Add(new AlgebraInput(header));
-        }
-        foreach (var item in Inputs.Children)
-        {
-            item.PreviewKeyDown += (object sender, KeyRoutedEventArgs e) => {
+            var item = new AlgebraInput(header);
+            Inputs.Children.Add(item);
+            item.PreviewKeyDown += (object sender, KeyRoutedEventArgs e) =>
+            {
                 if (e.Key == VirtualKey.Enter)
                 {
-                    Update(null, new());
+                    UpdateAsync();
                     e.Handled = true;
                 }
             };
         }
+
+        UnicodeButtons.ItemsSource = UnicodeButtonSymbols;
     }
 
     private static string Calculations(int x)
     {
         string result = "";
 
+        // Categorization
         {
             string posOrNeg = x > 0 ? "⁺" : x < 0 ? "⁻" : "";
             if (x > 0 && IsPrime(x))
@@ -226,7 +229,12 @@ public sealed partial class MainPage : Page
             _ => "...",
         };
 
-    private async void Update(object sender, RoutedEventArgs args)
+    private void UpdateCalculations(object sender, RoutedEventArgs args)
+    {
+        UpdateAsync();
+    }
+
+    private async void UpdateAsync()
     {
         CalcBtn.IsEnabled = false;
         Output.Text = string.Empty;
@@ -408,7 +416,7 @@ public sealed partial class MainPage : Page
             int index = e.Key - VirtualKey.Number1;
             (Inputs.Children[index] as AlgebraInput).SetValue(Notes.SelectedText);
             CalculationsPane.IsPaneOpen = true;
-            Update(null, new());
+            UpdateAsync();
             e.Handled = true;
         }
         // Calculate just the selection
@@ -418,26 +426,29 @@ public sealed partial class MainPage : Page
             (Inputs.Children[1] as AlgebraInput).SetValue("");
             (Inputs.Children[2] as AlgebraInput).SetValue("");
             CalculationsPane.IsPaneOpen = true;
-            Update(null, new());
+            UpdateAsync();
             e.Handled = true;
         }
         // Calculate the selection and set it equal to the solution
-        else if (isCtrling && e.Key == VirtualKey.Space && Notes.SelectionLength > 0)
+        else if (isCtrling && e.Key == VirtualKey.Space)
         {
-            string addText;
-            try
+            if (Notes.SelectionLength > 0)
             {
-                double value = Convert.ToDouble(dt.Compute(Notes.SelectedText, ""));
-                addText = $" = {value}";
+                string addText;
+                try
+                {
+                    double value = Convert.ToDouble(dt.Compute(Notes.SelectedText, ""));
+                    addText = $" = {value}";
+                }
+                catch (Exception err)
+                {
+                    addText = $" = <{err.Message}>";
+                }
+                int insertAt = Notes.SelectionStart + Notes.SelectionLength;
+                int insertEnd = insertAt + addText.Length;
+                Notes.Text = Notes.Text.Insert(insertAt, addText);
+                Notes.SelectionStart = insertEnd;
             }
-            catch (Exception err)
-            {
-                addText = $" = <{err.Message}>";
-            }
-            int insertAt = Notes.SelectionStart + Notes.SelectionLength;
-            int insertEnd = insertAt + addText.Length;
-            Notes.Text = Notes.Text.Insert(insertAt, addText);
-            Notes.SelectionStart = insertEnd;
             e.Handled = true;
         }
         // Insert 4 spaces when tab is pressed
@@ -512,6 +523,64 @@ public sealed partial class MainPage : Page
                 Notes.SelectionStart = newSelectPosition;
                 e.Handled = true;
             }
+        }
+    }
+
+    private const string NO_RESULTS_MSG = "No results";
+    private const string TOO_MANY_RESULTS_MSG = "Too many results to display";
+
+    private void UnicodeLookup_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter)
+        {
+            string search = UnicodeLookup.Text;
+
+            UnicodeButtonSymbols.Clear();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var filteredItems = LatexUnicode.unicodeReplacements
+                    .Where((kvp) => kvp.Key.Contains(search))
+                    .Select((kvp) => kvp.Value);
+
+                if (filteredItems.Count() == 0)
+                {
+                    UnicodeButtonSymbols.Add(NO_RESULTS_MSG);
+                }
+                else if (filteredItems.Count() > 64)
+                {
+                    UnicodeButtonSymbols.Add(TOO_MANY_RESULTS_MSG);
+                }
+                else
+                {
+                    foreach (string item in filteredItems)
+                    {
+                        UnicodeButtonSymbols.Add(item);
+                    }
+                }
+            }
+        }
+        else if (e.Key == VirtualKey.Escape)
+        {
+            UnicodeLookup.Text = "";
+            UnicodeButtonSymbols.Clear();
+        }
+    }
+
+    private void UnicodeButtons_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        string symbol = e.ClickedItem as string;
+        if (symbol is TOO_MANY_RESULTS_MSG or NO_RESULTS_MSG)
+        {
+            UnicodeButtonSymbols.Clear();
+            UnicodeButtonSymbols.Add(":P");
+        }
+        else
+        {
+            string insertion = symbol == ":P" ? "👬" : symbol;
+            int position = Notes.SelectionStart;
+            Notes.Text = Notes.Text.Insert(position, insertion);
+            _ = Notes.Focus(FocusState.Programmatic);
+            Notes.SelectionStart = position + insertion.Length;
         }
     }
 }

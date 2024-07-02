@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -9,6 +10,264 @@ using Windows.Devices.Power;
 namespace AlgebraBalancer;
 internal static class LatexUnicode
 {
+    public static readonly (Regex shorthand, MatchEvaluator evaluator)[] unicodeShorthands =
+    [
+        (new Regex(@"@0"), (match) => "°"),
+        (new Regex(@"@/"), (match) => "()/()"),
+        (new Regex(@"@\*"), (match) => "×"),
+        (new Regex(@"@\^"), (match) => "̂"),
+        (new Regex(@"@_"), (match) => "̄"),
+        (new Regex(@"@;"), (match) => "̇"),
+        (new Regex(@"@:"), (match) => "̈"),
+        (new Regex(@"@G"), (match) => "Γ"),
+        (new Regex(@"@D"), (match) => "Δ"),
+        (new Regex(@"@Q"), (match) => "Θ"),
+        (new Regex(@"@X"), (match) => "Ξ"),
+        (new Regex(@"@P"), (match) => "Π"),
+        (new Regex(@"@S"), (match) => "Σ"),
+        (new Regex(@"@U"), (match) => "ϒ"),
+        (new Regex(@"@F"), (match) => "Φ"),
+        (new Regex(@"@Y"), (match) => "Ψ"),
+        (new Regex(@"@W"), (match) => "Ω"),
+        (new Regex(@"@a"), (match) => "α"),
+        (new Regex(@"@b"), (match) => "β"),
+        (new Regex(@"@g"), (match) => "γ"),
+        (new Regex(@"@d"), (match) => "δ"),
+        (new Regex(@"@ve"), (match) => "ε"),
+        (new Regex(@"@z"), (match) => "ζ"),
+        (new Regex(@"@h"), (match) => "η"),
+        (new Regex(@"@q"), (match) => "θ"),
+        (new Regex(@"@i"), (match) => "ι"),
+        (new Regex(@"@k"), (match) => "κ"),
+        (new Regex(@"@l"), (match) => "λ"),
+        (new Regex(@"@m"), (match) => "μ"),
+        (new Regex(@"@n"), (match) => "ν"),
+        (new Regex(@"@x"), (match) => "ξ"),
+        (new Regex(@"@p"), (match) => "π"),
+        (new Regex(@"@L"), (match) => "Λ"),
+        (new Regex(@"@r"), (match) => "ρ"),
+        (new Regex(@"@vs"), (match) => "ς"),
+        (new Regex(@"@s"), (match) => "σ"),
+        (new Regex(@"@t"), (match) => "τ"),
+        (new Regex(@"@u"), (match) => "υ"),
+        (new Regex(@"@vf"), (match) => "φ"),
+        (new Regex(@"@c"), (match) => "χ"),
+        (new Regex(@"@y"), (match) => "ψ"),
+        (new Regex(@"@o"), (match) => "ω"),
+        (new Regex(@"@vb"), (match) => "ϐ"),
+        (new Regex(@"@vq"), (match) => "ϑ"),
+        (new Regex(@"@f"), (match) => "ϕ"),
+        (new Regex(@"@vp"), (match) => "ϖ"),
+        (new Regex(@"@A"), (match) => "∀"),
+        (new Regex(@"@6"), (match) => "∂"),
+        (new Regex(@"@E"), (match) => "∃"),
+        (new Regex(@"@v0"), (match) => "∅"),
+        (new Regex(@"@@"), (match) => "∘"),
+        (new Regex(@"@2"), (match) => "√"),
+        (new Regex(@"√(?:\^3|³)"), (match) => "∛"),
+        (new Regex(@"√(?:\^4|⁴)"), (match) => "∜"),
+        (new Regex(@"@8"), (match) => "∞"),
+        (new Regex(@"@\|"), (match) => "∣"),
+        (new Regex(@"@&"), (match) => "∧"),
+        (new Regex(@"@I"), (match) => "∫"),
+        (new Regex(@"∫∫"), (match) => "∬"),
+        (new Regex(@"∫(?:∫∫|∬)|∬∫"), (match) => "∭"),
+        (new Regex(@"@\\"), (match) => "⧵"),
+        (new Regex(@"∫(?:∫(?:∫∫|∬)|∬∫|∭)|∬(?:∫∫|∬)|∭∫"), (match) => "⨌"),
+        (new Regex(@"@="), (match) => "≡"),
+        (new Regex(@"@<"), (match) => "≤"),
+        (new Regex(@"@>"), (match) => "≥"),
+        (new Regex(@"@-"), (match) => "⋂"),
+        (new Regex(@"@\+"), (match) => "⋃"),
+        (new Regex(@"@\."), (match) => "⋅"),
+
+        (new Regex(@"\\Algebraic\\"), (match) => "𝔸"),
+        (new Regex(@"\\Boolean\\"), (match) => "𝔹"),
+        (new Regex(@"\\Complex\\"), (match) => "ℂ"),
+        (new Regex(@"\\Quaternion\\"), (match) => "ℍ"),
+        (new Regex(@"\\Imaginary\\"), (match) => "𝕀"),
+        (new Regex(@"\\Monster\\"), (match) => "𝕄"),
+        (new Regex(@"\\Natural\\"), (match) => "ℕ"),
+        (new Regex(@"\\Natural0\\"), (match) => "ℕ₀"),
+        (new Regex(@"\\Irrational\\"), (match) => "ℙ"),
+        (new Regex(@"\\Rational\\"), (match) => "ℚ"),
+        (new Regex(@"\\Real\\"), (match) => "ℝ"),
+        (new Regex(@"\\Whole\\"), (match) => "𝕎"),
+        (new Regex(@"\\Integer\\"), (match) => "ℤ"),
+
+        (new Regex(@"\$([A-Za-z0-9])"), (Match match) => {
+            char lookfor = match.Groups[1].Value.First(); // Should only be one character
+            return bbMapping.TryGetValue(lookfor, out string replacement) ? replacement : lookfor.ToString();
+        }),
+
+        (new Regex(@"\\(?:Int\\|big∫)"), (match) => @"
+⌠
+⌡"),
+        (new Regex(@"\\big\(\)"), (match) => @"
+⎛ & & ⎞
+⎝ & & ⎠"),
+        (new Regex(@"\\bigg\(\)"), (match) => @"
+⎛ && ⎞
+⎜ && ⎟
+⎝ && ⎠"),
+        (new Regex(@"\\big\[\]"), (match) => @"
+⎡ && ⎤
+⎣ && ⎦"),
+        (new Regex(@"\\bigg\[\]"), (match) => @"
+⎡ && ⎤
+⎢ && ⎥
+⎣ && ⎦"),
+
+        (new Regex(@"\\matrix\\"), (match) => @"
+⎡ & ... && ... && ... & ⎤
+⎢ & ... && ... && ... & ⎥
+⎣ & ... && ... && ... & ⎦"),
+
+        (new Regex(@"\\det\\"), (match) => @"
+⎢ & ... && ... && ... & ⎥
+⎢ & ... && ... && ... & ⎥
+⎢ & ... && ... && ... & ⎥"),
+
+        (new Regex(@"\\(matrix|det)([1-9])x([1-9])"), (match) => {
+            bool isDet = match.Groups[1].Value == "det";
+            int rows = Convert.ToInt32(match.Groups[2].Value);
+            int cols = Convert.ToInt32(match.Groups[3].Value);
+
+            string result = "";
+
+            void FillRow() {
+                for (int i = 0; i < cols; ++i)
+                    result += "& ... &";
+            }
+
+            if (rows == 1)
+            {
+                result += isDet ? "| " : "[ ";
+                FillRow();
+                result += isDet ? " |\n" : " ]\n";
+            }
+            else
+            {
+                for (int i = 0; i < rows; ++i)
+                {
+                    int kind;
+                    if (i == 0)
+                        kind = 0;
+                    else if (i == rows - 1)
+                        kind = 2;
+                    else
+                        kind = 1;
+
+                    result += isDet ? "⎢" : "⎡⎢⎣"[kind];
+                    FillRow();
+                    result += isDet ? "⎥" : "⎤⎥⎦"[kind];
+                    result += '\n';
+                }
+            }
+            return result;
+        }),
+
+        (new Regex(@"\\bigg\{\}"), (match) => @"
+⎧ && ⎫
+⎨ && ⎬
+⎩ && ⎭"),
+        (new Regex(@"\\huge\{\}"), (match) => @"
+⎧ && ⎫
+⎪ && ⎪
+⎨ && ⎬
+⎪ && ⎪
+⎩ && ⎭"),
+
+        (new Regex(@"\\cases\\"), (match) => @"
+⎧ & ... & if ...
+⎪ & ... & if ...
+⎨ & ... & if ...
+⎪ & ... & if ...
+⎩ & ... & otherwise"),
+
+        (new Regex(@"\\rcases\\"), (match) => @"
+& ... & if ...    & ⎫
+& ... & if ...    & ⎪
+& ... & if ...    & ⎬
+& ... & if ...    & ⎪
+& ... & otherwise & ⎭"),
+        (new Regex(@"\\(r?cases)([1-9])"), (match) => {
+            bool isReverse = match.Groups[1].Value == "rcases";
+            int cases = Convert.ToInt32(match.Groups[2].Value);
+
+            string result = "";
+
+            void FillRow() => result += "... & if ...";
+
+            switch (cases)
+            {
+                case 1:
+                    if (!isReverse)
+                    {
+                        result += "{ & ";
+                        FillRow();
+                        result += '\n';
+                    }
+                    else
+                    {
+                        result += "& ";
+                        FillRow();
+                        result += " & }\n";
+                    }
+                    break;
+
+                case 2:
+                    if (!isReverse)
+                    {
+                        result += "⎰ & ";
+                        FillRow();
+                        result += "\n⎱ & ";
+                        FillRow();
+                        result += '\n';
+                    }
+                    else
+                    {
+                        result += "& ";
+                        FillRow();
+                        result += " & ⎱\n";
+                        FillRow();
+                        result += " & ⎰\n";
+                    }
+                    break;
+
+                default:
+                    for (int i = 0; i < cases; ++i)
+                    {
+                        int kind;
+                        if (i == 0)
+                            kind = 0;
+                        else if (i == cases - 1)
+                            kind = 3;
+                        else if (i == cases / 2)
+                            kind = 1;
+                        else
+                            kind = 2;
+
+                        result += (isReverse ? "" : "⎧⎨⎪⎩"[kind]) + " & ";
+                        FillRow();
+                        result += (isReverse ? " & " + "⎫⎬⎪⎭"[kind] : "") + "\n";
+                    }
+                    break;
+            }
+            return result;
+        }),
+
+        (new Regex(@"\\big\{\}"), (match) => @"
+⎰ && ⎱
+⎱ && ⎰"),
+        (new Regex(@"\\Sum\\"), (match) => @"
+⎲
+⎳"),
+        (new Regex(@"\\big√"), (match) => @"
+ _
+⎷"),
+    ];
+
     public static readonly Dictionary<string, string> unicodeReplacements = new()
     {
         { @"\iexcl\", "¡" },
@@ -22,7 +281,6 @@ internal static class LatexUnicode
         { @"\neg\", "¬" },
         { @"\circledR\", "®" },
         { @"\deg\", "°" },
-        { @"@0", "°" },
         { @"\pm\", "±" },
         { @"\Micro\", "µ" },
         { @"\para\", "¶" },
@@ -30,10 +288,8 @@ internal static class LatexUnicode
         { @"\frac14\", "¼" },
         { @"\frac12\", "½" },
         { @"\frac34\", "¾" },
-        { @"@/", "()/()" },
         { @"\iquest\", "¿" },
         { @"\times\", "×" },
-        { @"@*", "×" },
         { @"\eth\", "ð" },
         { @"\div\", "÷" },
         { @"\Imath\", "ı" },
@@ -42,16 +298,12 @@ internal static class LatexUnicode
         { @"\grave\", "̀" },
         { @"\acute\", "́" },
         { @"\hat\", "̂" },
-        { @"@^", "̂" },
         { @"\tilde\", "̃" },
         { @"\bar\", "̄" },
-        { @"@_", "̄" },
         { @"\overline\", "̅" },
         { @"\breve\", "̆" },
         { @"\dot\", "̇" },
-        { @"@;", "̇" },
         { @"\ddot\", "̈" },
-        { @"@:", "̈" },
         { @"\ovhook\", "̉" },
         { @"\mathring\", "̊" },
         { @"\check\", "̌" },
@@ -64,99 +316,59 @@ internal static class LatexUnicode
         { @"\underline\", "̲" },
         { @"\twolowbar\", "̳" },
         { @"\not\", "̸" },
-        { @"@!", "̸" },
         { @"\Alpha\", "Α" },
         { @"\Beta\", "Β" },
         { @"\Gamma\", "Γ" },
-        { @"@G", "Γ" },
         { @"\Delta\", "Δ" },
-        { @"@D", "Δ" },
         { @"\Epsilon\", "Ε" },
         { @"\Zeta\", "Ζ" },
         { @"\Eta\", "Η" },
         { @"\Theta\", "Θ" },
-        { @"@Q", "Θ" },
         { @"\Iota\", "Ι" },
         { @"\Kappa\", "Κ" },
         { @"\Lambda\", "Λ" },
-        { @"@L", "Λ" },
         { @"\Mu\", "Μ" },
         { @"\Nu\", "Ν" },
         { @"\Xi\", "Ξ" },
-        { @"@X", "Ξ" },
         { @"\Omicron\", "Ο" },
         { @"\Pi\", "Π" },
-        { @"@P", "Π" },
         { @"\Rho\", "Ρ" },
         { @"\Sigma\", "Σ" },
-        { @"@S", "Σ" },
         { @"\Tau\", "Τ" },
         { @"\Upsilon\", "ϒ" },
-        { @"@U", "ϒ" },
         { @"\Phi\", "Φ" },
-        { @"@F", "Φ" },
         { @"\Chi\", "Χ" },
         { @"\Psi\", "Ψ" },
-        { @"@Y", "Ψ" },
         { @"\Omega\", "Ω" },
-        { @"@W", "Ω" },
         { @"\alpha\", "α" },
-        { @"@a", "α" },
         { @"\beta\", "β" },
-        { @"@b", "β" },
         { @"\gamma\", "γ" },
-        { @"@g", "γ" },
         { @"\delta\", "δ" },
-        { @"@d", "δ" },
         { @"\varepsilon\", "ε" },
-        { @"@ve", "ε" },
         { @"\zeta\", "ζ" },
-        { @"@z", "ζ" },
         { @"\eta\", "η" },
-        { @"@h", "η" },
         { @"\theta\", "θ" },
-        { @"@q", "θ" },
         { @"\iota\", "ι" },
-        { @"@i", "ι" },
         { @"\kappa\", "κ" },
-        { @"@k", "κ" },
         { @"\lambda\", "λ" },
-        { @"@l", "λ" },
         { @"\mu\", "μ" },
-        { @"@m", "μ" },
         { @"\nu\", "ν" },
-        { @"@n", "ν" },
         { @"\xi\", "ξ" },
-        { @"@x", "ξ" },
         { @"\omicron\", "ο" },
         { @"\pi\", "π" },
-        { @"@p", "π" },
         { @"\rho\", "ρ" },
-        { @"@r", "ρ" },
         { @"\varsigma\", "ς" },
-        { @"@vs", "ς" },
         { @"\sigma\", "σ" },
-        { @"@s", "σ" },
         { @"\tau\", "τ" },
-        { @"@t", "τ" },
         { @"\upsilon\", "υ" },
-        { @"@u", "υ" },
         { @"\varphi\", "φ" },
-        { @"@vf", "φ" },
         { @"\chi\", "χ" },
-        { @"@c", "χ" },
         { @"\psi\", "ψ" },
-        { @"@y", "ψ" },
         { @"\omega\", "ω" },
-        { @"@o", "ω" },
         { @"\varbeta\", "ϐ" },
-        { @"@vb", "ϐ" },
         { @"\vartheta\", "ϑ" },
-        { @"@vq", "ϑ" },
         { @"\phi\", "ϕ" },
-        { @"@f", "ϕ" },
         { @"\varpi\", "ϖ" },
-        { @"@vp", "ϖ" },
         { @"\Qoppa\", "Ϙ" },
         { @"\qoppa\", "ϙ" },
         { @"\Stigma\", "Ϛ" },
@@ -173,9 +385,6 @@ internal static class LatexUnicode
         { @"\epsilon\", "ϵ" },
         { @"\backepsilon\", "϶" },
         { @"\Sha\", "Ш" },
-        { @"--", "–" },
-        { @"–-", "---" },
-        { @"-–", "---" },
         { @"\Vert\", "‖" },
         { @"\twolowline\", "‗" },
         { @"\dagger\", "†" },
@@ -352,25 +561,18 @@ internal static class LatexUnicode
         { @"\rightarrowtriangle\", "⇾" },
         { @"\leftrightarrowtriangle\", "⇿" },
         { @"\forall\", "∀" },
-        { @"@A", "∀" },
         { @"\complement\", "∁" },
         { @"\partial\", "∂" },
-        { @"@6", "∂" },
         { @"\exists\", "∃" },
-        { @"@E", "∃" },
         { @"\nexists\", "∄" },
-        { @"̸∃", "∄" },
         { @"\varnothing\", "∅" },
-        { @"@v0", "∅" },
         { @"\increment\", "∆" },
         { @"\nabla\", "∇" },
         { @"\in\", "∈" },
-        { @"̸∈", "∈" },
         { @"\notin\", "∉" },
         { @"\smallin\", "∊" },
         { @"\ni\", "∋" },
         { @"\nni\", "∌" },
-        { @"̸∋", "∌" },
         { @"\smallni\", "∍" },
         { @"\QED\", "∎" },
         { @"\prod\", "∏" },
@@ -382,30 +584,21 @@ internal static class LatexUnicode
         { @"\smallsetminus\", "∖" },
         { @"\ast\", "∗" },
         { @"\circ\", "∘" },
-        { @"@@", "∘" },
         { @"\sqrt\", "√" },
-        { @"@2", "√" },
         { @"\sqrt[3]", "∛" },
-        { @"√^3", "∛" },
         { @"\sqrt[4]", "∜" },
-        { @"√^4", "∜" },
         { @"\propto\", "∝" },
         { @"\infty\", "∞" },
-        { @"@8", "∞" },
         { @"\rightangle\", "∟" },
         { @"\angle\", "∠" },
         { @"\measuredangle\", "∡" },
         { @"\sphericalangle\", "∢" },
         { @"\mid\", "∣" },
-        { @"@|", "∣" },
         { @"\nmid\", "∤" },
-        { @"̸∣", "∤" },
         { @"\parallel\", "∥" },
         { @"\nparallel\", "∦" },
-        { @"̸∥", "∦" },
         { @"\wedge\", "∧" },
         { @"\land\", "∧" },
-        { @"@&", "∧" },
         { @"\vee\", "∨" },
         { @"\lor\", "∨" },
         { @"\cap\", "∩" },
@@ -413,11 +606,8 @@ internal static class LatexUnicode
         { @"\cup\", "∪" },
         { @"\union\", "∪" },
         { @"\int\", "∫" },
-        { @"@I", "∫" },
         { @"\iint\", "∬" },
-        { @"∫∫", "∬" },
         { @"\iiint\", "∭" },
-        { @"∫∫∫", "∭" },
         { @"\oint\", "∮" },
         { @"\oiint\", "∯" },
         { @"\oiiint\", "∰" },
@@ -468,18 +658,13 @@ internal static class LatexUnicode
         { @"\measeq\", "≞" },
         { @"\questeq\", "≟" },
         { @"\neq\", "≠" },
-        { @"̸=", "≠" },
         { @"\equiv\", "≡" },
-        { @"@=", "≡" },
         { @"\nequiv\", "≢" },
-        { @"̸≡", "≢" },
         { @"\Equiv\", "≣" },
         { @"\leq\", "≤" },
         { @"\le\", "≤" },
-        { @"@<", "≤" },
         { @"\geq\", "≥" },
         { @"\ge\", "≥" },
-        { @"@>", "≥" },
         { @"\leqq\", "≦" },
         { @"\geqq\", "≧" },
         { @"\lneqq\", "≨" },
@@ -573,12 +758,9 @@ internal static class LatexUnicode
         { @"\bigwedge\", "⋀" },
         { @"\bigvee\", "⋁" },
         { @"\bigcap\", "⋂" },
-        { @"@-", "⋂" },
         { @"\bigcup\", "⋃" },
-        { @"@+", "⋃" },
         { @"\diamond\", "⋄" },
         { @"\cdot\", "⋅" },
-        { @"@.", "⋅" },
         { @"\star\", "⋆" },
         { @"\divideontimes\", "⋇" },
         { @"\bowtie\", "⋈" },
@@ -657,12 +839,6 @@ internal static class LatexUnicode
         { @"\lrcorner\", "⌟" },
         { @"\inttop\", "⌠" },
         { @"\intbottom\", "⌡" },
-        { @"\Int\", @"
-⌠
-⌡" },
-        { @"\big∫", @"
-⌠
-⌡" },
         { @"\frown\", "⌢" },
         { @"\smile\", "⌣" },
         { @"\varhexagonlrbonds\", "⌬" },
@@ -743,34 +919,12 @@ internal static class LatexUnicode
         { @"\rparenuend\", "⎞" },
         { @"\rparenextender\", "⎟" },
         { @"\rparenlend\", "⎠" },
-        { @"\big()", @"
-⎛ & & ⎞
-⎝ & & ⎠" },
-        { @"\bigg()", @"
-⎛ && ⎞
-⎜ && ⎟
-⎝ && ⎠" },
         { @"\lbrackuend\", "⎡" },
         { @"\lbrackextender\", "⎢" },
         { @"\lbracklend\", "⎣" },
         { @"\rbrackuend\", "⎤" },
         { @"\rbrackextender\", "⎥" },
         { @"\rbracklend\", "⎦" },
-        { @"\big[]", @"
-⎡ && ⎤
-⎣ && ⎦" },
-        { @"\bigg[]", @"
-⎡ && ⎤
-⎢ && ⎥
-⎣ && ⎦" },
-        { @"\matrix\", @"
-⎡ & a11 && a12 && a13 & ⎤
-⎢ & a21 && a22 && a23 & ⎥
-⎣ & a31 && a32 && a33 & ⎦" },
-        { @"\det\", @"
-⎢ & a11 && a12 && a13 & ⎥
-⎢ & a21 && a22 && a23 & ⎥
-⎢ & a31 && a32 && a33 & ⎥" },
         { @"\lbraceuend\", "⎧" },
         { @"\lbracemid\", "⎨" },
         { @"\lbracelend\", "⎩" },
@@ -778,47 +932,16 @@ internal static class LatexUnicode
         { @"\rbraceuend\", "⎫" },
         { @"\rbracemid\", "⎬" },
         { @"\rbracelend\", "⎭" },
-        { @"\bigg{}", @"
-⎧ && ⎫
-⎨ && ⎬
-⎩ && ⎭" },
-        { @"\huge{}",@"
-⎧ && ⎫
-⎪ && ⎪
-⎨ && ⎬
-⎪ && ⎪
-⎩ && ⎭" },
-        { @"\cases\",@"
-⎧ & expr & if cond
-⎪ & expr & if cond
-⎨ & expr & if cond
-⎪ & expr & if cond
-⎩ & expr & otherwise" },
-        { @"\rcases\",@"
-expr & if cond   & ⎫
-expr & if cond   & ⎪
-expr & if cond   & ⎬
-expr & if cond   & ⎪
-expr & otherwise & ⎭" },
         { @"\intextender\", "⎮" },
         { @"\harrowextender\", "⎯" },
         { @"\lmoustache\", "⎰" },
         { @"\rmoustache\", "⎱" },
-        { @"\big{}", @"
-⎰ && ⎱
-⎱ && ⎰" },
         { @"\sumtop\", "⎲" },
         { @"\sumbottom\", "⎳" },
-        { @"\Sum\", @"
-⎲
-⎳" },
         { @"\overbracket\", "⎴" },
         { @"\underbracket\", "⎵" },
         { @"\bbrktbrk\", "⎶" },
         { @"\sqrtbottom\", "⎷" },
-        { @"\big√", @"
- _
-⎷" },
         { @"\lvboxline\", "⎸" },
         { @"\rvboxline\", "⎹" },
         { @"\varcarriagereturn\", "⏎" },
@@ -1332,7 +1455,6 @@ expr & otherwise & ⎭" },
         { @"\errbarblackcircle\", "⧳" },
         { @"\ruledelayed\", "⧴" },
         { @"\setminus\", "⧵" },
-        { @"@\", "⧵" },
         { @"\dsol\", "⧶" },
         { @"\rsolbar\", "⧷" },
         { @"\xsol\", "⧸" },
@@ -1691,7 +1813,7 @@ expr & otherwise & ⎭" },
         //{ @"\llbracket\", "〚" },
         //{ @"\rrbracket\", "〛" },
         { @"\hzigzag\", "〰" },
-        { @"hiraganano", "の" },
+        { @"\hiraganano\", "の" },
          // ﬩                       \HEBREW LETTER ALTERNATIVE PLUS SIGN (doesn’t have cross shape)
         // ︀                       \VARIATION SELECTOR-1
         // ﹡                       \SMALL ASTERISK
@@ -1767,31 +1889,6 @@ expr & otherwise & ⎭" },
         { @"\z\", "𝑧" },
         { @"\imath\", "𝚤" },
         { @"\jmath\", "𝚥" },
-        { @"\Algebraic\", "𝔸" },
-        { @"$A", "𝔸" },
-        { @"\Boolean\", "𝔹" },
-        { @"$B", "𝔹" },
-        { @"\Complex\", "ℂ" },
-        { @"$C", "ℂ" },
-        { @"\Quaternion\", "ℍ" },
-        { @"$H", "ℍ" },
-        { @"\Imaginary\", "𝕀" },
-        { @"$I", "𝕀" },
-        { @"\Monster\", "𝕄" },
-        { @"$M", "𝕄" },
-        { @"\Natural\", "ℕ" },
-        { @"\Natural0\", "ℕ₀" },
-        { @"$N", "ℕ" },
-        { @"\Irrational\", "ℙ" },
-        { @"$P", "ℙ" },
-        { @"\Rational\", "ℚ" },
-        { @"$Q", "ℚ" },
-        { @"\Real\", "ℝ" },
-        { @"$R", "ℝ" },
-        { @"\Whole\", "𝕎" },
-        { @"$W", "𝕎" },
-        { @"\Integer\", "ℤ" },
-        { @"$Z", "ℤ" },
     };
 
     private static readonly Dictionary<char, string> superscriptMapping = new()
@@ -2952,8 +3049,18 @@ expr & otherwise & ⎭" },
     private static readonly Regex rxUnicodeRelpacement =
         new(@$"({string.Join("|", unicodeReplacements.Keys.Select((key) => key.Replace(@"\", @"(?<!\\)\\")))})");
 
+    private static string ApplyUnicodeShorthands(string str)
+    {
+        foreach (var (pattern, evaluator) in unicodeShorthands)
+        {
+            str = pattern.Replace(str, evaluator);
+        }
+        return str;
+    }
+
     public static string ApplyUnicodeReplacements(string str)
     {
+        str = ApplyUnicodeShorthands(str);
         foreach (string key in unicodeReplacements.Keys)
         {
             str = str.Replace(key, unicodeReplacements[key]);

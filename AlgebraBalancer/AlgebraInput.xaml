@@ -11,7 +11,21 @@
     DataContext="local">
 
     <StackPanel Orientation="Vertical" Spacing="9" Width="80">
-        <TextBox x:Name="Input" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" Background="{ThemeResource SystemControlAcrylicElementBrush}" TextAlignment="Right" TextChanged="Input_TextChanged" MaxLength="7" TextWrapping="Wrap"/>
-        <TextBlock x:Name="EchoInput" FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code" FontSize="16" HorizontalAlignment="Center" Text="∅" Opacity="0.5"/>
+        <TextBox
+            x:Name="Input"
+            FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code"
+            Background="{ThemeResource SystemControlAcrylicElementBrush}"
+            TextAlignment="Right"
+            TextChanged="Input_TextChanged"
+            MaxLength="7"
+            TextWrapping="Wrap"/>
+        
+        <TextBlock
+            x:Name="EchoInput"
+            FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code"
+            FontSize="16"
+            HorizontalAlignment="Center"
+            Text="∅"
+            Opacity="0.5"/>
     </StackPanel>
 </UserControl>
