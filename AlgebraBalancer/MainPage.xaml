@@ -73,7 +73,8 @@
                             x:Name="UnicodeLookup"
                             PlaceholderText="Symbol lookup"
                             PreviewKeyDown="UnicodeLookup_PreviewKeyDown"
-                            IsSpellCheckEnabled="false"/>
+                            IsSpellCheckEnabled="False"
+                            IsTextPredictionEnabled="False"/>
                         <GridView
                             x:Name="UnicodeButtons"
                             IsItemClickEnabled="True"

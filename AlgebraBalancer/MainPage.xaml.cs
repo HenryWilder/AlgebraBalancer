@@ -367,6 +367,9 @@ public sealed partial class MainPage : Page
 
     private readonly static DataTable dt = new();
 
+    private readonly static Regex rxImpliedMul = new(@"(?<=\))\s*(?=[0-9\(])|(?<=[0-9\)])\s*(?=\()");
+    private readonly static Regex rxSquare = new(@"(\d+\.?\d*)([²³⁴])");
+
     private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
     {
         var shiftState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift);
@@ -383,6 +386,47 @@ public sealed partial class MainPage : Page
         {
             CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
         }
+        // Column jumping
+        else if ((e.Key is VirtualKey.Left or VirtualKey.Right) && isAlting && isCtrling)
+        {
+            int selectionStart = Notes.SelectionStart;
+            string notesText = Notes.Text;
+            int maxIndex = Math.Max(notesText.Length - 1, 0);
+
+            switch (e.Key)
+            {
+                case VirtualKey.Left:
+                {
+                    int selectionIndex = Math.Max(selectionStart - 1, 0);
+
+                    int startOfLine = notesText.LastIndexOf('\n', selectionIndex);
+                    if (startOfLine == -1) startOfLine = notesText.LastIndexOf('\r', selectionIndex);
+                    if (startOfLine == -1) startOfLine = 0;
+
+                    int prevCol = notesText.LastIndexOf('&', selectionIndex);
+                    if (prevCol == -1) prevCol = 0;
+
+                    Notes.SelectionStart = Math.Max(prevCol, startOfLine);
+                }
+                    break;
+
+                case VirtualKey.Right:
+                {
+                    int selectionIndex = Math.Min(selectionStart + 1, maxIndex);
+
+                    int endOfLine = notesText.IndexOf('\n', selectionIndex);
+                    if (endOfLine == -1) endOfLine = notesText.IndexOf('\r', selectionIndex);
+                    if (endOfLine == -1) endOfLine = notesText.Length;
+
+                    int nextCol = notesText.IndexOf('&', selectionIndex);
+                    if (nextCol == -1) nextCol = notesText.Length;
+
+                    Notes.SelectionStart = Math.Min(nextCol, endOfLine);
+                }
+                    break;
+            }
+            Notes.SelectionLength = 0; // Todo: shift-select
+        }
         // Duplicate line
         else if (!string.IsNullOrWhiteSpace(Notes.Text) && ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting
             || (e.Key == VirtualKey.Enter && (isShifting || isAlting))))
@@ -395,7 +439,7 @@ public sealed partial class MainPage : Page
             if (startOfLine == -1) startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
             if (startOfLine == -1) startOfLine = 0;
 
-            int endOfLine = notesText.IndexOf('\r', selectionIndex);
+            int endOfLine = notesText.IndexOf('\n', selectionIndex);
             if (endOfLine == -1) endOfLine = notesText.IndexOf('\r', selectionIndex);
             if (endOfLine == -1) endOfLine = notesText.Length;
 
@@ -429,7 +473,7 @@ public sealed partial class MainPage : Page
             UpdateAsync();
             e.Handled = true;
         }
-        // Calculate the selection and set it equal to the solution
+        // Calculate the selection and insert the result on the right side of an equals sign
         else if (isCtrling && e.Key == VirtualKey.Space)
         {
             if (Notes.SelectionLength > 0)
@@ -437,7 +481,26 @@ public sealed partial class MainPage : Page
                 string addText;
                 try
                 {
-                    double value = Convert.ToDouble(dt.Compute(Notes.SelectedText, ""));
+                    string expr = Notes.SelectedText;
+                    expr = rxImpliedMul.Replace(expr, "*");
+                    expr = rxSquare.Replace(expr, (Match match) => {
+                        string baseValue = match.Groups[1].Value;
+                        int expValue = match.Groups[2].Value switch {
+                            "²" => 2,
+                            "³" => 3,
+                            "⁴" => 4,
+                            _ => throw new Exception("Not implemented"),
+                        };
+                        // Weird workaround for Math.pow() not working with DataTable
+                        string subexpr = "(" + baseValue;
+                        for (int i = 1; i < expValue; ++i)
+                        {
+                            subexpr += "*" + baseValue;
+                        }
+                        subexpr += ")";
+                        return subexpr;
+                    });
+                    double value = Convert.ToDouble(dt.Compute(expr, ""));
                     addText = $" = {value}";
                 }
                 catch (Exception err)
