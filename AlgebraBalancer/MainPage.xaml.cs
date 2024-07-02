@@ -11,6 +11,7 @@ using Windows.UI.Core;
 using Windows.System;
 using System.Data;
 using System.Collections.ObjectModel;
+using Windows.UI.Xaml.Shapes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -286,84 +287,25 @@ public sealed partial class MainPage : Page
         CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
     }
 
-    private static readonly string CURSOR_SAVER = "\f";
-
-    private static readonly Regex rxAlignAroundCursor = new ($@"^ *{CURSOR_SAVER} *$");
-    private static readonly Regex rxMultipleSpaces = new (@" +");
-    private static readonly Regex rxSpacesBeforeAmp = new (@" +&");
-    private static readonly Regex rxOnlySpaces = new (@"^ +$");
-    private static readonly Regex rxLeadingSpaces = new (@"^ +"); // TODO: Check if this can just be TrimLeft or somethin
-
-    private string AlignMath(string str)
-    {
-        static string MinimizePadding(string part)
-        {
-            part = rxAlignAroundCursor.Replace(part, CURSOR_SAVER);
-            part = rxMultipleSpaces.Replace(part, " ");
-            part = rxOnlySpaces.Replace(part, "");
-            return part;
-        }
-
-        var lines = str.Split("\r").Select((line) => rxSpacesBeforeAmp.Replace(line, " &")).ToList();
-        var alignLines = lines.Select((line) => line.Split('&'));
-        var alignments = new List<int>();
-        foreach (string[] line in alignLines)
-        {
-            while (alignments.Count() < line.Count() - 1)
-            {
-                alignments.Add(-1);
-            }
-            for (int i = 0; i < line.Count() - 1; ++i)
-            {
-                string part = MinimizePadding(line[i]).Replace(CURSOR_SAVER, "");
-                if (i == 0) part = rxLeadingSpaces.Replace(part, "");
-                int partLen = part.Length;
-                if (partLen > alignments[i]) alignments[i] = partLen;
-            }
-        }
-        return string.Join("\r",
-            alignLines.Select((line, i) => string.Join('&',
-                line.Select((part, j) => {
-                    if (j < line.Count() - 1 && j < alignments.Count())
-                    {
-                        int accountForCursor = part.Contains(CURSOR_SAVER) ? CURSOR_SAVER.Length : 0;
-                        int partWidth = alignments[j] + accountForCursor;
-                        part = MinimizePadding(part);
-                        if (j == 0) part = rxLeadingSpaces.Replace(part, "");
-                        part = (j & 1) == 0 ? part.PadLeft(partWidth) : part.PadRight(partWidth);
-                    }
-                    return part;
-                })
-            ))
-        );
-    }
-
-    private static readonly Regex rxNoalign = new(@"^\\noalign\b");
-
     private string UnicodeReplacements(string str)
     {
         string macroPass = LatexUnicode.ApplyUnicodeReplacements(str);
-
         string remapPass = LatexUnicode.ApplyRemapPatterns(macroPass);
-
-        string alignPass = !rxNoalign.IsMatch(remapPass)
-            ? AlignMath(remapPass)
-            : remapPass;
-
+        string alignPass = MathAlign.AlignMath(remapPass);
         return alignPass;
     }
 
     private void Notes_TextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         int selectionStart = Notes.SelectionStart;
-        string updated = Notes.Text.Insert(selectionStart, CURSOR_SAVER);
+        string updated = Notes.Text.Insert(selectionStart, MathAlign.CURSOR_SAVER);
         updated = UnicodeReplacements(updated);
-        int cursorPos = updated.IndexOf(CURSOR_SAVER);
-        Notes.Text = updated.Replace(CURSOR_SAVER, "");
+        int cursorPos = updated.IndexOf(MathAlign.CURSOR_SAVER);
+        Notes.Text = updated.Replace(MathAlign.CURSOR_SAVER, "");
         Notes.SelectionStart = cursorPos;
     }
 
-    private static readonly Regex rxWS = new(@"\s+");
+    private static readonly Regex rxWS = new(@"[ \t\n\r]+");
 
     private readonly static DataTable dt = new();
 
