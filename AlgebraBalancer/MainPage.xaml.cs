@@ -313,6 +313,9 @@ public sealed partial class MainPage : Page
     private readonly static Regex rxSquare = new(@"(\d+\.?\d*)([²³⁴])");
 
     private static readonly string HELP_TEXT = @"
+!! The commands have been modified so that they display without executing.
+   Make sure to type the commands yourself instead of copying and pasting them from this, or else they won't work.
+
 # Notes
   [alt] + [enter]              => Toggle calculator pane
   [ctrl] + [alt] + [left]      => Jump left one column
@@ -326,20 +329,20 @@ public sealed partial class MainPage : Page
 
   \SomeLaTeXCommand\ => Unicode equivalent of corresponding LaTeX command
 
-  \matrix~<rows>x<cols> => Create a matrix with <rows> rows and <cols> columns
-  Example: \matrix~3x2
+  \matrix~<rows>x<cols> => Create a matrix with <rows> rows and <cols> columns (between 1 and 9)
+    Example: \matrix~3x2
 \matrix3x2
 
-  \det~<rows>x<cols> => Create a determinant with <rows> rows and <cols> columns
-  Example: \det~3x2
+  \det~<rows>x<cols> => Create a determinant with <rows> rows and <cols> columns (between 1 and 9)
+    Example: \det~3x2
 \det3x2
 
-  \cases~<cases> => Create a piecewise with <cases> cases
-  Example: \cases~3
+  \cases~<cases> => Create a piecewise with <cases> cases (between 1 and 9)
+    Example: \cases~3
 \cases3
 
-  \rcases~<cases> => Create a reverse piecewise with <cases> cases
-  Example: \rcases~3
+  \rcases~<cases> => Create a reverse piecewise with <cases> cases (between 1 and 9)
+    Example: \rcases~3
 \rcases3
 
   ^... or ^{...} => Superscript (^{0-9})
@@ -369,10 +372,21 @@ public sealed partial class MainPage : Page
   If the brackets are empty, backspacing the opening bracket deletes the closing bracket.
   ), ], and } can overtype each other (to make interval notation easier).
 
-  Use ""\&"" to separate columns.
+  Use ""~&"" to separate columns.
   Columns are aligned in an alternating pattern of right, left, right, left, etc.
-  Use ""\&\&"" to keep the same alignment direction in the new column.
-  Use ""\noalign"" at the beginning to disable alignment.
+    --> ~& <-- ~& --> ~& <--
+
+  Use ""~&~&"" to keep the same alignment direction in the new column.
+    --> ~&~& --> ~&~& --> ~&~& --> ~& <-- ~&~& <-- ~&~& <-- ~&~& <--
+
+  Alignments are localized to the current ""chunk"". Chunks are separated by lines that have no ""~&""s.
+    apple ~& banana ~& orange ~& mango
+      000 ~& 000    ~&    000 ~& 000
+    blah blah blah blah
+    0000 ~& 0000 ~&~& 0000
+       0 ~& 0    ~&~& 0
+
+  \~& => Non-aligning ampersand (""\&"")
 
 # Calculator
   Press enter to calculate.

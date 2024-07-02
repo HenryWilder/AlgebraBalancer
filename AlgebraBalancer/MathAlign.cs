@@ -11,8 +11,9 @@ namespace AlgebraBalancer;
 internal static class MathAlign
 {
     public const string CURSOR_SAVER = "\f";
-
-    private static readonly Regex rxNoalign = new(@"^\\noalign\b");
+    
+    private static readonly Regex rxColumnSplit = new(@"(?<!\u200B)&");
+    //private static readonly Regex rxNoalign = new(@"^\\noalign\b");
     private static readonly Regex rxAlignAroundCursor = new($@"^ *{CURSOR_SAVER} *$");
     private static readonly Regex rxMultipleSpaces = new(@" +");
     private static readonly Regex rxSpacesBeforeAmp = new(@" +&");
@@ -37,7 +38,7 @@ internal static class MathAlign
             if (!needsAlignment) return;
 
             // Split each row into columns
-            var table = rows.Select((row) => row.Split('&'));
+            var table = rows.Select((row) => rxColumnSplit.Split(row));
 
             // Find the widest each column ever gets
             var alignments = new List<int>();
