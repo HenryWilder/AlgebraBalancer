@@ -370,6 +370,77 @@ public sealed partial class MainPage : Page
     private readonly static Regex rxImpliedMul = new(@"(?<=\))\s*(?=[0-9\(])|(?<=[0-9\)])\s*(?=\()");
     private readonly static Regex rxSquare = new(@"(\d+\.?\d*)([²³⁴])");
 
+    private static readonly string HELP_TEXT = @"
+# Notes
+  [alt] + [enter]              => Toggle calculator pane
+  [ctrl] + [alt] + [left]      => Jump left one column
+  [ctrl] + [alt] + [right]     => Jump right one column
+  ([alt] or [shift]) + [enter] => Duplicate line down
+  [alt] + [shift] + [down]     => Duplicate line down
+  [alt] + [shift] + [up]       => Duplicate line up
+  [ctrl] + (1, 2, or 3)        => Insert selection into the corresponding calculator input
+  [ctrl] + [enter]             => Clear calculator inputs and replace 1st with selection
+  [ctrl] + [space]             => Calculate approximate value of the selection inline
+
+  \SomeLaTeXCommand\ => Unicode equivalent of corresponding LaTeX command
+
+  \matrix~<rows>x<cols> => Create a matrix with <rows> rows and <cols> columns
+  Example: \matrix~3x2
+\matrix3x2
+
+  \det~<rows>x<cols> => Create a determinant with <rows> rows and <cols> columns
+  Example: \det~3x2
+\det3x2
+
+  \cases~<cases> => Create a piecewise with <cases> cases
+  Example: \cases~3
+\cases3
+
+  \rcases~<cases> => Create a reverse piecewise with <cases> cases
+  Example: \rcases~3
+\rcases3
+
+  ^... or ^{...} => Superscript (^{0-9})
+  _... or _{...} => Subscript (_{0-9})
+
+  $...  => Blackboard bold
+  \...\ => Math variable
+
+  @~@  => Circ (""@@"")
+  @~0  => Degrees (""@0"")
+  @~*  => Times (""@*"")
+  @~.  => Cdot (""@."")
+  @~/  => Div (""@/"")
+  @~-  => Intersection (""@-"")
+  @~+  => Union (""@+"")
+  @~2  => Square root (""@2"")
+  √~³  => Cube root (""@2^3"")
+  √~⁴  => Cube root (""@2^4"")
+  @~8  => Infinity (""@8"")
+  @~6  => Partial derivative (""@6"")
+  @~A  => Forall (""@A"")
+  @~E  => Exists (""@E"")
+  @~v0 => Varnothing (""@v0"")
+  @~I  => Integral (""@I"")
+
+  (), [], and {} are created in pairs and surround the selection.
+  If the brackets are empty, backspacing the opening bracket deletes the closing bracket.
+  ), ], and } can overtype each other (to make interval notation easier).
+
+  Use ""\&"" to separate columns.
+  Columns are aligned in an alternating pattern of right, left, right, left, etc.
+  Use ""\&\&"" to keep the same alignment direction in the new column.
+  Use ""\noalign"" at the beginning to disable alignment.
+
+# Calculator
+  Press enter to calculate.
+
+# Symbol lookup
+  Press enter to search.
+  Press escape to clear the search.
+  Click a symbol to insert it in the notes section.
+".Replace("~", "\u200B");
+
     private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
     {
         var shiftState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift);
@@ -381,10 +452,18 @@ public sealed partial class MainPage : Page
         var altState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Menu);
         bool isAlting = (altState & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
 
+        // Help
+        if (e.Key == VirtualKey.F1)
+        {
+            Notes.Text += HELP_TEXT;
+            e.Handled = true;
+        }
+
         // Toggle calculator
-        if (e.Key == VirtualKey.Enter && isAlting)
+        else if (e.Key == VirtualKey.Enter && isAlting)
         {
             CalculationsPane.IsPaneOpen = !CalculationsPane.IsPaneOpen;
+            e.Handled = true;
         }
         // Column jumping
         else if ((e.Key is VirtualKey.Left or VirtualKey.Right) && isAlting && isCtrling)
@@ -399,8 +478,7 @@ public sealed partial class MainPage : Page
                 {
                     int selectionIndex = Math.Max(selectionStart - 1, 0);
 
-                    int startOfLine = notesText.LastIndexOf('\n', selectionIndex);
-                    if (startOfLine == -1) startOfLine = notesText.LastIndexOf('\r', selectionIndex);
+                    int startOfLine = notesText.LastIndexOf('\r', selectionIndex);
                     if (startOfLine == -1) startOfLine = 0;
 
                     int prevCol = notesText.LastIndexOf('&', selectionIndex);
@@ -414,8 +492,7 @@ public sealed partial class MainPage : Page
                 {
                     int selectionIndex = Math.Min(selectionStart + 1, maxIndex);
 
-                    int endOfLine = notesText.IndexOf('\n', selectionIndex);
-                    if (endOfLine == -1) endOfLine = notesText.IndexOf('\r', selectionIndex);
+                    int endOfLine = notesText.IndexOf('\r', selectionIndex);
                     if (endOfLine == -1) endOfLine = notesText.Length;
 
                     int nextCol = notesText.IndexOf('&', selectionIndex);
@@ -426,6 +503,7 @@ public sealed partial class MainPage : Page
                     break;
             }
             Notes.SelectionLength = 0; // Todo: shift-select
+            e.Handled = true;
         }
         // Duplicate line
         else if (!string.IsNullOrWhiteSpace(Notes.Text) && ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting
@@ -435,18 +513,16 @@ public sealed partial class MainPage : Page
             string notesText = Notes.Text;
             int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
 
-            int startOfLine = notesText.LastIndexOf('\n', selectionIndex - 1);
-            if (startOfLine == -1) startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
+            int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
             if (startOfLine == -1) startOfLine = 0;
 
-            int endOfLine = notesText.IndexOf('\n', selectionIndex);
-            if (endOfLine == -1) endOfLine = notesText.IndexOf('\r', selectionIndex);
+            int endOfLine = notesText.IndexOf('\r', selectionIndex);
             if (endOfLine == -1) endOfLine = notesText.Length;
 
             string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
-            if (lineText[0] is not '\n' and not '\r')
+            if (lineText[0] != '\r')
             {
-                lineText = lineText.Insert(0, "\n");
+                lineText = lineText.Insert(0, "\r");
             }
             int cursorOffset = e.Key == VirtualKey.Up ? 0 : lineText.Length;
 

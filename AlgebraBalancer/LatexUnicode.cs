@@ -13,7 +13,7 @@ internal static class LatexUnicode
     public static readonly (Regex shorthand, MatchEvaluator evaluator)[] unicodeShorthands =
     [
         (new Regex(@"@0"), (match) => "°"),
-        (new Regex(@"@/"), (match) => "()/()"),
+        (new Regex(@"@/"), (match) => "÷"),
         (new Regex(@"@\*"), (match) => "×"),
         (new Regex(@"@\^"), (match) => "̂"),
         (new Regex(@"@_"), (match) => "̄"),
@@ -144,7 +144,7 @@ internal static class LatexUnicode
             {
                 result += isDet ? "| " : "[ ";
                 FillRow();
-                result += isDet ? " |\n" : " ]\n";
+                result += isDet ? " |\r" : " ]\r";
             }
             else
             {
@@ -161,7 +161,7 @@ internal static class LatexUnicode
                     result += isDet ? "⎢" : "⎡⎢⎣"[kind];
                     FillRow();
                     result += isDet ? "⎥" : "⎤⎥⎦"[kind];
-                    result += '\n';
+                    result += '\r';
                 }
             }
             return result;
@@ -206,13 +206,13 @@ internal static class LatexUnicode
                     {
                         result += "{ & ";
                         FillRow();
-                        result += '\n';
+                        result += '\r';
                     }
                     else
                     {
                         result += "& ";
                         FillRow();
-                        result += " & }\n";
+                        result += " & }\r";
                     }
                     break;
 
@@ -221,17 +221,17 @@ internal static class LatexUnicode
                     {
                         result += "⎰ & ";
                         FillRow();
-                        result += "\n⎱ & ";
+                        result += "\r⎱ & ";
                         FillRow();
-                        result += '\n';
+                        result += '\r';
                     }
                     else
                     {
                         result += "& ";
                         FillRow();
-                        result += " & ⎱\n";
+                        result += " & ⎱\r";
                         FillRow();
-                        result += " & ⎰\n";
+                        result += " & ⎰\r";
                     }
                     break;
 
@@ -250,7 +250,7 @@ internal static class LatexUnicode
 
                         result += (isReverse ? "" : "⎧⎨⎪⎩"[kind]) + " & ";
                         FillRow();
-                        result += (isReverse ? " & " + "⎫⎬⎪⎭"[kind] : "") + "\n";
+                        result += (isReverse ? " & " + "⎫⎬⎪⎭"[kind] : "") + "\r";
                     }
                     break;
             }
@@ -1889,6 +1889,7 @@ internal static class LatexUnicode
         { @"\z\", "𝑧" },
         { @"\imath\", "𝚤" },
         { @"\jmath\", "𝚥" },
+        { @"\&", "＆" },
     };
 
     private static readonly Dictionary<char, string> superscriptMapping = new()
@@ -1957,7 +1958,6 @@ internal static class LatexUnicode
         { ')', "₎" },
         { 'a', "ₐ" },
         { 'e', "ₑ" },
-        { 'x', "ₓ" },
         { 'h', "ₕ" },
         { 'k', "ₖ" },
         { 'l', "ₗ" },
@@ -1967,6 +1967,7 @@ internal static class LatexUnicode
         { 'p', "ₚ" },
         { 's', "ₛ" },
         { 't', "ₜ" },
+        { 'x', "ₓ" },
     };
     private static readonly Regex subscriptPattern = new(@"_\{([0-9\+\-=\(\)aexhklmnopst]+?)\}");
     private static readonly Regex subscriptPattern1 = new(@"_([0-9\+\-=\(\)aexhklmnopst])");
