@@ -53,7 +53,11 @@
   <tr>
     <td><kbd>Ctrl</kbd> + <kbd>space</kbd></td>
     <td>Calculate approximate value of the selection inline</td>
-    <td></td>
+    <td>
+      <mark>8(4 + 3)</mark><br/>
+      <kbd>Ctrl</kbd> + <kbd>space</kbd><br/>
+      8(4 + 3) = 56
+    </td>
   </tr>
   <tr>
     <td><code>\<span style="color:dodgerblue">&lt;command&gt;</span>\</code></td>
