@@ -57,7 +57,7 @@ internal static class MathAlign
                     if (i == 0) column = rxLeadingSpaces.Replace(column, "");
 
                     int colWidth = column.Length;
-                    alignments[i] = Math.Max(alignments[i], colWidth);
+                    alignments[i] = System.Math.Max(alignments[i], colWidth);
                 }
             }
 

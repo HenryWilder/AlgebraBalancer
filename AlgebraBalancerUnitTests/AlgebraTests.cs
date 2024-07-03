@@ -1,7 +1,8 @@
 ﻿
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static AlgebraBalancer.Algebra;
+using AlgebraBalancer.Notation;
+using AlgebraBalancer.Algebra;
+using static AlgebraBalancer.ExactMath;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -18,7 +19,7 @@ public class AlgebraTests
 
     [TestMethod]
     public void PowerTest3() =>
-        Assert.IsInstanceOfType(Power(int.MaxValue, -2), typeof(Epsilon));
+        Assert.IsInstanceOfType(Power(int.MaxValue, -2), typeof(Tiny));
 
     [TestMethod]
     public void RadicalTest1() =>

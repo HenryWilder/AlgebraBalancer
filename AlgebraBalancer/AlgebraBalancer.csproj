@@ -116,13 +116,19 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Algebra.cs" />
+    <Compile Include="Algebra\Complex.cs" />
+    <Compile Include="Algebra\ExactMath.cs" />
+    <Compile Include="Algebra\Notation.cs" />
     <Compile Include="AlgebraInput.xaml.cs">
       <DependentUpon>AlgebraInput.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Algebra\Fraction.cs" />
+    <Compile Include="Algebra\Radical.cs" />
+    <Compile Include="Algebra\RadicalFraction.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExactCalculations.cs" />
     <Compile Include="LatexUnicode.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -226,6 +232,7 @@
     <Content Include="Assets\Fonts\FiraCode-Retina.ttf" />
     <Content Include="Assets\Fonts\FiraCode-SemiBold.ttf" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
