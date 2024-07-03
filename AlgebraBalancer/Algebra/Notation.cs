@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using AlgebraBalancer.Algebra;
 
 namespace AlgebraBalancer.Notation;
 

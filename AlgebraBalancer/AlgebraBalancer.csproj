@@ -116,6 +116,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Algebra\Balancer.cs" />
     <Compile Include="Algebra\Complex.cs" />
     <Compile Include="Algebra\ExactMath.cs" />
     <Compile Include="Algebra\Notation.cs" />
