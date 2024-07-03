@@ -22,17 +22,17 @@
   </tr>
   <tr>
     <td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>right</kbd></td>
-    <td> Jump right one column</td>
+    <td>Jump right one column</td>
     <td></td>
   </tr>
   <tr>
-    <td>(<kbd>Alt</kbd> or <kbd>Shift</kbd>) + <kbd>Enter</kbd></td>
-    <td> Duplicate line down</td>
+    <td><kbd>Shift</kbd> + <kbd>Enter</kbd></td>
+    <td>Duplicate line down</td>
     <td></td>
   </tr>
   <tr>
     <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>down</kbd></td>
-    <td> Duplicate line down</td>
+    <td>Duplicate line down</td>
     <td></td>
   </tr>
   <tr>
@@ -42,17 +42,17 @@
   </tr>
   <tr>
     <td><kbd>Ctrl</kbd> + (<kbd>1</kbd> or <kbd>2</kbd> or <kbd>3</kbd>)</td>
-    <td> Insert selection into the corresponding calculator input</td>
+    <td>Insert selection into the corresponding calculator input</td>
     <td></td>
   </tr>
   <tr>
     <td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td>
-    <td> Clear calculator inputs and replace 1st with selection</td>
+    <td>Clear calculator inputs and replace 1st with selection</td>
     <td></td>
   </tr>
   <tr>
     <td><kbd>Ctrl</kbd> + <kbd>space</kbd></td>
-    <td> Calculate approximate value of the selection inline</td>
+    <td>Calculate approximate value of the selection inline</td>
     <td></td>
   </tr>
   <tr>
