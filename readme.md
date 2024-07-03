@@ -2,6 +2,8 @@
 
 ## Notes
 
+### Shortcuts
+
 <table>
   <tr>
     <th>Input</th>
@@ -55,7 +57,11 @@
   </tr>
   <tr>
     <td><code>\<span style="color:dodgerblue">&lt;command&gt;</span>\</code></td>
-    <td>Unicode equivalent of the corresponding LaTeX command</td>
+    <td>
+      
+Unicode equivalent of the corresponding <code><span style="color:dodgerblue">&lt;command&gt;</span></code> $\LaTeX$ command
+      
+</td>
     <td>
       <code>\forall\</code> &forall;<br/>
       <code>\exists\</code> &exist;<br/>
@@ -106,11 +112,11 @@
   </tr>
   <tr>
     <td>
-        <code>^<span style="color:dodgerblue">&lt;...<span style="color:orange">[1]</span>&gt;</span></code>
-        or
-        <code>^{<span style="color:dodgerblue">&lt;...<span style="color:orange">[n]</span>&gt;</span>}</code>
+        <code>^<span style="color:dodgerblue">&lt;...&gt;</span></code><br/>
+        or<br/>
+        <code>^{<span style="color:dodgerblue">&lt;...&gt;</span>}</code>
     </td>
-    <td>Superscript <code><span style="color:dodgerblue">&lt;...&gt;</span></code> (up to <code><span style="color:orange">[?]</span></code>)</td>
+    <td>Superscript <code><span style="color:dodgerblue">&lt;...&gt;</span></code></td>
     <td>
       <code>^0-^9</code> ⁰-⁹<br/>
       <code>1^23</code> 1²3<br/>
@@ -120,11 +126,11 @@
   </tr>
   <tr>
     <td>
-        <code>_<span style="color:dodgerblue">&lt;...<span style="color:orange">[1]</span>&gt;</span></code>
-        or
-        <code>_{<span style="color:dodgerblue">&lt;...<span style="color:orange">[n]</span>&gt;</span>}</code>
+        <code>_<span style="color:dodgerblue">&lt;...&gt;</span></code><br/>
+        or<br/>
+        <code>_{<span style="color:dodgerblue">&lt;...&gt;</span>}</code>
     </td>
-    <td>Subscript <code><span style="color:dodgerblue">&lt;...&gt;</span></code> (up to <code><span style="color:orange">[?]</span></code>)</td>
+    <td>Subscript <code><span style="color:dodgerblue">&lt;...&gt;</span></code></td>
     <td>
       <code>_0-_9</code> ₀-₉<br/>
       <code>1_23</code> 1₂3<br/>
@@ -204,11 +210,15 @@
   <tr><td><code>\&</code></td><td>Non-aligning ampersand</td><td>＆</td></tr>
 </table>
 
-`()`, `[]`, and `{}` are created in pairs and surround the selection.
-If the brackets are empty, backspacing the opening bracket deletes the closing bracket.
+### Brackets
+
+`()`, `[]`, and `{}` are created in pairs and surround the selection.\
+If the brackets are empty, backspacing the opening bracket deletes the closing bracket.\
 `)`, `]`, and `}` can overtype each other (to make interval notation easier).
 
-Use `&` to separate columns.
+### Align
+
+Use `&` to separate columns.\
 Columns are aligned in an alternating pattern of right, left, right, left, etc.
 <pre>
 &longrightarrow; <span style="color:violet">&</span> &longleftarrow; <span style="color:violet">&</span> &longrightarrow; <span style="color:violet">&</span> &longleftarrow;
@@ -220,19 +230,53 @@ Use `&&` to keep the same alignment direction in the new column.
 </pre>
 
 Alignments are localized to the current "chunk". Chunks are separated by lines that have no `&`s.
+<table>
+  <tr>
+    <th>Input</th>
+    <th>Analysis</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td>
 <pre>
-<span style="background-color:color-mix(in srgb,dodgerblue 20%,transparent)">apple & banana & orange & mango
-  000 & 000    &    000 & 000</span> <span style="font-size:0.75em;color:dodgerblue">chunk 1</span>
-blah blah blah blah           <span style="font-size:0.75em;color:gray">chunk 2</span>
-<span style="background-color:color-mix(in srgb,green 20%,transparent)">0000 & 0000 && 0000
-   0 & 0    && 0</span>              <span style="font-size:0.75em;color:green">chunk 3</span>
+apple & banana & orange & mango
+000 & 000 & 000 & 000
+blah blah blah blah
+0000 & 0000 && 0000
+0 & 0 && 0
 </pre>
+    </td><td>
+<pre>
+----------- chunk 1 -----------
+apple & banana & orange & mango
+  000 & 000    &    000 & 000
+      ^        ^        ^
+----------- chunk 2 -----------
+blah blah blah blah<br/>
+----------- chunk 3 -----------
+0000 & 0000 && 0000
+   0 & 0    && 0
+     ^      ^^
+-------------------------------
+</pre>
+    </td><td>
+<pre>
+apple & banana & orange & mango
+  000 & 000    &    000 & 000
+blah blah blah blah
+0000 & 0000 && 0000
+   0 & 0    && 0
+</pre>
+      </td>
+    </tr>
+</table>
 
 ## Calculator
 
 Press enter to calculate.
 
 ## Symbol lookup
-Press enter to search.
-Press escape to clear the search.
+
+Press enter to search.\
+Press escape to clear the search.\
 Click a symbol to insert it in the notes section.
