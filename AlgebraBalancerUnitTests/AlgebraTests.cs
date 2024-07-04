@@ -376,14 +376,34 @@ public class AlgebraTests
         [TestClass]
         public class FactorTests
         {
+            [TestMethod]
+            public void TestFactorVariable()
+            {
+                Assert.AreEqual("(a + b)x", Relationship.Factor("ax + bx"));
+            }
 
             [TestMethod]
-            public void TestOperationSub()
+            public void TestFactorVariableMoreTerms()
             {
-                var test = new Relationship("5 + 3", Comparator.EQ, "8 + 2");
-                test.ApplyOperation(Operation.Sub, "2");
-                AssertRelationshipsAreEqual(
-                    new Relationship("5 + 3 - 2", Comparator.EQ, "8"), test);
+                Assert.AreEqual("(a + b + c + d)x", Relationship.Factor("ax + bx + cx + dx"));
+            }
+
+            [TestMethod]
+            public void TestFactorVariablePower()
+            {
+                Assert.AreEqual("(x + 1)x", Relationship.Factor("x^2 + x"));
+            }
+
+            [TestMethod]
+            public void TestFactorVariablePower2()
+            {
+                Assert.AreEqual("(x + 1)x^2", Relationship.Factor("x^3 + x^2"));
+            }
+
+            [TestMethod]
+            public void TestFactorConstant()
+            {
+                Assert.AreEqual("(2a + b)2", Relationship.Factor("4a + 2b"));
             }
         }
     }
