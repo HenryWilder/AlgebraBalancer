@@ -10,6 +10,7 @@ using Windows.UI.Core;
 using Windows.System;
 using System.Data;
 using System.Collections.ObjectModel;
+using AlgebraBalancer.Algebra.Balancer;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -226,7 +227,6 @@ public sealed partial class MainPage : Page
             Notes.Text += HELP_TEXT;
             e.Handled = true;
         }
-
         // Toggle calculator
         else if (e.Key == VirtualKey.Enter && isAlting)
         {
@@ -238,13 +238,15 @@ public sealed partial class MainPage : Page
         {
             int selectionStart = Notes.SelectionStart;
             string notesText = Notes.Text;
-            int maxIndex = System.Math.Max(notesText.Length - 1, 0);
+            int maxIndex = 
+                Math.Max(notesText.Length - 1, 0);
 
             switch (e.Key)
             {
                 case VirtualKey.Left:
                 {
-                    int selectionIndex = System.Math.Max(selectionStart - 1, 0);
+                    int selectionIndex = 
+                        Math.Max(selectionStart - 1, 0);
 
                     int startOfLine = notesText.LastIndexOf('\r', selectionIndex);
                     if (startOfLine == -1) startOfLine = 0;
@@ -252,13 +254,15 @@ public sealed partial class MainPage : Page
                     int prevCol = notesText.LastIndexOf('&', selectionIndex);
                     if (prevCol == -1) prevCol = 0;
 
-                        Notes.SelectionStart = System.Math.Max(prevCol, startOfLine);
+                        Notes.SelectionStart = 
+                        Math.Max(prevCol, startOfLine);
                 }
                     break;
 
                 case VirtualKey.Right:
                 {
-                    int selectionIndex = System.Math.Min(selectionStart + 1, maxIndex);
+                    int selectionIndex = 
+                        Math.Min(selectionStart + 1, maxIndex);
 
                     int endOfLine = notesText.IndexOf('\r', selectionIndex);
                     if (endOfLine == -1) endOfLine = notesText.Length;
@@ -266,7 +270,8 @@ public sealed partial class MainPage : Page
                     int nextCol = notesText.IndexOf('&', selectionIndex);
                     if (nextCol == -1) nextCol = notesText.Length;
 
-                        Notes.SelectionStart = System.Math.Min(nextCol, endOfLine);
+                        Notes.SelectionStart = 
+                        Math.Min(nextCol, endOfLine);
                 }
                     break;
             }
@@ -275,11 +280,12 @@ public sealed partial class MainPage : Page
         }
         // Duplicate line
         else if (!string.IsNullOrWhiteSpace(Notes.Text) && ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting
-            || (e.Key == VirtualKey.Enter && (isShifting || isAlting))))
+            || (e.Key == VirtualKey.Enter && isShifting)))
         {
             int selectionStart = Notes.SelectionStart;
             string notesText = Notes.Text;
-            int selectionIndex = System.Math.Min(selectionStart, notesText.Length - 1);
+            int selectionIndex = 
+                Math.Min(selectionStart, notesText.Length - 1);
 
             int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
             if (startOfLine == -1) startOfLine = 0;
@@ -320,6 +326,7 @@ public sealed partial class MainPage : Page
         // Calculate the selection and insert the result on the right side of an equals sign
         else if (isCtrling && e.Key == VirtualKey.Space)
         {
+            // Calculate approximate value
             if (Notes.SelectionLength > 0)
             {
                 string addText;
@@ -356,6 +363,43 @@ public sealed partial class MainPage : Page
                 Notes.Text = Notes.Text.Insert(insertAt, addText);
                 Notes.SelectionStart = insertEnd;
             }
+            // Balance Algebra
+            else
+            {
+                int selectionStart = Notes.SelectionStart;
+                string notesText = Notes.Text;
+                int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
+
+                int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
+                if (startOfLine == -1) startOfLine = 0;
+                else ++startOfLine;
+
+                int endOfLine = notesText.IndexOf('\r', selectionIndex);
+                if (endOfLine == -1) endOfLine = notesText.Length - 1;
+
+                string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
+
+                string[] args = lineText.Split(@"\\");
+                var rel = Relationship.Parse(args[0]);
+                var match = new Regex(@"^\s*([-+/*])\s*(.*)\s*$").Match(args[1]);
+                if (match.Success)
+                {
+                    var op = match.Groups[1].Value switch
+                    {
+                        "+" => Operation.Add,
+                        "-" => Operation.Sub,
+                        "*" => Operation.Mul,
+                        "/" => Operation.Div,
+                        _ => throw new NotImplementedException(),
+                    };
+                    rel.ApplyOperation(op, match.Groups[2].Value);
+                    string refactor = rel.ToString();
+                    Notes.Text = Notes.Text
+                        .Remove(startOfLine, endOfLine - startOfLine)
+                        .Insert(startOfLine, refactor);
+                    Notes.SelectionStart = startOfLine + refactor.Length;
+                }
+            }
             e.Handled = true;
         }
         // Insert 4 spaces when tab is pressed
@@ -365,7 +409,8 @@ public sealed partial class MainPage : Page
             int selectionLength = Notes.SelectionLength;
             if (isShifting)
             {
-                int lineStart = System.Math.Max(Notes.Text.Substring(0, selectionStart).LastIndexOf('\r'), 0);
+                int lineStart = 
+                    Math.Max(Notes.Text.Substring(0, selectionStart).LastIndexOf('\r'), 0);
                 int erasing = 0;
                 for (; erasing < 4
                     && lineStart + erasing < Notes.Text.Length
@@ -422,7 +467,8 @@ public sealed partial class MainPage : Page
         // Delete bracket pair together
         else if (e.Key == VirtualKey.Back)
         {
-            int newSelectPosition = System.Math.Max(Notes.SelectionStart - 1, 0);
+            int newSelectPosition = 
+                Math.Max(Notes.SelectionStart - 1, 0);
             if (Notes.SelectionLength == 0 && Notes.Text.Length >= newSelectPosition + 2 &&
                 Notes.Text.Substring(newSelectPosition, 2) is "()" or "[]" or "{}" or "<>" or "[)" or "(]")
             {

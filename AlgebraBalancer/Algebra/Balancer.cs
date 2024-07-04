@@ -60,9 +60,9 @@ public enum Refactor
     FOIL,
 }
 
-public interface RelationshipItem { }
+public interface IRelationshipItem { }
 
-public struct RelSide(string value) : RelationshipItem
+public struct RelSide(string value) : IRelationshipItem
 {
     public string value = value;
     public static implicit operator string(RelSide side) => side.value;
@@ -80,9 +80,10 @@ public enum Comparator
     QE, // ?=
 }
 
-public struct RelComp(Comparator value) : RelationshipItem
+public struct RelComp(Comparator value) : IRelationshipItem
 {
-    public static readonly Regex reCmp = new(@"(&\s*)?(?:[≠≥≤≟]|(?:==)|(?:!=)|(?:>=)|(?:<=)|(?:\?=)|(?:(?<![!?>=<])=(?!=))|(?:>(?!=))|(?:<(?!=)))(\s*&)?");
+    public static readonly Regex reCmp =
+        new(@"(&\s*)?(?:[≠≥≤≟]|(?:==)|(?:!=)|(?:>=)|(?:<=)|(?:\?=)|(?:(?<![!?>=<])=(?!=))|(?:>(?!=))|(?:<(?!=)))(\s*&)?");
 
     public Comparator value = value;
     public static implicit operator Comparator(RelComp cmp) => cmp.value;
@@ -117,7 +118,7 @@ public class Relationship
     public Relationship(params object[] items)
     {
         if (items.Length % 2 == 0) throw new Exception("Relationship must have an odd number of items so that each side has a comparison");
-        this.items = new RelationshipItem[items.Length];
+        this.items = new IRelationshipItem[items.Length];
         for (int i = 0; i < items.Length; ++i)
         {
             object item = items[i];
@@ -158,7 +159,36 @@ public class Relationship
         }
     }
 
-    public RelationshipItem[] items;
+    public override string ToString()
+    {
+        return string.Join(" ", items.Select(item =>
+        {
+            if (item is RelSide side)
+            {
+                return side.value;
+            }
+            else if (item is RelComp cmp)
+            {
+                return cmp.value switch
+                {
+                    Comparator.EQ => "=",
+                    Comparator.NE => "!=",
+                    Comparator.GT => ">",
+                    Comparator.GE => ">=",
+                    Comparator.LT => "<",
+                    Comparator.LE => "<=",
+                    Comparator.QE => "?=",
+                    _ => throw new NotImplementedException(),
+                };
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }));
+    }
+
+    public IRelationshipItem[] items;
 
     public int NumSides => (items.Length + 1) / 2;
 
