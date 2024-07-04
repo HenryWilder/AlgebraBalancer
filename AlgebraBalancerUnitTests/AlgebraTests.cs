@@ -274,6 +274,15 @@ public class AlgebraTests
             }
 
             [TestMethod]
+            public void TestOperationAddVar()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "10 - x");
+                test.ApplyOperation(Operation.Add, "x");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + x", Comparator.EQ, "10"), test);
+            }
+
+            [TestMethod]
             public void TestOperationAddMultipleSides()
             {
                 var test = new Relationship("5 + 3 - 2", Comparator.EQ, "8 - 2");
@@ -319,12 +328,21 @@ public class AlgebraTests
             }
 
             [TestMethod]
-            public void TestOperationAddSameValueDifferentOperation()
+            public void TestOperationAddParentheticalRightContinued()
             {
-                var test = new Relationship("5 + 3", Comparator.EQ, "-2(7 - 2) - 2");
+                var test = new Relationship("5 + 3", Comparator.EQ, "2(7 - 2 + 3) - 2");
                 test.ApplyOperation(Operation.Add, "2");
                 AssertRelationshipsAreEqual(
-                    new Relationship("5 + 3 + 2", Comparator.EQ, "-2(7 - 2)"), test);
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "2(7 - 2 + 3)"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddParentheticalLeftContinued()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "-2 + 2(7 - 2 + 3)");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "2(7 - 2 + 3)"), test);
             }
 
             [TestMethod]
@@ -335,12 +353,38 @@ public class AlgebraTests
                 AssertRelationshipsAreEqual(
                     new Relationship("5 + 3 + 2", Comparator.EQ, "-2(7 - 2)"), test);
             }
+
+            [TestMethod]
+            public void TestOperationAddSameValueDifferentOperationRight()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "-2(7 - 2) - 2");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "-2(7 - 2)"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationSub()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "8 + 2");
+                test.ApplyOperation(Operation.Sub, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 - 2", Comparator.EQ, "8"), test);
+            }
         }
 
         [TestClass]
-        public class RefactorTests
+        public class FactorTests
         {
 
+            [TestMethod]
+            public void TestOperationSub()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "8 + 2");
+                test.ApplyOperation(Operation.Sub, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 - 2", Comparator.EQ, "8"), test);
+            }
         }
     }
 }

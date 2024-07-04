@@ -182,11 +182,13 @@ public class Relationship
     private static readonly Regex reMultipleSpaces = new(@"[\t ]+");
     private static readonly Regex reLeadingPlus = new(@"(?<=^|\()\s*\+\s*");
     private static readonly Regex reUnaryMinus = new(@"(?<=^|\()\s*\-\s+");
+    private static readonly Regex reBinaryOp = new(@"(?<!^|\()\s*([-+/*])\s*");
     public void ApplyOperation(Operation operation, string value)
     {
         static string Cleanup(string str)
         {
             str = reLeadingPlus.Replace(str, "");
+            str = reBinaryOp.Replace(str, (Match match) => " " + match.Groups[1].Value + " ");
             str = reUnaryMinus.Replace(str, "-");
             str = reMultipleSpaces.Replace(str, " ");
             return str.Trim();
@@ -194,12 +196,25 @@ public class Relationship
         switch (operation)
         {
             case Operation.Add:
-                Regex reAddInv = new(@$"-\s*{value}\s*(?=[+-]|$)");
-                Sides = Sides.Select(x => reAddInv.IsMatch(x)
-                    ? Cleanup(reAddInv.Replace(x, "", 1))
-                    : $"{x} + {value}");
+                Regex reAddInv = new(@$"\s*\-\s*{value}\s*(?=[+-]|$)");
+                Sides = Sides.Select(x => {
+                    foreach (Match match in reAddInv.Matches(x))
+                    {
+                        string pre = x.Substring(0, match.Index);
+                        // Not inside parentheses
+                        if (pre.Count(ch => ch == '(') == pre.Count(ch => ch == ')'))
+                        {
+                            return Cleanup(x.Remove(match.Index, match.Length));
+                        }
+                    }
+                    return $"{x} + {value}";
+                });
                 break;
             case Operation.Sub:
+                Regex reSubInv = new(@$"\s*\+\s*{value}\s*(?=[+-]|$)");
+                Sides = Sides.Select(x => reSubInv.IsMatch(x)
+                    ? Cleanup(reSubInv.Replace(x, "", 1))
+                    : $"{x} - {value}");
                 break;
             case Operation.Mul:
                 break;
@@ -224,16 +239,10 @@ public class Relationship
         }
     }
 
-    public void ApplyRefactor(Refactor refactor)
+    public static string Factor(string expr)
     {
-        switch (refactor)
-        {
-            case Refactor.Factor:
-                break;
-            case Refactor.FOIL:
-                break;
 
-            default: throw new NotImplementedException();
-        }
+
+        return expr;
     }
 }
