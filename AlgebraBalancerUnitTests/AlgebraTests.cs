@@ -527,10 +527,34 @@ public class AlgebraTests
 [TestClass]
 public class MainPageTests
 {
+    /// <summary>
+    /// String constant designating
+    /// <see cref="Windows.UI.Xaml.Controls.TextBox.SelectionStart"/>
+    /// position in test string before operation
+    /// </summary>
     private const string SEL_BEG_IN = "[[SELECTION_BEGIN_INITIAL]]";
+
+    /// <summary>
+    /// String constant designating
+    /// (<see cref="Windows.UI.Xaml.Controls.TextBox.SelectionStart"/> +
+    /// <see cref="Windows.UI.Xaml.Controls.TextBox.SelectionLength"/>)
+    /// position in test string before operation
+    /// </summary>
     private const string SEL_END_IN = "[[SELECTION_END_INITIAL]]";
 
+    /// <summary>
+    /// String constant designating
+    /// <see cref="Windows.UI.Xaml.Controls.TextBox.SelectionStart"/>
+    /// position in test string after operation
+    /// </summary>
     private const string SEL_BEG_EX = "[[SELECTION_BEGIN_EXPECT]]";
+
+    /// <summary>
+    /// String constant designating
+    /// (<see cref="Windows.UI.Xaml.Controls.TextBox.SelectionStart"/> +
+    /// <see cref="Windows.UI.Xaml.Controls.TextBox.SelectionLength"/>)
+    /// position in test string after operation
+    /// </summary>
     private const string SEL_END_EX = "[[SELECTION_END_EXPECT]]";
 
     private static void GetTextSelectionPositions(
@@ -731,12 +755,153 @@ public class MainPageTests
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
+
+        [TestMethod]
+        public void TestDupeLineDownFromWithinLine()
+        {
+            string notesText = $"apple orange\rbanana m{SEL_BEG_IN}ango\rstrawberry kiwi";
+            string expectNotesText = $"apple orange\rbanana mango\rbanana m{SEL_BEG_EX}ango\rstrawberry kiwi";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestDupeLineUpFromWithinLine()
+        {
+            string notesText = $"apple orange\rbanana m{SEL_BEG_IN}ango\rstrawberry kiwi";
+            string expectNotesText = $"apple orange\rbanana m{SEL_BEG_EX}ango\rbanana mango\rstrawberry kiwi";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestDupeLineDownFromStartLine()
+        {
+            string notesText = $"apple orange{SEL_BEG_IN}\rbanana mango\rstrawberry kiwi";
+            string expectNotesText = $"apple orange\rapple orange{SEL_BEG_EX}\rbanana mango\rstrawberry kiwi";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestDupeLineUpFromStartLine()
+        {
+            string notesText = $"apple orange{SEL_BEG_IN}\rbanana mango\rstrawberry kiwi";
+            string expectNotesText = $"apple orange{SEL_BEG_EX}\rapple orange\rbanana mango\rstrawberry kiwi";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestDupeLineDownFromEndLine()
+        {
+            string notesText = $"apple orange\rbanana mango\rstrawberry kiwi{SEL_BEG_IN}";
+            string expectNotesText = $"apple orange\rbanana mango\rstrawberry kiwi\rstrawberry kiwi{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestDupeLineUpFromEndLine()
+        {
+            string notesText = $"apple orange\rbanana mango\rstrawberry kiwi{SEL_BEG_IN}";
+            string expectNotesText = $"apple orange\rbanana mango\rstrawberry kiwi{SEL_BEG_EX}\rstrawberry kiwi";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        // Empty notes are handled by a check outside of the DuplicateLine function. Duplicating a line when the notes are empty is undefined.
     }
 
     [TestClass]
     public class CalculateInlineTests
     {
+        [TestMethod]
+        public void TestBasic()
+        {
+            string notesText       = $"{SEL_BEG_IN}2 + 2{SEL_END_IN}";
+            string expectNotesText = $"2 + 2 = 4{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(
+                ref notesText, ref expectNotesText,
+                out int selectionStart,  out int expectStart,
+                out int selectionLength, out _);
+            string expr = notesText.Substring(selectionStart, selectionLength);
+            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
 
+        [TestMethod]
+        public void TestParenMulLeft()
+        {
+            string notesText = $"{SEL_BEG_IN}(2 + 2)3{SEL_END_IN}";
+            string expectNotesText = $"(2 + 2)3 = 12{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(
+                ref notesText, ref expectNotesText,
+                out int selectionStart, out int expectStart,
+                out int selectionLength, out _);
+            string expr = notesText.Substring(selectionStart, selectionLength);
+            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestParenMulRight()
+        {
+            string notesText = $"{SEL_BEG_IN}3(2 + 2){SEL_END_IN}";
+            string expectNotesText = $"3(2 + 2) = 12{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(
+                ref notesText, ref expectNotesText,
+                out int selectionStart, out int expectStart,
+                out int selectionLength, out _);
+            string expr = notesText.Substring(selectionStart, selectionLength);
+            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestParenParenMul()
+        {
+            string notesText = $"{SEL_BEG_IN}(1 + 2)(2 + 2){SEL_END_IN}";
+            string expectNotesText = $"(1 + 2)(2 + 2) = 12{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(
+                ref notesText, ref expectNotesText,
+                out int selectionStart, out int expectStart,
+                out int selectionLength, out _);
+            string expr = notesText.Substring(selectionStart, selectionLength);
+            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+        
+        [TestMethod]
+        public void TestInnerSelection()
+        {
+            string notesText = $"2 + ({SEL_BEG_IN}2 * 8{SEL_END_IN}) - 3";
+            string expectNotesText = $"2 + (2 * 8 = 16{SEL_BEG_EX}) - 3";
+            GetModifiedTextSelectionPositions(
+                ref notesText, ref expectNotesText,
+                out int selectionStart, out int expectStart,
+                out int selectionLength, out _);
+            string expr = notesText.Substring(selectionStart, selectionLength);
+            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
     }
 
     [TestClass]

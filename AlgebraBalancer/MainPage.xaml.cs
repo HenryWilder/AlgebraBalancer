@@ -212,7 +212,7 @@ public sealed partial class MainPage : Page
 
     public static void ColumnJump(
         bool isLeft,
-        string notesText,
+        in string notesText,
         int selectionStart,
         out int selectionStartFinal,
         out int selectionLengthFinal
@@ -250,7 +250,7 @@ public sealed partial class MainPage : Page
     public static void DuplicateLine(
         bool isUpward,
         int selectionStart,
-        string notesText,
+        in string notesText,
         out int selectionStartFinal,
         out string notesTextFinal
     )
@@ -322,7 +322,7 @@ public sealed partial class MainPage : Page
 
     public static void BalanceAlgebra(
         int selectionStart,
-        string notesText,
+        in string notesText,
         out int selectionStartFinal,
         out string notesTextFinal
     )
