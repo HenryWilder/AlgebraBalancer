@@ -28,16 +28,27 @@ public struct Radical : IAlgebraicExpression
 
     public override readonly string ToString()
     {
-        if (coefficient == 0 || radicand == 0) return 0.ToString();
+        // Radicand is not negative if it is 1 or 0
+        // It is also not negative if it is multiplied by 0
+        if (coefficient == 0 || radicand == 0) return "0";
         else if (radicand == 1) return coefficient.ToString();
 
-        string integerPart = coefficient == 1 ? "" : (radicand < 0
+        // Negative radicand represents an imaginary coefficient
+        IAlgebraicNotation coef = radicand < 0
+            // Saves having to copy-paste the imaginary number notation code here
             ? new Imaginary(coefficient)
-            : new Number(coefficient)
-            as IAlgebraicNotation
-        ).ToString();
+            : new Number(coefficient);
 
-        return $"{integerPart}√{Math.Abs(radicand)}";
+        // Special case where radicand is not shown even though it is neither 1 nor 0
+        // Simultaneously covers the case where the coefficient is shown despite being 1
+        if (radicand == -1) return coef.ToString();
+
+        // Coefficient is not shown when it is 1 (1*i != 1)
+        string coefStr = coef is Number num && num == 1 ? "" : coef.ToString();
+
+        // By reaching this point, the radicand is not 1 and so must need a radical
+        // Coefficient may be an empty string
+        return $"{coefStr}√{Math.Abs(radicand)}";
     }
 
     public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";

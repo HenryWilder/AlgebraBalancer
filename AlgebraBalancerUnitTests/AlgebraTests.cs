@@ -81,6 +81,58 @@ public class AlgebraTests
         {
             Assert.AreEqual(new Imaginary(2), new Radical(-4).Simplified());
         }
+
+        [TestClass]
+        public class ToStringTests
+        {
+            [TestMethod]
+            public void TestRadicalWithCoefficientToString()
+            {
+                Assert.AreEqual("2√2", new Radical(2, 2).ToString());
+            }
+
+            [TestMethod]
+            public void TestRadicalNoCoefficientToString()
+            {
+                Assert.AreEqual("√2", new Radical(2).ToString());
+            }
+
+            [TestMethod]
+            public void TestRadicalNoRadicandToString()
+            {
+                Assert.AreEqual("2", new Radical(2, 1).ToString());
+            }
+
+            [TestMethod]
+            public void TestRadicalNoCoefficientOrRadicandToString()
+            {
+                Assert.AreEqual("1", new Radical().ToString());
+            }
+
+            [TestMethod]
+            public void TestRadicalImaginaryToString()
+            {
+                Assert.AreEqual("2𝑖√2", new Radical(2, -2).ToString());
+            }
+
+            [TestMethod]
+            public void TestRadicalImaginaryNoRadicandToString()
+            {
+                Assert.AreEqual("2𝑖", new Radical(2, -1).ToString());
+            }
+
+            [TestMethod]
+            public void TestRadicalImaginaryNoCoefficientToString()
+            {
+                Assert.AreEqual("𝑖√2", new Radical(-2).ToString());
+            }
+
+            [TestMethod]
+            public void TestRadicalImaginaryNoCoefficientOrRadicandToString()
+            {
+                Assert.AreEqual("𝑖", new Radical(-1).ToString());
+            }
+        }
     }
 
     [TestClass]
