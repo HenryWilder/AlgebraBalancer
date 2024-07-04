@@ -1,134 +1,109 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Xml.Serialization;
-
-using Windows.Devices.Power;
 
 namespace AlgebraBalancer;
 internal static class LatexUnicode
 {
     public static readonly (Regex shorthand, MatchEvaluator evaluator)[] unicodeShorthands =
     [
-        (new Regex(@"@0"), (match) => "°"),
-        (new Regex(@"@/"), (match) => "÷"),
-        (new Regex(@"@\*"), (match) => "×"),
-        (new Regex(@"@\^"), (match) => "̂"),
-        (new Regex(@"@_"), (match) => "̄"),
-        (new Regex(@"@;"), (match) => "̇"),
-        (new Regex(@"@:"), (match) => "̈"),
-        (new Regex(@"@G"), (match) => "Γ"),
-        (new Regex(@"@D"), (match) => "Δ"),
-        (new Regex(@"@Q"), (match) => "Θ"),
-        (new Regex(@"@X"), (match) => "Ξ"),
-        (new Regex(@"@P"), (match) => "Π"),
-        (new Regex(@"@S"), (match) => "Σ"),
-        (new Regex(@"@U"), (match) => "ϒ"),
-        (new Regex(@"@F"), (match) => "Φ"),
-        (new Regex(@"@Y"), (match) => "Ψ"),
-        (new Regex(@"@W"), (match) => "Ω"),
-        (new Regex(@"@a"), (match) => "α"),
-        (new Regex(@"@b"), (match) => "β"),
-        (new Regex(@"@g"), (match) => "γ"),
-        (new Regex(@"@d"), (match) => "δ"),
-        (new Regex(@"@ve"), (match) => "ε"),
-        (new Regex(@"@z"), (match) => "ζ"),
-        (new Regex(@"@h"), (match) => "η"),
-        (new Regex(@"@q"), (match) => "θ"),
-        (new Regex(@"@i"), (match) => "ι"),
-        (new Regex(@"@k"), (match) => "κ"),
-        (new Regex(@"@l"), (match) => "λ"),
-        (new Regex(@"@m"), (match) => "μ"),
-        (new Regex(@"@n"), (match) => "ν"),
-        (new Regex(@"@x"), (match) => "ξ"),
-        (new Regex(@"@p"), (match) => "π"),
-        (new Regex(@"@L"), (match) => "Λ"),
-        (new Regex(@"@r"), (match) => "ρ"),
-        (new Regex(@"@vs"), (match) => "ς"),
-        (new Regex(@"@s"), (match) => "σ"),
-        (new Regex(@"@t"), (match) => "τ"),
-        (new Regex(@"@u"), (match) => "υ"),
-        (new Regex(@"@vf"), (match) => "φ"),
-        (new Regex(@"@c"), (match) => "χ"),
-        (new Regex(@"@y"), (match) => "ψ"),
-        (new Regex(@"@o"), (match) => "ω"),
-        (new Regex(@"@vb"), (match) => "ϐ"),
-        (new Regex(@"@vq"), (match) => "ϑ"),
-        (new Regex(@"@f"), (match) => "ϕ"),
-        (new Regex(@"@vp"), (match) => "ϖ"),
-        (new Regex(@"@A"), (match) => "∀"),
-        (new Regex(@"@6"), (match) => "∂"),
-        (new Regex(@"@E"), (match) => "∃"),
-        (new Regex(@"@v0"), (match) => "∅"),
-        (new Regex(@"@@"), (match) => "∘"),
-        (new Regex(@"@2"), (match) => "√"),
-        (new Regex(@"√(?:\^3|³)"), (match) => "∛"),
-        (new Regex(@"√(?:\^4|⁴)"), (match) => "∜"),
-        (new Regex(@"@8"), (match) => "∞"),
-        (new Regex(@"@\|"), (match) => "∣"),
-        (new Regex(@"@&"), (match) => "∧"),
-        (new Regex(@"@I"), (match) => "∫"),
-        (new Regex(@"∫∫"), (match) => "∬"),
-        (new Regex(@"∫(?:∫∫|∬)|∬∫"), (match) => "∭"),
-        (new Regex(@"@\\"), (match) => "⧵"),
-        (new Regex(@"∫(?:∫(?:∫∫|∬)|∬∫|∭)|∬(?:∫∫|∬)|∭∫"), (match) => "⨌"),
-        (new Regex(@"@="), (match) => "≡"),
-        (new Regex(@"@<"), (match) => "≤"),
-        (new Regex(@"@>"), (match) => "≥"),
-        (new Regex(@"@-"), (match) => "⋂"),
-        (new Regex(@"@\+"), (match) => "⋃"),
-        (new Regex(@"@\."), (match) => "⋅"),
+        (new Regex(@"@0",           RegexOptions.Compiled), (match) => "°"),
+        (new Regex(@"@/",           RegexOptions.Compiled), (match) => "÷"),
+        (new Regex(@"@\*",          RegexOptions.Compiled), (match) => "×"),
+        (new Regex(@"@\^",          RegexOptions.Compiled), (match) => "̂"),
+        (new Regex(@"@_",           RegexOptions.Compiled), (match) => "̄"),
+        (new Regex(@"@;",           RegexOptions.Compiled), (match) => "̇"),
+        (new Regex(@"@:",           RegexOptions.Compiled), (match) => "̈"),
+        (new Regex(@"@G",           RegexOptions.Compiled), (match) => "Γ"),
+        (new Regex(@"@D",           RegexOptions.Compiled), (match) => "Δ"),
+        (new Regex(@"@Q",           RegexOptions.Compiled), (match) => "Θ"),
+        (new Regex(@"@X",           RegexOptions.Compiled), (match) => "Ξ"),
+        (new Regex(@"@P",           RegexOptions.Compiled), (match) => "Π"),
+        (new Regex(@"@S",           RegexOptions.Compiled), (match) => "Σ"),
+        (new Regex(@"@U",           RegexOptions.Compiled), (match) => "ϒ"),
+        (new Regex(@"@F",           RegexOptions.Compiled), (match) => "Φ"),
+        (new Regex(@"@Y",           RegexOptions.Compiled), (match) => "Ψ"),
+        (new Regex(@"@W",           RegexOptions.Compiled), (match) => "Ω"),
+        (new Regex(@"@a",           RegexOptions.Compiled), (match) => "α"),
+        (new Regex(@"@b",           RegexOptions.Compiled), (match) => "β"),
+        (new Regex(@"@g",           RegexOptions.Compiled), (match) => "γ"),
+        (new Regex(@"@d",           RegexOptions.Compiled), (match) => "δ"),
+        (new Regex(@"@ve",          RegexOptions.Compiled), (match) => "ε"),
+        (new Regex(@"@z",           RegexOptions.Compiled), (match) => "ζ"),
+        (new Regex(@"@h",           RegexOptions.Compiled), (match) => "η"),
+        (new Regex(@"@q",           RegexOptions.Compiled), (match) => "θ"),
+        (new Regex(@"@i",           RegexOptions.Compiled), (match) => "ι"),
+        (new Regex(@"@k",           RegexOptions.Compiled), (match) => "κ"),
+        (new Regex(@"@l",           RegexOptions.Compiled), (match) => "λ"),
+        (new Regex(@"@m",           RegexOptions.Compiled), (match) => "μ"),
+        (new Regex(@"@n",           RegexOptions.Compiled), (match) => "ν"),
+        (new Regex(@"@x",           RegexOptions.Compiled), (match) => "ξ"),
+        (new Regex(@"@p",           RegexOptions.Compiled), (match) => "π"),
+        (new Regex(@"@L",           RegexOptions.Compiled), (match) => "Λ"),
+        (new Regex(@"@r",           RegexOptions.Compiled), (match) => "ρ"),
+        (new Regex(@"@vs",          RegexOptions.Compiled), (match) => "ς"),
+        (new Regex(@"@s",           RegexOptions.Compiled), (match) => "σ"),
+        (new Regex(@"@t",           RegexOptions.Compiled), (match) => "τ"),
+        (new Regex(@"@u",           RegexOptions.Compiled), (match) => "υ"),
+        (new Regex(@"@vf",          RegexOptions.Compiled), (match) => "φ"),
+        (new Regex(@"@c",           RegexOptions.Compiled), (match) => "χ"),
+        (new Regex(@"@y",           RegexOptions.Compiled), (match) => "ψ"),
+        (new Regex(@"@o",           RegexOptions.Compiled), (match) => "ω"),
+        (new Regex(@"@vb",          RegexOptions.Compiled), (match) => "ϐ"),
+        (new Regex(@"@vq",          RegexOptions.Compiled), (match) => "ϑ"),
+        (new Regex(@"@f",           RegexOptions.Compiled), (match) => "ϕ"),
+        (new Regex(@"@vp",          RegexOptions.Compiled), (match) => "ϖ"),
+        (new Regex(@"@A",           RegexOptions.Compiled), (match) => "∀"),
+        (new Regex(@"@6",           RegexOptions.Compiled), (match) => "∂"),
+        (new Regex(@"@E",           RegexOptions.Compiled), (match) => "∃"),
+        (new Regex(@"@v0",          RegexOptions.Compiled), (match) => "∅"),
+        (new Regex(@"@@",           RegexOptions.Compiled), (match) => "∘"),
+        (new Regex(@"@2",           RegexOptions.Compiled), (match) => "√"),
+        (new Regex(@"√(?:\^3|³)",   RegexOptions.Compiled), (match) => "∛"),
+        (new Regex(@"√(?:\^4|⁴)",   RegexOptions.Compiled), (match) => "∜"),
+        (new Regex(@"@8",           RegexOptions.Compiled), (match) => "∞"),
+        (new Regex(@"@\|",          RegexOptions.Compiled), (match) => "∣"),
+        (new Regex(@"@&",           RegexOptions.Compiled), (match) => "∧"),
+        (new Regex(@"@I",           RegexOptions.Compiled), (match) => "∫"),
+        (new Regex(@"∫∫",           RegexOptions.Compiled), (match) => "∬"),
+        (new Regex(@"∫(?:∫∫|∬)|∬∫", RegexOptions.Compiled), (match) => "∭"),
+        (new Regex(@"@\\",          RegexOptions.Compiled), (match) => "⧵"),
+        (new Regex(@"∫(?:∫(?:∫∫|∬)|∬∫|∭)|∬(?:∫∫|∬)|∭∫", RegexOptions.Compiled), (match) => "⨌"),
+        (new Regex(@"@=",           RegexOptions.Compiled), (match) => "≡"),
+        (new Regex(@"@<",           RegexOptions.Compiled), (match) => "≤"),
+        (new Regex(@"@>",           RegexOptions.Compiled), (match) => "≥"),
+        (new Regex(@"@-",           RegexOptions.Compiled), (match) => "⋂"),
+        (new Regex(@"@\+",          RegexOptions.Compiled), (match) => "⋃"),
+        (new Regex(@"@\.",          RegexOptions.Compiled), (match) => "⋅"),
 
-        (new Regex(@"\\Algebraic\\"), (match) => "𝔸"),
-        (new Regex(@"\\Boolean\\"), (match) => "𝔹"),
-        (new Regex(@"\\Complex\\"), (match) => "ℂ"),
-        (new Regex(@"\\Quaternion\\"), (match) => "ℍ"),
-        (new Regex(@"\\Imaginary\\"), (match) => "𝕀"),
-        (new Regex(@"\\Monster\\"), (match) => "𝕄"),
-        (new Regex(@"\\Natural\\"), (match) => "ℕ"),
-        (new Regex(@"\\Natural0\\"), (match) => "ℕ₀"),
-        (new Regex(@"\\Irrational\\"), (match) => "ℙ"),
-        (new Regex(@"\\Rational\\"), (match) => "ℚ"),
-        (new Regex(@"\\Real\\"), (match) => "ℝ"),
-        (new Regex(@"\\Whole\\"), (match) => "𝕎"),
-        (new Regex(@"\\Integer\\"), (match) => "ℤ"),
+        (new Regex(@"\\Algebraic\\",  RegexOptions.Compiled), (match) => "𝔸"),
+        (new Regex(@"\\Boolean\\",    RegexOptions.Compiled), (match) => "𝔹"),
+        (new Regex(@"\\Complex\\",    RegexOptions.Compiled), (match) => "ℂ"),
+        (new Regex(@"\\Quaternion\\", RegexOptions.Compiled), (match) => "ℍ"),
+        (new Regex(@"\\Imaginary\\",  RegexOptions.Compiled), (match) => "𝕀"),
+        (new Regex(@"\\Monster\\",    RegexOptions.Compiled), (match) => "𝕄"),
+        (new Regex(@"\\Natural\\",    RegexOptions.Compiled), (match) => "ℕ"),
+        (new Regex(@"\\Natural0\\",   RegexOptions.Compiled), (match) => "ℕ₀"),
+        (new Regex(@"\\Irrational\\", RegexOptions.Compiled), (match) => "ℙ"),
+        (new Regex(@"\\Rational\\",   RegexOptions.Compiled), (match) => "ℚ"),
+        (new Regex(@"\\Real\\",       RegexOptions.Compiled), (match) => "ℝ"),
+        (new Regex(@"\\Whole\\",      RegexOptions.Compiled), (match) => "𝕎"),
+        (new Regex(@"\\Integer\\",    RegexOptions.Compiled), (match) => "ℤ"),
 
-        (new Regex(@"\$([A-Za-z0-9])"), (Match match) => {
+        (new Regex(@"\$([A-Za-z0-9])", RegexOptions.Compiled), (Match match) => {
             char lookfor = match.Groups[1].Value.First(); // Should only be one character
             return bbMapping.TryGetValue(lookfor, out string replacement) ? replacement : lookfor.ToString();
         }),
 
-        (new Regex(@"\\(?:Int\\|big∫)"), (match) => @"
-⌠
-⌡"),
-        (new Regex(@"\\big\(\)"), (match) => @"
-⎛ & & ⎞
-⎝ & & ⎠"),
-        (new Regex(@"\\bigg\(\)"), (match) => @"
-⎛ && ⎞
-⎜ && ⎟
-⎝ && ⎠"),
-        (new Regex(@"\\big\[\]"), (match) => @"
-⎡ && ⎤
-⎣ && ⎦"),
-        (new Regex(@"\\bigg\[\]"), (match) => @"
-⎡ && ⎤
-⎢ && ⎥
-⎣ && ⎦"),
-
-        (new Regex(@"\\matrix\\"), (match) => @"
-⎡ & ... && ... && ... & ⎤
-⎢ & ... && ... && ... & ⎥
-⎣ & ... && ... && ... & ⎦"),
-
-        (new Regex(@"\\det\\"), (match) => @"
-⎢ & ... && ... && ... & ⎥
-⎢ & ... && ... && ... & ⎥
-⎢ & ... && ... && ... & ⎥"),
-
-        (new Regex(@"\\(matrix|det)([1-9])x([1-9])"), (match) => {
+        (new Regex(@"\\(?:Int\\|big∫)", RegexOptions.Compiled), (match) => "⌠\r⌡\r"),
+        (new Regex(@"\\big\(\)", RegexOptions.Compiled), (match) => "⎛ & & ⎞\r⎝ & & ⎠"),
+        (new Regex(@"\\bigg\(\)", RegexOptions.Compiled), (match) => "⎛ && ⎞\r⎜ && ⎟\r⎝ && ⎠"),
+        (new Regex(@"\\big\[\]", RegexOptions.Compiled), (match) => "⎡ && ⎤\r⎣ && ⎦"),
+        (new Regex(@"\\bigg\[\]", RegexOptions.Compiled), (match) => "⎡ && ⎤\r⎢ && ⎥\r⎣ && ⎦"),
+        (new Regex(@"\\matrix\\", RegexOptions.Compiled), (match) => "⎡ & ... && ... && ... & ⎤\r⎢ & ... && ... && ... & ⎥\r⎣ & ... && ... && ... & ⎦"),
+        (new Regex(@"\\det\\", RegexOptions.Compiled), (match) => "⎢ & ... && ... && ... & ⎥\r⎢ & ... && ... && ... & ⎥\r⎢ & ... && ... && ... & ⎥"),
+        (new Regex(@"\\(matrix|det)([1-9])x([1-9])", RegexOptions.Compiled), (match) => {
             bool isDet = match.Groups[1].Value == "det";
             int rows = Convert.ToInt32(match.Groups[2].Value);
             int cols = Convert.ToInt32(match.Groups[3].Value);
@@ -167,31 +142,11 @@ internal static class LatexUnicode
             return result;
         }),
 
-        (new Regex(@"\\bigg\{\}"), (match) => @"
-⎧ && ⎫
-⎨ && ⎬
-⎩ && ⎭"),
-        (new Regex(@"\\huge\{\}"), (match) => @"
-⎧ && ⎫
-⎪ && ⎪
-⎨ && ⎬
-⎪ && ⎪
-⎩ && ⎭"),
-
-        (new Regex(@"\\cases\\"), (match) => @"
-⎧ & ... & if ...
-⎪ & ... & if ...
-⎨ & ... & if ...
-⎪ & ... & if ...
-⎩ & ... & otherwise"),
-
-        (new Regex(@"\\rcases\\"), (match) => @"
-& ... & if ...    & ⎫
-& ... & if ...    & ⎪
-& ... & if ...    & ⎬
-& ... & if ...    & ⎪
-& ... & otherwise & ⎭"),
-        (new Regex(@"\\(r?cases)([1-9])"), (match) => {
+        (new Regex(@"\\bigg\{\}", RegexOptions.Compiled), (match) => "⎧ && ⎫\r⎨ && ⎬\r⎩ && ⎭"),
+        (new Regex(@"\\huge\{\}", RegexOptions.Compiled), (match) => "⎧ && ⎫\r⎪ && ⎪\r⎨ && ⎬\r⎪ && ⎪\r⎩ && ⎭"),
+        (new Regex(@"\\cases\\", RegexOptions.Compiled), (match) => "⎧ & ... & if ...\r⎪ & ... & if ...\r⎨ & ... & if ...\r⎪ & ... & if ...\r⎩ & ... & otherwise"),
+        (new Regex(@"\\rcases\\", RegexOptions.Compiled), (match) => "& ... & if ...    & ⎫\r& ... & if ...    & ⎪\r& ... & if ...    & ⎬\r& ... & if ...    & ⎪\r& ... & otherwise & ⎭"),
+        (new Regex(@"\\(r?cases)([1-9])", RegexOptions.Compiled), (match) => {
             bool isReverse = match.Groups[1].Value == "rcases";
             int cases = Convert.ToInt32(match.Groups[2].Value);
 
@@ -257,15 +212,9 @@ internal static class LatexUnicode
             return result;
         }),
 
-        (new Regex(@"\\big\{\}"), (match) => @"
-⎰ && ⎱
-⎱ && ⎰"),
-        (new Regex(@"\\Sum\\"), (match) => @"
-⎲
-⎳"),
-        (new Regex(@"\\big√"), (match) => @"
- _
-⎷"),
+        (new Regex(@"\\big\{\}", RegexOptions.Compiled), (match) => "⎰ && ⎱\r⎱ && ⎰"),
+        (new Regex(@"\\Sum\\", RegexOptions.Compiled), (match) => "⎲\r⎳"),
+        (new Regex(@"\\big√", RegexOptions.Compiled), (match) => " _\r⎷"),
     ];
 
     public static readonly Dictionary<string, string> unicodeReplacements = new()
@@ -1935,8 +1884,8 @@ internal static class LatexUnicode
         { 'y', "ʸ" },
         { 'z', "ᶻ" },
     };
-    private static readonly Regex superscriptPattern = new(@"\^\{([0-9\+\-=\(\)a-pr-z]+?)\}");
-    private static readonly Regex superscriptPattern1 = new(@"\^([0-9\+\-=\(\)a-pr-z])");
+    private static readonly Regex superscriptPattern = new(@"\^\{([0-9\+\-=\(\)a-pr-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex superscriptPattern1 = new(@"\^([0-9\+\-=\(\)a-pr-z])", RegexOptions.Compiled);
     public static string ToSuperscript(string str) => Remap(str, superscriptMapping);
 
     private static readonly Dictionary<char, string> subscriptMapping = new()
@@ -1969,8 +1918,8 @@ internal static class LatexUnicode
         { 't', "ₜ" },
         { 'x', "ₓ" },
     };
-    private static readonly Regex subscriptPattern = new(@"_\{([0-9\+\-=\(\)aexhklmnopst]+?)\}");
-    private static readonly Regex subscriptPattern1 = new(@"_([0-9\+\-=\(\)aexhklmnopst])");
+    private static readonly Regex subscriptPattern = new(@"_\{([0-9\+\-=\(\)aexhklmnopst]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex subscriptPattern1 = new(@"_([0-9\+\-=\(\)aexhklmnopst])", RegexOptions.Compiled);
     public static string ToSubscript(string str) => Remap(str, subscriptMapping);
 
     private static readonly Dictionary<char, string> ttMapping = new()
@@ -2038,7 +1987,7 @@ internal static class LatexUnicode
         { 'y', "𝚢" },
         { 'z', "𝚣" },
     };
-    private static readonly Regex ttPattern = new(@"\\tt\{([0-9A-Za-z]+?)\}");
+    private static readonly Regex ttPattern = new(@"\\tt\{([0-9A-Za-z]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bfMapping = new()
     {
@@ -2165,7 +2114,7 @@ internal static class LatexUnicode
         { 'Ϝ', "𝟊" },
         { 'ϝ', "𝟋" },
     };
-    private static readonly Regex bfPattern = new(@"\\bf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}");
+    private static readonly Regex bfPattern = new(@"\\bf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bbMapping = new()
     {
@@ -2237,7 +2186,7 @@ internal static class LatexUnicode
         { 'Π', "ℿ" },
         { 'Σ', "⅀" },
     };
-    private static readonly Regex bbPattern = new(@"\\bb\{([0-9A-Za-zπγΓΠΣ]+?)\}");
+    private static readonly Regex bbPattern = new(@"\\bb\{([0-9A-Za-zπγΓΠΣ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfMapping = new()
     {
@@ -2304,7 +2253,7 @@ internal static class LatexUnicode
         { 'y', "𝗒" },
         { 'z', "𝗓" },
     };
-    private static readonly Regex sfPattern = new(@"\\sf\{([0-9A-Za-z]+?)\}");
+    private static readonly Regex sfPattern = new(@"\\sf\{([0-9A-Za-z]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> itMapping = new()
     {
@@ -2367,7 +2316,7 @@ internal static class LatexUnicode
         { 'ϱ', "𝜚" },
         { 'ϖ', "𝜛" },
     };
-    private static readonly Regex itPattern = new(@"\\it\{([ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}");
+    private static readonly Regex itPattern = new(@"\\it\{([ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> frakMapping = new()
     {
@@ -2423,7 +2372,7 @@ internal static class LatexUnicode
         { 'z', "𝔷" },
 
     };
-    private static readonly Regex frakPattern = new(@"\\frak\{([A-Za-z]+?)\}");
+    private static readonly Regex frakPattern = new(@"\\frak\{([A-Za-z]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> calMapping = new()
     {
@@ -2480,7 +2429,7 @@ internal static class LatexUnicode
         { 'y', "𝓎" },
         { 'z', "𝓏" },
     };
-    private static readonly Regex calPattern = new(@"\\cal\{([A-Za-z]+?)\}");
+    private static readonly Regex calPattern = new(@"\\cal\{([A-Za-z]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfbfMapping = new()
     {
@@ -2605,7 +2554,7 @@ internal static class LatexUnicode
         { '8', "𝟴" },
         { '9', "𝟵" },
     };
-    private static readonly Regex sfbfPattern = new(@"\\sfbf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}");
+    private static readonly Regex sfbfPattern = new(@"\\sfbf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfbfitMapping = new()
     {
@@ -2720,7 +2669,7 @@ internal static class LatexUnicode
         { 'ϱ', "𝟈" },
         { 'ϖ', "𝟉" },
     };
-    private static readonly Regex sfbfitPattern = new(@"\\sfbfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}");
+    private static readonly Regex sfbfitPattern = new(@"\\sfbfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bfitMapping = new()
     {
@@ -2835,7 +2784,7 @@ internal static class LatexUnicode
         { 'ϱ', "𝝔" },
         { 'ϖ', "𝝕" },
     };
-    private static readonly Regex bfitPattern = new(@"\\bfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}");
+    private static readonly Regex bfitPattern = new(@"\\bfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bfscrMapping = new()
     {
@@ -2892,7 +2841,7 @@ internal static class LatexUnicode
         { 'y', "𝔂" },
         { 'z', "𝔃" },
     };
-    private static readonly Regex bfscrPattern = new(@"\\bfscr\{([A-Za-z]+?)\}");
+    private static readonly Regex bfscrPattern = new(@"\\bfscr\{([A-Za-z]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfitMapping = new()
     {
@@ -2949,7 +2898,7 @@ internal static class LatexUnicode
         { 'y', "𝘺" },
         { 'z', "𝘻" },
     };
-    private static readonly Regex sfitPattern = new(@"\\sfit\{([A-Za-z]+?)\}");
+    private static readonly Regex sfitPattern = new(@"\\sfit\{([A-Za-z]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bffrakMapping = new()
     {
@@ -3006,7 +2955,7 @@ internal static class LatexUnicode
         { 'y', "𝖞" },
         { 'z', "𝖟" },
     };
-    private static readonly Regex bffrakPattern = new(@"\\bffrak\{([A-Za-z]+?)\}");
+    private static readonly Regex bffrakPattern = new(@"\\bffrak\{([A-Za-z]+?)\}", RegexOptions.Compiled);
 
     private static string Remap(string str, Dictionary<char, string> mapping) =>
         string.Concat(str.Select((char ch) => mapping.TryGetValue(ch, out string replacement) ? replacement : ch.ToString()));
@@ -3046,9 +2995,6 @@ internal static class LatexUnicode
 
         return str;
     }
-
-    private static readonly Regex rxUnicodeRelpacement =
-        new(@$"({string.Join("|", unicodeReplacements.Keys.Select((key) => key.Replace(@"\", @"(?<!\\)\\")))})");
 
     private static string ApplyUnicodeShorthands(string str)
     {

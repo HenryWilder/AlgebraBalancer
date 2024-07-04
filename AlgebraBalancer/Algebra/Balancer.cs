@@ -83,7 +83,8 @@ public enum Comparator
 public struct RelComp(Comparator value) : IRelationshipItem
 {
     public static readonly Regex reCmp =
-        new(@"(&\s*)?(?:[≠≥≤≟]|(?:==)|(?:!=)|(?:>=)|(?:<=)|(?:\?=)|(?:(?<![!?>=<])=(?!=))|(?:>(?!=))|(?:<(?!=)))(\s*&)?");
+        new(@"(&\s*)?([≠≥≤≟]|(==)|(!=)|(>=)|(<=)|(\?=)|((?<![!?>=<])=(?!=))|(>(?!=))|(<(?!=)))(\s*&)?",
+            RegexOptions.ExplicitCapture);
 
     public Comparator value = value;
     public static implicit operator Comparator(RelComp cmp) => cmp.value;
@@ -210,9 +211,9 @@ public class Relationship
     }
 
     private static readonly Regex reMultipleSpaces = new(@"[\t ]+");
-    private static readonly Regex reLeadingPlus = new(@"(?<=^|\()\s*\+\s*");
-    private static readonly Regex reUnaryMinus = new(@"(?<=^|\()\s*\-\s+");
-    private static readonly Regex reBinaryOp = new(@"(?<!^|\()\s*([-+/*])\s*");
+    private static readonly Regex reLeadingPlus    = new(@"(?<=^|\()\s*\+\s*");
+    private static readonly Regex reUnaryMinus     = new(@"(?<=^|\()\s*\-\s+");
+    private static readonly Regex reBinaryOp       = new(@"(?<!^|\()\s*([-+/*])\s*");
     public void ApplyOperation(Operation operation, string value)
     {
         static string Cleanup(string str)

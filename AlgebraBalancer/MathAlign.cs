@@ -1,24 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
-using Windows.UI.Xaml.Shapes;
 
 namespace AlgebraBalancer;
 internal static class MathAlign
 {
     public const string CURSOR_SAVER = "\f";
     
-    private static readonly Regex rxColumnSplit = new(@"(?<!\u200B)&");
-    //private static readonly Regex rxNoalign = new(@"^\\noalign\b");
-    private static readonly Regex rxAlignAroundCursor = new($@"^ *{CURSOR_SAVER} *$");
-    private static readonly Regex rxMultipleSpaces = new(@" +");
-    private static readonly Regex rxSpacesBeforeAmp = new(@" +&");
-    private static readonly Regex rxOnlySpaces = new(@"^ +$");
-    private static readonly Regex rxLeadingSpaces = new(@"^ +"); // TODO: Check if this can just be TrimLeft or somethin
+    // These are compiled due to alignment taking place every time the user types in the notes
+    private static readonly Regex rxColumnSplit       = new(@"(?<!\u200B)&",          RegexOptions.Compiled);
+    private static readonly Regex rxAlignAroundCursor = new($@"^ *{CURSOR_SAVER} *$", RegexOptions.Compiled);
+    private static readonly Regex rxMultipleSpaces    = new(@" +",                    RegexOptions.Compiled);
+    private static readonly Regex rxSpacesBeforeAmp   = new(@" +&",                   RegexOptions.Compiled);
+    private static readonly Regex rxOnlySpaces        = new(@"^ +$",                  RegexOptions.Compiled);
+    private static readonly Regex rxLeadingSpaces     = new(@"^ +",                   RegexOptions.Compiled); // TODO: Check if this can just be TrimLeft or somethin
 
     private static string MinimizePadding(string part)
     {
@@ -57,7 +53,7 @@ internal static class MathAlign
                     if (i == 0) column = rxLeadingSpaces.Replace(column, "");
 
                     int colWidth = column.Length;
-                    alignments[i] = System.Math.Max(alignments[i], colWidth);
+                    alignments[i] = Math.Max(alignments[i], colWidth);
                 }
             }
 

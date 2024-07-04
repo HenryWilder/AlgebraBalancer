@@ -302,19 +302,9 @@ public sealed partial class MainPage : Page
         out string notesTextFinal
     )
     {
-        int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
+        var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
 
-        int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
-        if (startOfLine == -1) startOfLine = 0;
-
-        int endOfLine = notesText.IndexOf('\r', selectionIndex);
-        if (endOfLine == -1) endOfLine = notesText.Length;
-
-        string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
-        if (lineText[0] != '\r')
-        {
-            lineText = lineText.Insert(0, "\r");
-        }
+        string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine).Insert(0, "\r");
         int cursorOffset = isUpward ? 0 : lineText.Length;
 
         notesTextFinal = notesText.Insert(endOfLine, lineText);
@@ -325,7 +315,7 @@ public sealed partial class MainPage : Page
         string expr,
         int selectionStart,
         int selectionLength,
-        string notesText,
+        in string notesText,
         out int selectionStartFinal,
         out string notesTextFinal
     )
@@ -372,13 +362,24 @@ public sealed partial class MainPage : Page
         out string notesTextFinal
     )
     {
-        // TODO
-        selectionStartFinal = selectionStart;
-        notesTextFinal = notesText;
+        var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
+        int lineLength = endOfLine - startOfLine;
+        string lineText = notesText.Substring(startOfLine, lineLength);
+
+        string[] args = lineText.Split(@"\\");
+        string expr = args[0];
+        string sub = args[1];
+        string newExpr = Relationship.Substitute(expr, sub);
+
+        selectionStartFinal = startOfLine + newExpr.Length;
+        notesTextFinal = notesText
+            .Remove(startOfLine, lineLength)
+            .Insert(startOfLine, newExpr);
     }
 
     private static readonly Regex rxOperator = new(@"^\s*([-+/*])\s*(.*)\s*$");
 
+    // TODO: Currently broken
     public static void BalanceAlgebra(
         int selectionStart,
         in string notesText,
@@ -386,15 +387,7 @@ public sealed partial class MainPage : Page
         out string notesTextFinal
     )
     {
-        int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
-
-        int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
-        if (startOfLine == -1) startOfLine = 0;
-        else ++startOfLine;
-
-        int endOfLine = notesText.IndexOf('\r', selectionIndex);
-        if (endOfLine == -1) endOfLine = notesText.Length - 1;
-
+        var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
         string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
 
         string[] args = lineText.Split(@"\\");
@@ -514,7 +507,7 @@ public sealed partial class MainPage : Page
             // Balance Algebra
             else
             {
-                if (false) // TODO
+                if (new Regex(@"^.*\\\\.*=.*$", RegexOptions.Multiline).IsMatch(Notes.Text))
                 {
                     SubstituteVars(
                         Notes.SelectionStart,
@@ -533,8 +526,8 @@ public sealed partial class MainPage : Page
                     );
                 }
             }
-            Notes.SelectionStart = newSelectionStart;
             Notes.Text = newNotesText;
+            Notes.SelectionStart = newSelectionStart;
             e.Handled = true;
         }
         // Insert 4 spaces when tab is pressed

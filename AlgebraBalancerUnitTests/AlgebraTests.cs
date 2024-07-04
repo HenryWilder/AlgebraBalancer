@@ -1022,14 +1022,99 @@ public class MainPageTests
         }
     }
 
+    /// <summary>
+    /// These tests are specifically for confirming that <see cref="MainPage.SubstituteVars"/> is handling the parsing corectly.
+    /// Other tests related to substitution should be handled by <see cref="SubstitutionTests">.
+    /// </summary>
+    [TestClass]
+    public class SubstituteVarsTests
+    {
+        [TestMethod]
+        public void TestBasic()
+        {
+            string notesText       = @$"2x + 3\\x=3{SEL_BEG_IN}";
+            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestWhitespaceBefore()
+        {
+            string notesText       = @$"2x + 3     \\x=3{SEL_BEG_IN}";
+            string expectNotesText = @$"2(3) + 3     {SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestWhitespaceBetween()
+        {
+            string notesText       = @$"2x + 3\\     x=3{SEL_BEG_IN}";
+            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestWhitespaceAfter()
+        {
+            string notesText       = @$"2x + 3\\x=3     {SEL_BEG_IN}";
+            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestLineBefore()
+        {
+            string notesText       = @$"3x-5{'\r'}2x + 3\\x=3{SEL_BEG_IN}";
+            string expectNotesText = @$"3x-5{'\r'}2(3) + 3{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestLineAfter()
+        {
+            string notesText       = @$"2x + 3\\x=3{SEL_BEG_IN}{'\r'}3x-5";
+            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}{'\r'}3x-5";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestSelectingWithin()
+        {
+            string notesText       = @$"2x +{SEL_BEG_IN} 3\\x=3";
+            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+    }
+
     [TestClass]
     public class BalanceAlgebraTests
     {
         [TestMethod]
         public void TestBasic()
         {
-            string notesText       = $"4 - 2 = 3 \\\\+2{SEL_BEG_IN}";
-            string expectNotesText = $"4 = 3 + 2{SEL_BEG_EX}";
+            string notesText       = @$"4 - 2 = 3 \\+2{SEL_BEG_IN}";
+            string expectNotesText = @$"4 = 3 + 2{SEL_BEG_EX}";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
             MainPage.BalanceAlgebra(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
