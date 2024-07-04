@@ -210,6 +210,160 @@ public sealed partial class MainPage : Page
   Click a symbol to insert it in the notes section.
 ".Replace("~", "\u200B");
 
+    public static void ColumnJump(
+        bool isLeft,
+        string notesText,
+        int selectionStart,
+        out int selectionStartFinal,
+        out int selectionLengthFinal
+    )
+    {
+        int maxIndex = Math.Max(notesText.Length - 1, 0);
+
+        if (isLeft)
+        {
+            int selectionIndex = Math.Max(selectionStart - 1, 0);
+
+            int startOfLine = notesText.LastIndexOf('\r', selectionIndex);
+            if (startOfLine == -1) startOfLine = 0;
+
+            int prevCol = notesText.LastIndexOf('&', selectionIndex);
+            if (prevCol == -1) prevCol = 0;
+
+            selectionStartFinal = Math.Max(prevCol, startOfLine);
+        }
+        else
+        {
+            int selectionIndex = Math.Min(selectionStart + 1, maxIndex);
+
+            int endOfLine = notesText.IndexOf('\r', selectionIndex);
+            if (endOfLine == -1) endOfLine = notesText.Length;
+
+            int nextCol = notesText.IndexOf('&', selectionIndex);
+            if (nextCol == -1) nextCol = notesText.Length;
+
+            selectionStartFinal = Math.Min(nextCol, endOfLine);
+        }
+        selectionLengthFinal = 0; // Todo: shift-select
+    }
+
+    public static void DuplicateLine(
+        bool isUpward,
+        int selectionStart,
+        string notesText,
+        out int selectionStartFinal,
+        out string notesTextFinal
+    )
+    {
+        int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
+
+        int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
+        if (startOfLine == -1) startOfLine = 0;
+
+        int endOfLine = notesText.IndexOf('\r', selectionIndex);
+        if (endOfLine == -1) endOfLine = notesText.Length;
+
+        string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
+        if (lineText[0] != '\r')
+        {
+            lineText = lineText.Insert(0, "\r");
+        }
+        int cursorOffset = isUpward ? 0 : lineText.Length;
+
+        notesTextFinal = notesText.Insert(endOfLine, lineText);
+        selectionStartFinal = selectionStart + cursorOffset;
+    }
+
+    public static void CalculateInline(
+        string expr,
+        int selectionStart,
+        int selectionLength,
+        string notesText,
+        out int selectionStartFinal,
+        out string notesTextFinal
+    )
+    {
+        string addText;
+        try
+        {
+            expr = rxImpliedMul.Replace(expr, "*");
+            expr = rxSquare.Replace(expr, (Match match) => {
+                string baseValue = match.Groups[1].Value;
+                int expValue = match.Groups[2].Value switch
+                {
+                    "²" => 2,
+                    "³" => 3,
+                    "⁴" => 4,
+                    _ => throw new NotImplementedException(),
+                };
+                // Weird workaround for Math.pow() not working with DataTable
+                string subexpr = "(" + baseValue;
+                for (int i = 1; i < expValue; ++i)
+                {
+                    subexpr += "*" + baseValue;
+                }
+                subexpr += ")";
+                return subexpr;
+            });
+            double value = Convert.ToDouble(dt.Compute(expr, ""));
+            addText = $" = {value}";
+        }
+        catch (Exception err)
+        {
+            addText = $" = <{err.Message}>";
+        }
+        int insertAt = selectionStart + selectionLength;
+        int insertEnd = insertAt + addText.Length;
+        notesTextFinal = notesText.Insert(insertAt, addText);
+        selectionStartFinal = insertEnd;
+    }
+
+    private static readonly Regex rxOperator = new(@"^\s*([-+/*])\s*(.*)\s*$");
+
+    public static void BalanceAlgebra(
+        int selectionStart,
+        string notesText,
+        out int selectionStartFinal,
+        out string notesTextFinal
+    )
+    {
+        int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
+
+        int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
+        if (startOfLine == -1) startOfLine = 0;
+        else ++startOfLine;
+
+        int endOfLine = notesText.IndexOf('\r', selectionIndex);
+        if (endOfLine == -1) endOfLine = notesText.Length - 1;
+
+        string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
+
+        string[] args = lineText.Split(@"\\");
+        var rel = Relationship.Parse(args[0]);
+        var match = rxOperator.Match(args[1]);
+        if (match.Success)
+        {
+            var op = match.Groups[1].Value switch
+            {
+                "+" => Operation.Add,
+                "-" => Operation.Sub,
+                "*" => Operation.Mul,
+                "/" => Operation.Div,
+                _ => throw new NotImplementedException(),
+            };
+            rel.ApplyOperation(op, match.Groups[2].Value);
+            string refactor = rel.ToString();
+            notesTextFinal = notesText
+                .Remove(startOfLine, endOfLine - startOfLine)
+                .Insert(startOfLine, refactor);
+            selectionStartFinal = startOfLine + refactor.Length;
+            return;
+        }
+
+        selectionStartFinal = selectionStart;
+        notesTextFinal = notesText;
+    }
+
     private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
     {
         var shiftState = CoreWindow.GetForCurrentThread().GetKeyState(VirtualKey.Shift);
@@ -236,72 +390,30 @@ public sealed partial class MainPage : Page
         // Column jumping
         else if ((e.Key is VirtualKey.Left or VirtualKey.Right) && isAlting && isCtrling)
         {
-            int selectionStart = Notes.SelectionStart;
-            string notesText = Notes.Text;
-            int maxIndex = 
-                Math.Max(notesText.Length - 1, 0);
-
-            switch (e.Key)
-            {
-                case VirtualKey.Left:
-                {
-                    int selectionIndex = 
-                        Math.Max(selectionStart - 1, 0);
-
-                    int startOfLine = notesText.LastIndexOf('\r', selectionIndex);
-                    if (startOfLine == -1) startOfLine = 0;
-
-                    int prevCol = notesText.LastIndexOf('&', selectionIndex);
-                    if (prevCol == -1) prevCol = 0;
-
-                        Notes.SelectionStart = 
-                        Math.Max(prevCol, startOfLine);
-                }
-                    break;
-
-                case VirtualKey.Right:
-                {
-                    int selectionIndex = 
-                        Math.Min(selectionStart + 1, maxIndex);
-
-                    int endOfLine = notesText.IndexOf('\r', selectionIndex);
-                    if (endOfLine == -1) endOfLine = notesText.Length;
-
-                    int nextCol = notesText.IndexOf('&', selectionIndex);
-                    if (nextCol == -1) nextCol = notesText.Length;
-
-                        Notes.SelectionStart = 
-                        Math.Min(nextCol, endOfLine);
-                }
-                    break;
-            }
-            Notes.SelectionLength = 0; // Todo: shift-select
+            ColumnJump(
+                e.Key == VirtualKey.Left,
+                Notes.Text,
+                Notes.SelectionStart,
+                out int newSelectionStart,
+                out int newSelectionLength
+            );
+            Notes.SelectionStart = newSelectionStart;
+            Notes.SelectionLength = newSelectionLength;
             e.Handled = true;
         }
         // Duplicate line
         else if (!string.IsNullOrWhiteSpace(Notes.Text) && ((e.Key is VirtualKey.Down or VirtualKey.Up) && isShifting && isAlting
             || (e.Key == VirtualKey.Enter && isShifting)))
         {
-            int selectionStart = Notes.SelectionStart;
-            string notesText = Notes.Text;
-            int selectionIndex = 
-                Math.Min(selectionStart, notesText.Length - 1);
-
-            int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
-            if (startOfLine == -1) startOfLine = 0;
-
-            int endOfLine = notesText.IndexOf('\r', selectionIndex);
-            if (endOfLine == -1) endOfLine = notesText.Length;
-
-            string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
-            if (lineText[0] != '\r')
-            {
-                lineText = lineText.Insert(0, "\r");
-            }
-            int cursorOffset = e.Key == VirtualKey.Up ? 0 : lineText.Length;
-
-            Notes.Text = notesText.Insert(endOfLine, lineText);
-            Notes.SelectionStart = selectionStart + cursorOffset;
+            DuplicateLine(
+                e.Key == VirtualKey.Up,
+                Notes.SelectionStart,
+                Notes.Text,
+                out int newSelectionStart,
+                out string newNotesText
+            );
+            Notes.Text = newNotesText;
+            Notes.SelectionStart = newSelectionStart;
             e.Handled = true;
         }
         // Put selection in math input
@@ -329,76 +441,28 @@ public sealed partial class MainPage : Page
             // Calculate approximate value
             if (Notes.SelectionLength > 0)
             {
-                string addText;
-                try
-                {
-                    string expr = Notes.SelectedText;
-                    expr = rxImpliedMul.Replace(expr, "*");
-                    expr = rxSquare.Replace(expr, (Match match) => {
-                        string baseValue = match.Groups[1].Value;
-                        int expValue = match.Groups[2].Value switch {
-                            "²" => 2,
-                            "³" => 3,
-                            "⁴" => 4,
-                            _ => throw new Exception("Not implemented"),
-                        };
-                        // Weird workaround for Math.pow() not working with DataTable
-                        string subexpr = "(" + baseValue;
-                        for (int i = 1; i < expValue; ++i)
-                        {
-                            subexpr += "*" + baseValue;
-                        }
-                        subexpr += ")";
-                        return subexpr;
-                    });
-                    double value = Convert.ToDouble(dt.Compute(expr, ""));
-                    addText = $" = {value}";
-                }
-                catch (Exception err)
-                {
-                    addText = $" = <{err.Message}>";
-                }
-                int insertAt = Notes.SelectionStart + Notes.SelectionLength;
-                int insertEnd = insertAt + addText.Length;
-                Notes.Text = Notes.Text.Insert(insertAt, addText);
-                Notes.SelectionStart = insertEnd;
+                CalculateInline(
+                    Notes.SelectedText,
+                    Notes.SelectionStart,
+                    Notes.SelectionLength,
+                    Notes.Text,
+                    out int newSelectionStart,
+                    out string newNotesText
+                );
+                Notes.SelectionStart = newSelectionStart;
+                Notes.Text = newNotesText;
             }
             // Balance Algebra
             else
             {
-                int selectionStart = Notes.SelectionStart;
-                string notesText = Notes.Text;
-                int selectionIndex = Math.Min(selectionStart, notesText.Length - 1);
-
-                int startOfLine = notesText.LastIndexOf('\r', selectionIndex - 1);
-                if (startOfLine == -1) startOfLine = 0;
-                else ++startOfLine;
-
-                int endOfLine = notesText.IndexOf('\r', selectionIndex);
-                if (endOfLine == -1) endOfLine = notesText.Length - 1;
-
-                string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
-
-                string[] args = lineText.Split(@"\\");
-                var rel = Relationship.Parse(args[0]);
-                var match = new Regex(@"^\s*([-+/*])\s*(.*)\s*$").Match(args[1]);
-                if (match.Success)
-                {
-                    var op = match.Groups[1].Value switch
-                    {
-                        "+" => Operation.Add,
-                        "-" => Operation.Sub,
-                        "*" => Operation.Mul,
-                        "/" => Operation.Div,
-                        _ => throw new NotImplementedException(),
-                    };
-                    rel.ApplyOperation(op, match.Groups[2].Value);
-                    string refactor = rel.ToString();
-                    Notes.Text = Notes.Text
-                        .Remove(startOfLine, endOfLine - startOfLine)
-                        .Insert(startOfLine, refactor);
-                    Notes.SelectionStart = startOfLine + refactor.Length;
-                }
+                BalanceAlgebra(
+                    Notes.SelectionStart,
+                    Notes.Text,
+                    out int newSelectionStart,
+                    out string newNotesText
+                );
+                Notes.SelectionStart = newSelectionStart;
+                Notes.Text = newNotesText;
             }
             e.Handled = true;
         }
@@ -467,8 +531,7 @@ public sealed partial class MainPage : Page
         // Delete bracket pair together
         else if (e.Key == VirtualKey.Back)
         {
-            int newSelectPosition = 
-                Math.Max(Notes.SelectionStart - 1, 0);
+            int newSelectPosition = Math.Max(Notes.SelectionStart - 1, 0);
             if (Notes.SelectionLength == 0 && Notes.Text.Length >= newSelectPosition + 2 &&
                 Notes.Text.Substring(newSelectPosition, 2) is "()" or "[]" or "{}" or "<>" or "[)" or "(]")
             {

@@ -3,6 +3,7 @@ using AlgebraBalancer.Notation;
 using AlgebraBalancer.Algebra;
 using static AlgebraBalancer.ExactMath;
 using AlgebraBalancer.Algebra.Balancer;
+using AlgebraBalancer;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -426,6 +427,68 @@ public class AlgebraTests
         }
 
         [TestClass]
+        public class SubstitutionTests
+        {
+            [TestMethod]
+            public void TestSubstituteX()
+            {
+                Assert.AreEqual(
+                    "((4)-(4)^2) + 5 = 2(4) - 3",
+                    Relationship.Substitute(
+                        "(x-x^2) + 5 = 2x - 3",
+                        "x=4")
+                );
+            }
+
+            [TestMethod]
+            public void TestSubstituteXY()
+            {
+                Assert.AreEqual(
+                    "((6)-(6)^2) + 5 = 2(4) - 3",
+                    Relationship.Substitute(
+                        "(y-y^2) + 5 = 2x - 3",
+                        "x=4,y=6")
+                );
+            }
+
+            [TestMethod]
+            public void TestSubstituteXYX()
+            {
+                // Should stop after one iteration
+                Assert.AreEqual(
+                    "((2x)-(2x)^2) + 5 = 2(4) - 3",
+                    Relationship.Substitute(
+                        "(y-y^2) + 5 = 2x - 3",
+                        "x=4,y=2x")
+                );
+            }
+
+            [TestMethod]
+            public void TestSubstituteYXX()
+            {
+                // Order matters
+                Assert.AreEqual(
+                    "((2(4))-(2(4))^2) + 5 = 2(4) - 3",
+                    Relationship.Substitute(
+                        "(y-y^2) + 5 = 2x - 3",
+                        "y=2x,x=4")
+                );
+            }
+
+            [TestMethod]
+            public void TestSubstituteRecursive()
+            {
+                // Should stop after one iteration
+                Assert.AreEqual(
+                    "((2x)-(2x)^2) + 5 = 2(2(2x)) - 3",
+                    Relationship.Substitute(
+                        "(y-y^2) + 5 = 2x - 3",
+                        "x=2y,y=2x")
+                );
+            }
+        }
+
+        [TestClass]
         public class FactorTests
         {
             [TestMethod]
@@ -458,5 +521,227 @@ public class AlgebraTests
                 Assert.AreEqual("(2a + b)2", Relationship.Factor("4a + 2b"));
             }
         }
+    }
+}
+
+[TestClass]
+public class MainPageTests
+{
+    private const string SEL_BEG_IN = "[[SELECTION_BEGIN_INITIAL]]";
+    private const string SEL_END_IN = "[[SELECTION_END_INITIAL]]";
+
+    private const string SEL_BEG_EX = "[[SELECTION_BEGIN_EXPECT]]";
+    private const string SEL_END_EX = "[[SELECTION_END_EXPECT]]";
+
+    private static void GetTextSelectionPositions(
+        ref string text,
+        out int selectionStart,
+        out int expectStart,
+        out int selectionLength,
+        out int expectLength
+    )
+    {
+        selectionStart =
+            text.Replace(SEL_END_IN, "")
+                .Replace(SEL_BEG_EX, "")
+                .Replace(SEL_END_EX, "")
+                .IndexOf(SEL_BEG_IN);
+
+        selectionLength = System.Math.Max(-1,
+            text.Replace(SEL_BEG_IN, "")
+                .Replace(SEL_BEG_EX, "")
+                .Replace(SEL_END_EX, "")
+                .IndexOf(SEL_END_IN) - selectionStart);
+
+        expectStart =
+            text.Replace(SEL_BEG_IN, "")
+                .Replace(SEL_END_IN, "")
+                .Replace(SEL_END_EX, "")
+                .IndexOf(SEL_BEG_EX);
+
+        expectLength = System.Math.Max(-1,
+            text.Replace(SEL_BEG_IN, "")
+                .Replace(SEL_END_IN, "")
+                .Replace(SEL_BEG_EX, "")
+                .IndexOf(SEL_END_EX) - expectStart);
+
+        text =
+            text.Replace(SEL_BEG_IN, "")
+                .Replace(SEL_END_IN, "")
+                .Replace(SEL_BEG_EX, "")
+                .Replace(SEL_END_EX, "");
+    }
+
+    private static void GetModifiedTextSelectionPositions(
+        ref string notesText,
+        ref string expectNotesText,
+        out int selectionStart,
+        out int expectStart,
+        out int selectionLength,
+        out int expectLength
+    )
+    {
+        GetTextSelectionPositions(ref notesText, out int actBeg, out _, out int actLen, out _);
+        selectionStart = actBeg;
+        selectionLength = actLen;
+        GetTextSelectionPositions(ref expectNotesText, out _, out int expBeg, out _, out int expLen);
+        expectStart = expBeg;
+        expectLength = expLen;
+    }
+
+    [TestClass]
+    public class ColumnJumpTests
+    {
+        private const bool JUMP_LEFT = true;
+        private const bool JUMP_RIGHT = false;
+
+        [TestMethod]
+        public void TestJumpRightToAmp()
+        {
+            string notesText = $"app{SEL_BEG_IN}le {SEL_BEG_EX}& orange";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpLeftToAmp()
+        {
+            string notesText = $"apple {SEL_BEG_EX}& ora{SEL_BEG_IN}nge";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpRightToAmpFromStart()
+        {
+            string notesText = $"{SEL_BEG_IN}apple {SEL_BEG_EX}& orange";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpLeftToAmpFromEnd()
+        {
+            string notesText = $"apple {SEL_BEG_EX}& orange{SEL_BEG_IN}";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpRightToEnd()
+        {
+            string notesText = $"apple & ora{SEL_BEG_IN}nge{SEL_BEG_EX}";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpLeftToStart()
+        {
+            string notesText = $"{SEL_BEG_EX}app{SEL_BEG_IN}le & orange";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpRightToEndFromAmp()
+        {
+            string notesText = $"apple {SEL_BEG_IN}& orange{SEL_BEG_EX}";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpLeftToStartFromAmp()
+        {
+            string notesText = $"{SEL_BEG_EX}apple {SEL_BEG_IN}& orange";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpRightToNewline()
+        {
+            string notesText = $"apple & or{SEL_BEG_IN}ange{SEL_BEG_EX}\rbanana & mango";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpLeftToNewline()
+        {
+            string notesText = $"apple & orange{SEL_BEG_EX}\rbanan{SEL_BEG_IN}a & mango";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpRightToAmpFromNewline()
+        {
+            string notesText = $"apple & orange{SEL_BEG_IN}\rbanana {SEL_BEG_EX}& mango";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpLeftToAmpFromNewline()
+        {
+            string notesText = $"apple {SEL_BEG_EX}& orange{SEL_BEG_IN}\rbanana & mango";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+    }
+
+    [TestClass]
+    public class DuplicateLineTests
+    {
+        private const bool UPWARD = true;
+        private const bool DOWNWARD = false;
+
+        [TestMethod]
+        public void TestDupeLineDown()
+        {
+            string notesText       = $"apple orange\rbanana mango{SEL_BEG_IN}\rstrawberry kiwi";
+            string expectNotesText = $"apple orange\rbanana mango\rbanana mango{SEL_BEG_EX}\rstrawberry kiwi";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
+        [TestMethod]
+        public void TestDupeLineUp()
+        {
+            string notesText       = $"apple orange\rbanana mango{SEL_BEG_IN}\rstrawberry kiwi";
+            string expectNotesText = $"apple orange\rbanana mango{SEL_BEG_EX}\rbanana mango\rstrawberry kiwi";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+    }
+
+    [TestClass]
+    public class CalculateInlineTests
+    {
+
+    }
+
+    [TestClass]
+    public class BalanceAlgebraTests
+    {
+
     }
 }

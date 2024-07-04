@@ -269,6 +269,24 @@ public class Relationship
         }
     }
 
+    public static string Substitute(string expr, string sub)
+    {
+        (string variable, string value)[] substitutions = sub
+            .Split(",")
+            .Select((x) =>
+            {
+                string[] parts = x.Split("=");
+                return (parts[0].Trim(), parts[1].Trim());
+            })
+            .ToArray();
+
+        foreach (var (variable, value) in substitutions)
+        {
+            expr = expr.Replace(variable, $"({value})");
+        }
+        return expr;
+    }
+
     public static string Factor(string expr)
     {
 
