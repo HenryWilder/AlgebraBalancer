@@ -6,8 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-using Windows.Foundation;
-
 namespace AlgebraBalancer.Algebra.Balancer;
 
 public enum Operation
@@ -113,13 +111,12 @@ public class Relationship
             .Where(x => !string.IsNullOrEmpty(x))
             .ToArray();
 
-        Debug.Assert(items.Length > 1 && items.Length % 2 == 1);
         return new Relationship(items);
     }
 
     public Relationship(params object[] items)
     {
-        Debug.Assert(items.Length > 1 && items.Length % 2 == 1);
+        if (items.Length % 2 == 0) throw new Exception("Relationship must have an odd number of items so that each side has a comparison");
         this.items = new RelationshipItem[items.Length];
         for (int i = 0; i < items.Length; ++i)
         {
@@ -136,7 +133,7 @@ public class Relationship
                 }
                 else
                 {
-                    Debug.Assert(false, $"Expected item {i} to be RelSide");
+                    throw new Exception($"Expected item {i} to be RelSide");
                 }
             }
             else
@@ -155,7 +152,7 @@ public class Relationship
                 }
                 else
                 {
-                    Debug.Assert(false, $"Expected item {i} to be RelComp");
+                    throw new Exception($"Expected item {i} to be RelComp");
                 }
             }
         }
@@ -163,7 +160,7 @@ public class Relationship
 
     public RelationshipItem[] items;
 
-    public int NumSides => items.Length / 2;
+    public int NumSides => (items.Length + 1) / 2;
 
     private IEnumerable<string> Sides
     {
@@ -173,20 +170,34 @@ public class Relationship
 
         set
         {
-            Debug.Assert(value.Count() == NumSides);
-            for (int i = 0; i < value.Count(); ++i)
+            int numValues = value.Count();
+            if (numValues != NumSides) throw new Exception($"Wrong number of items; expected {NumSides}, got {numValues}");
+            for (int i = 0; i < numValues; ++i)
             {
                 items[i * 2] = new RelSide(value.ElementAt(i));
             }
         }
     }
 
+    private static readonly Regex reMultipleSpaces = new(@"[\t ]+");
+    private static readonly Regex reLeadingPlus = new(@"(?<=^|\()\s*\+\s*");
+    private static readonly Regex reUnaryMinus = new(@"(?<=^|\()\s*\-\s+");
     public void ApplyOperation(Operation operation, string value)
     {
+        static string Cleanup(string str)
+        {
+            str = reLeadingPlus.Replace(str, "");
+            str = reUnaryMinus.Replace(str, "-");
+            str = reMultipleSpaces.Replace(str, " ");
+            return str.Trim();
+        }
         switch (operation)
         {
             case Operation.Add:
-                Sides = Sides.Select(x => $"{x} + {value}");
+                Regex reAddInv = new(@$"-\s*{value}\s*(?=[+-]|$)");
+                Sides = Sides.Select(x => reAddInv.IsMatch(x)
+                    ? Cleanup(reAddInv.Replace(x, "", 1))
+                    : $"{x} + {value}");
                 break;
             case Operation.Sub:
                 break;

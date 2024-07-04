@@ -183,61 +183,164 @@ public class AlgebraTests
     [TestClass]
     public class RelationshipTests
     {
-        private void AssertRelationshipsAreEqual(Relationship expected, Relationship actual)
+        private static void AssertRelationshipsAreEqual(Relationship expect, Relationship actual)
         {
-            Assert.AreEqual(expected.items.Length, actual.items.Length);
-            for (int i = 0; i < expected.items.Length; ++i)
+            Assert.AreEqual(expect.items.Length, actual.items.Length);
+            for (int i = 0; i < expect.items.Length; ++i)
             {
-                Assert.AreEqual(expected.items[i], actual.items[i]);
+                var expectItem = expect.items[i];
+                var actualItem = actual.items[i];
+                if (i % 2 == 0)
+                {
+                    Assert.IsInstanceOfType(expectItem, typeof(RelSide), $"Malformed test: Cannot expect item {i} not to be RelSide");
+                    Assert.IsInstanceOfType(actualItem, typeof(RelSide));
+                    string expectSide = (string)(RelSide)expectItem;
+                    string actualSide = (string)(RelSide)actualItem;
+                    Assert.AreEqual(expectSide, actualSide);
+                }
+                else
+                {
+                    Assert.IsInstanceOfType(expectItem, typeof(RelComp), $"Malformed test: Cannot expect item {i} not to be RelComp");
+                    Assert.IsInstanceOfType(actualItem, typeof(RelComp));
+                    var expectCmp = (Comparator)(RelComp)expectItem;
+                    var actualCmp = (Comparator)(RelComp)actualItem;
+                    Assert.AreEqual(expectCmp, actualCmp);
+                }
             }
         }
 
-        [TestMethod]
-        public void TestRelationshipParse()
+        [TestClass]
+        public class ParseTests
         {
-            AssertRelationshipsAreEqual(
-                new Relationship("5 + 3", Comparator.EQ, "10 - 2"),
-                Relationship.Parse("5 + 3 = 10 - 2"));
+            [TestMethod]
+            public void TestRelationshipParse()
+            {
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3", Comparator.EQ, "10 - 2"),
+                    Relationship.Parse("5 + 3 = 10 - 2"));
+            }
+
+            [TestMethod]
+            public void TestRelationshipMultiCharCmpParse()
+            {
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3", Comparator.LE, "10 - 2"),
+                    Relationship.Parse("5 + 3 <= 10 - 2"));
+            }
+
+            [TestMethod]
+            public void TestRelationshipParseAligned()
+            {
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3", Comparator.LE, "10 - 2"),
+                    Relationship.Parse("5 + 3 &<= 10 - 2"));
+            }
+
+            [TestMethod]
+            public void TestRelationshipParseAlignedWithSpace()
+            {
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3", Comparator.GE, "10 - 2"),
+                    Relationship.Parse("5 + 3 & >= 10 - 2"));
+            }
+
+            [TestMethod]
+            public void TestRelationshipParseMatAligned()
+            {
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3", Comparator.LE, "10 - 2"),
+                    Relationship.Parse("5 + 3 &<=& 10 - 2"));
+            }
+
+            [TestMethod]
+            public void TestRelationshipParseMatAlignedWithSpace()
+            {
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3", Comparator.GE, "10 - 2"),
+                    Relationship.Parse("5 + 3 & >= & 10 - 2"));
+            }
         }
 
-        [TestMethod]
-        public void TestRelationshipMultiCharCmpParse()
+        [TestClass]
+        public class OperationTests
         {
-            AssertRelationshipsAreEqual(
-                new Relationship("5 + 3", Comparator.LE, "10 - 2"),
-                Relationship.Parse("5 + 3 <= 10 - 2"));
+            [TestMethod]
+            public void TestOperationAdd()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "10 - 2");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "10"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddMultipleSides()
+            {
+                var test = new Relationship("5 + 3 - 2", Comparator.EQ, "8 - 2");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3", Comparator.EQ, "8"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddMultipleSameSide()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "12 - 2 - 2");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "12 - 2"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddAmbiguous()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "10 - 2");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "10"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddParentheticalRight()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "2(7 - 2) - 2");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "2(7 - 2)"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddParentheticalLeft()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "-2 + 2(7 - 2)");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "2(7 - 2)"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddSameValueDifferentOperation()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "-2(7 - 2) - 2");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "-2(7 - 2)"), test);
+            }
+
+            [TestMethod]
+            public void TestOperationAddSameValueDifferentOperationLeft()
+            {
+                var test = new Relationship("5 + 3", Comparator.EQ, "-2 - 2(7 - 2)");
+                test.ApplyOperation(Operation.Add, "2");
+                AssertRelationshipsAreEqual(
+                    new Relationship("5 + 3 + 2", Comparator.EQ, "-2(7 - 2)"), test);
+            }
         }
 
-        [TestMethod]
-        public void TestRelationshipParseAligned()
+        [TestClass]
+        public class RefactorTests
         {
-            AssertRelationshipsAreEqual(
-                new Relationship("5 + 3", Comparator.LE, "10 - 2"),
-                Relationship.Parse("5 + 3 &<= 10 - 2"));
-        }
 
-        [TestMethod]
-        public void TestRelationshipParseAlignedWithSpace()
-        {
-            AssertRelationshipsAreEqual(
-                new Relationship("5 + 3", Comparator.GE, "10 - 2"),
-                Relationship.Parse("5 + 3 & >= 10 - 2"));
-        }
-
-        [TestMethod]
-        public void TestRelationshipParseMatAligned()
-        {
-            AssertRelationshipsAreEqual(
-                new Relationship("5 + 3", Comparator.LE, "10 - 2"),
-                Relationship.Parse("5 + 3 &<=& 10 - 2"));
-        }
-
-        [TestMethod]
-        public void TestRelationshipParseMatAlignedWithSpace()
-        {
-            AssertRelationshipsAreEqual(
-                new Relationship("5 + 3", Comparator.GE, "10 - 2"),
-                Relationship.Parse("5 + 3 & >= & 10 - 2"));
         }
     }
 }
