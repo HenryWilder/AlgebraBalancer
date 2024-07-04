@@ -1,8 +1,8 @@
-﻿
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AlgebraBalancer.Notation;
 using AlgebraBalancer.Algebra;
 using static AlgebraBalancer.ExactMath;
+using AlgebraBalancer.Algebra.Balancer;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -177,6 +177,67 @@ public class AlgebraTests
         public void TestComplexPlusImaginary()
         {
             Assert.AreEqual(new Complex(2, 5), new Complex(2, 3) + new Imaginary(2));
+        }
+    }
+
+    [TestClass]
+    public class RelationshipTests
+    {
+        private void AssertRelationshipsAreEqual(Relationship expected, Relationship actual)
+        {
+            Assert.AreEqual(expected.items.Length, actual.items.Length);
+            for (int i = 0; i < expected.items.Length; ++i)
+            {
+                Assert.AreEqual(expected.items[i], actual.items[i]);
+            }
+        }
+
+        [TestMethod]
+        public void TestRelationshipParse()
+        {
+            AssertRelationshipsAreEqual(
+                new Relationship("5 + 3", Comparator.EQ, "10 - 2"),
+                Relationship.Parse("5 + 3 = 10 - 2"));
+        }
+
+        [TestMethod]
+        public void TestRelationshipMultiCharCmpParse()
+        {
+            AssertRelationshipsAreEqual(
+                new Relationship("5 + 3", Comparator.LE, "10 - 2"),
+                Relationship.Parse("5 + 3 <= 10 - 2"));
+        }
+
+        [TestMethod]
+        public void TestRelationshipParseAligned()
+        {
+            AssertRelationshipsAreEqual(
+                new Relationship("5 + 3", Comparator.LE, "10 - 2"),
+                Relationship.Parse("5 + 3 &<= 10 - 2"));
+        }
+
+        [TestMethod]
+        public void TestRelationshipParseAlignedWithSpace()
+        {
+            AssertRelationshipsAreEqual(
+                new Relationship("5 + 3", Comparator.GE, "10 - 2"),
+                Relationship.Parse("5 + 3 & >= 10 - 2"));
+        }
+
+        [TestMethod]
+        public void TestRelationshipParseMatAligned()
+        {
+            AssertRelationshipsAreEqual(
+                new Relationship("5 + 3", Comparator.LE, "10 - 2"),
+                Relationship.Parse("5 + 3 &<=& 10 - 2"));
+        }
+
+        [TestMethod]
+        public void TestRelationshipParseMatAlignedWithSpace()
+        {
+            AssertRelationshipsAreEqual(
+                new Relationship("5 + 3", Comparator.GE, "10 - 2"),
+                Relationship.Parse("5 + 3 & >= & 10 - 2"));
         }
     }
 }
