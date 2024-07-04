@@ -614,6 +614,106 @@ public class MainPageTests
     }
 
     [TestClass]
+    public class GetLineContainingPositionTests
+    {
+        /// <summary>
+        /// Asserts that <see cref="SEL_BEG_EX"/> and <see cref="SEL_END_EX"/> are where they should be,
+        /// based on the position of <see cref="SEL_BEG_IN"/>.
+        /// </summary>
+        private static void AssertPredictedLineRange(string notesText)
+        {
+            // Does not need to be exhaustive
+            static string Sanatize(string str)
+            {
+                return "\"" + str
+                    .Replace("\r", @"\r")
+                    .Replace("\n", @"\n")
+                    .Replace("\t", @"\t")
+                    .Replace("\"", @"\""")
+                + "\"";
+            }
+
+            GetTextSelectionPositions(ref notesText, out int selectionStart, out int expectStart, out _, out int expectLength);
+            var (lineStart, lineEnd) = MainPage.GetLineContainingPosition(notesText, selectionStart);
+            Assert.AreEqual(
+                (
+                    Sanatize(notesText.Substring(expectStart, expectLength)),
+                    $"{expectStart}:{expectStart + expectLength}"
+                ),
+                (
+                    Sanatize(notesText.Substring(lineStart, lineEnd - lineStart)),
+                    $"{lineStart}:{lineEnd}"
+                ));
+        }
+
+        [TestMethod]
+        public void TestBetweenNewlines()
+        {
+            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}oran{SEL_BEG_IN}ge{SEL_END_EX}\rbanana\rmango");
+        }
+
+        [TestMethod]
+        public void TestBetweenNewlinesButNotFirst()
+        {
+            AssertPredictedLineRange($"apple\rorange\r{SEL_BEG_EX}ban{SEL_BEG_IN}ana{SEL_END_EX}\rmango");
+        }
+
+        [TestMethod]
+        public void TestFirstLine()
+        {
+            AssertPredictedLineRange($"{SEL_BEG_EX}ap{SEL_BEG_IN}ple{SEL_END_EX}\rorange\rbanana\rmango");
+        }
+
+        [TestMethod]
+        public void TestLastLine()
+        {
+            AssertPredictedLineRange($"apple\rorange\rbanana\r{SEL_BEG_EX}man{SEL_BEG_IN}go{SEL_END_EX}");
+        }
+
+        [TestMethod]
+        public void TestStart()
+        {
+            AssertPredictedLineRange($"{SEL_BEG_EX}{SEL_BEG_IN}apple{SEL_END_EX}\rorange\rbanana\rmango");
+        }
+
+        [TestMethod]
+        public void TestEnd()
+        {
+            AssertPredictedLineRange($"apple\rorange\rbanana\r{SEL_BEG_EX}mango{SEL_BEG_IN}{SEL_END_EX}");
+        }
+
+        [TestMethod]
+        public void TestEmptyString()
+        {
+            AssertPredictedLineRange($"{SEL_BEG_EX}{SEL_BEG_IN}{SEL_END_EX}");
+        }
+
+        [TestMethod]
+        public void TestSingleLineString()
+        {
+            AssertPredictedLineRange($"{SEL_BEG_EX}app{SEL_BEG_IN}le{SEL_END_EX}");
+        }
+
+        [TestMethod]
+        public void TestEmptyLine()
+        {
+            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}{SEL_BEG_IN}{SEL_END_EX}\rbanana");
+        }
+
+        [TestMethod]
+        public void TestStartOfLine()
+        {
+            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}{SEL_BEG_IN}orange{SEL_END_EX}\rbanana");
+        }
+
+        [TestMethod]
+        public void TestEndOfLine()
+        {
+            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}orange{SEL_BEG_IN}{SEL_END_EX}\rbanana");
+        }
+    }
+
+    [TestClass]
     public class ColumnJumpTests
     {
         private const bool JUMP_LEFT = true;
@@ -703,25 +803,43 @@ public class MainPageTests
         [TestMethod]
         public void TestJumpLeftToNewline()
         {
-            string notesText = $"apple & orange{SEL_BEG_EX}\rbanan{SEL_BEG_IN}a & mango";
+            string notesText = $"apple & orange\r{SEL_BEG_EX}banan{SEL_BEG_IN}a & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
             MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
         [TestMethod]
-        public void TestJumpRightToAmpFromNewline()
+        public void TestJumpRightToNextlineFromBeforeNewline()
         {
-            string notesText = $"apple & orange{SEL_BEG_IN}\rbanana {SEL_BEG_EX}& mango";
+            string notesText = $"apple & orange{SEL_BEG_IN}\r{SEL_BEG_EX}banana & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
             MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
         [TestMethod]
-        public void TestJumpLeftToAmpFromNewline()
+        public void TestJumpLeftToAmpFromBeforeNewline()
         {
             string notesText = $"apple {SEL_BEG_EX}& orange{SEL_BEG_IN}\rbanana & mango";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpRightToAmpFromAfterNewline()
+        {
+            string notesText = $"apple & orange\r{SEL_BEG_IN}banana {SEL_BEG_EX}& mango";
+            GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
+            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            Assert.AreEqual(expectStart, newSelectionStart);
+        }
+
+        [TestMethod]
+        public void TestJumpLeftToPrevlineFromAfterNewline()
+        {
+            string notesText = $"apple & orange{SEL_BEG_EX}\r{SEL_BEG_IN}banana & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
             MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
@@ -907,6 +1025,15 @@ public class MainPageTests
     [TestClass]
     public class BalanceAlgebraTests
     {
-
+        [TestMethod]
+        public void TestBasic()
+        {
+            string notesText       = $"4 - 2 = 3 \\\\+2{SEL_BEG_IN}";
+            string expectNotesText = $"4 = 3 + 2{SEL_BEG_EX}";
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            MainPage.BalanceAlgebra(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
     }
 }

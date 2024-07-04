@@ -11,6 +11,7 @@ using Windows.System;
 using System.Data;
 using System.Collections.ObjectModel;
 using AlgebraBalancer.Algebra.Balancer;
+using System.Reflection;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -210,6 +211,43 @@ public sealed partial class MainPage : Page
   Click a symbol to insert it in the notes section.
 ".Replace("~", "\u200B");
 
+    /// <summary>
+    /// Looks within a multiline string and finds the "line" containing the provided position.
+    /// A line is defined as the range between a combination of any two of the following, with the shortest length possible:
+    /// <ul>
+    ///   <li> The start of the string. </li>
+    ///   <li> A '\r' character. </li>
+    ///   <li> A second '\r' character. </li>
+    ///   <li> The end of the string. </li>
+    /// </ul>
+    /// In other words: <code>@"(?&lt;=^|\r).*?(?=\r|$)"</code>
+    /// The range returned will not contain the '\r' character(s) if any are used to find the boundaries of the line.
+    /// </summary>
+    /// <param name="text">The full text to search within.</param>
+    /// <param name="index">The index to search for.</param>
+    /// <returns>
+    /// The range of the two '\r' characters (or start or end) closest to <paramref name="index"/> in either direction.
+    /// (-1,-1) if <paramref name="index"/> is out of bounds.
+    /// </returns>
+    public static (int lineStart, int lineEnd) GetLineContainingPosition(in string text, int index)
+    {
+        const string LINE_SPLIT = "\r";
+        string[] lines = text.Split(LINE_SPLIT);
+        int lineStartIndex = 0;
+        foreach (string line in lines)
+        {
+            int lineEndIndex = lineStartIndex + line.Length;
+            if (index <= lineEndIndex)
+            {
+                return (lineStartIndex, lineEndIndex);
+            }
+
+            lineStartIndex = lineEndIndex + LINE_SPLIT.Length;
+        }
+
+        return (-1, -1);
+    }
+
     public static void ColumnJump(
         bool isLeft,
         in string notesText,
@@ -218,32 +256,41 @@ public sealed partial class MainPage : Page
         out int selectionLengthFinal
     )
     {
-        int maxIndex = Math.Max(notesText.Length - 1, 0);
+        var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
 
-        if (isLeft)
+        if (isLeft && selectionStart != 0)
         {
-            int selectionIndex = Math.Max(selectionStart - 1, 0);
+            if (selectionStart == startOfLine)
+            {
+                selectionStartFinal = startOfLine - 1;
+            }
+            else
+            {
+                int prevCol = notesText.LastIndexOf('&', Math.Clamp(selectionStart - 1, 0, notesText.Length - 1));
+                if (prevCol == -1) prevCol = 0;
 
-            int startOfLine = notesText.LastIndexOf('\r', selectionIndex);
-            if (startOfLine == -1) startOfLine = 0;
+                selectionStartFinal = Math.Max(prevCol, startOfLine);
+            }
+        }
+        else if (!isLeft && selectionStart != notesText.Length)
+        {
+            if (selectionStart == endOfLine)
+            {
+                selectionStartFinal = endOfLine + 1;
+            }
+            else
+            {
+                int nextCol = notesText.IndexOf('&', Math.Clamp(selectionStart + 1, 0, notesText.Length - 1));
+                if (nextCol == -1) nextCol = notesText.Length;
 
-            int prevCol = notesText.LastIndexOf('&', selectionIndex);
-            if (prevCol == -1) prevCol = 0;
-
-            selectionStartFinal = Math.Max(prevCol, startOfLine);
+                selectionStartFinal = Math.Min(nextCol, endOfLine);
+            }
         }
         else
         {
-            int selectionIndex = Math.Min(selectionStart + 1, maxIndex);
-
-            int endOfLine = notesText.IndexOf('\r', selectionIndex);
-            if (endOfLine == -1) endOfLine = notesText.Length;
-
-            int nextCol = notesText.IndexOf('&', selectionIndex);
-            if (nextCol == -1) nextCol = notesText.Length;
-
-            selectionStartFinal = Math.Min(nextCol, endOfLine);
+            selectionStartFinal = selectionStart;
         }
+
         selectionLengthFinal = 0; // Todo: shift-select
     }
 
@@ -316,6 +363,18 @@ public sealed partial class MainPage : Page
         int insertEnd = insertAt + addText.Length;
         notesTextFinal = notesText.Insert(insertAt, addText);
         selectionStartFinal = insertEnd;
+    }
+
+    public static void SubstituteVars(
+        int selectionStart,
+        in string notesText,
+        out int selectionStartFinal,
+        out string notesTextFinal
+    )
+    {
+        // TODO
+        selectionStartFinal = selectionStart;
+        notesTextFinal = notesText;
     }
 
     private static readonly Regex rxOperator = new(@"^\s*([-+/*])\s*(.*)\s*$");
@@ -438,6 +497,8 @@ public sealed partial class MainPage : Page
         // Calculate the selection and insert the result on the right side of an equals sign
         else if (isCtrling && e.Key == VirtualKey.Space)
         {
+            int newSelectionStart;
+            string newNotesText;
             // Calculate approximate value
             if (Notes.SelectionLength > 0)
             {
@@ -446,24 +507,34 @@ public sealed partial class MainPage : Page
                     Notes.SelectionStart,
                     Notes.SelectionLength,
                     Notes.Text,
-                    out int newSelectionStart,
-                    out string newNotesText
+                    out newSelectionStart,
+                    out newNotesText
                 );
-                Notes.SelectionStart = newSelectionStart;
-                Notes.Text = newNotesText;
             }
             // Balance Algebra
             else
             {
-                BalanceAlgebra(
-                    Notes.SelectionStart,
-                    Notes.Text,
-                    out int newSelectionStart,
-                    out string newNotesText
-                );
-                Notes.SelectionStart = newSelectionStart;
-                Notes.Text = newNotesText;
+                if (false) // TODO
+                {
+                    SubstituteVars(
+                        Notes.SelectionStart,
+                        Notes.Text,
+                        out newSelectionStart,
+                        out newNotesText
+                    );
+                }
+                else
+                {
+                    BalanceAlgebra(
+                        Notes.SelectionStart,
+                        Notes.Text,
+                        out newSelectionStart,
+                        out newNotesText
+                    );
+                }
             }
+            Notes.SelectionStart = newSelectionStart;
+            Notes.Text = newNotesText;
             e.Handled = true;
         }
         // Insert 4 spaces when tab is pressed
