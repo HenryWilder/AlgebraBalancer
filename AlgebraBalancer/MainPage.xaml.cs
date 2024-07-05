@@ -387,7 +387,9 @@ public sealed partial class MainPage : Page
         string[] args = lineText.Split(@"\\");
         string expr = args[0];
         string sub = (args.Length > 1 ? args[1] : "") + string.Join(";", GetLetDefinitions(notesText));
-        string newExpr = Relationship.Substitute(expr, sub).TrimEnd();
+        string newExpr = sub.Contains("=")
+            ? Relationship.Substitute(expr, sub).TrimEnd()
+            : expr;
 
         selectionStartFinal = startOfLine + newExpr.Length;
         notesTextFinal = notesText

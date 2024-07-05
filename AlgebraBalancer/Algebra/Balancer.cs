@@ -270,6 +270,44 @@ public class Relationship
         }
     }
 
+    private static readonly Regex rxVectorTest = new(
+        @"^\((?:[^()]|(?'a'\()|(?'-a'\)))*(?(a)(?!))(,(?:[^()]|(?'b'\()|(?'-b'\)))*(?(b)(?!)))+\)$",
+        RegexOptions.Compiled);
+
+    private static readonly Regex rxUnneededOuterParens = new(
+        @"\(\s*(\((?:[^()]|(?'inner'\()|(?'-inner'\)))*(?(inner)(?!))\))\s*\)",
+        RegexOptions.Compiled);
+
+    private static readonly Regex rxUnneededFullParens = new(
+        @"^\s*\(((?:[^()]|(?'inner'\()|(?'-inner'\)))*(?(inner)(?!)))\)\s*$",
+        RegexOptions.Compiled);
+
+    public static string CleanParentheses(string expr)
+    {
+        while (rxUnneededOuterParens.IsMatch(expr))
+        {
+            expr = rxUnneededOuterParens.Replace(expr, (x) => x.Groups[1].Value);
+        }
+        while (rxUnneededFullParens.IsMatch(expr))
+        {
+            bool hasNonVector = false;
+            expr = rxUnneededFullParens.Replace(expr, (x) => {
+                string outer = x.Groups[0].Value;
+                if (!rxVectorTest.IsMatch(outer))
+                {
+                    hasNonVector = true;
+                    return x.Groups[1].Value;
+                }
+                else
+                {
+                    return outer;
+                }
+            });
+            if (!hasNonVector) break;
+        }
+        return expr;
+    }
+
     private static readonly Regex rxBracket = new(@"[(){}\[\]]");
 
     private static readonly Regex rxFunction =
@@ -360,7 +398,7 @@ public class Relationship
                 expr = expr.Replace(variable, $"({value})");
             }
         }
-        return expr;
+        return CleanParentheses(expr);
     }
 
     public static string Factor(string expr)

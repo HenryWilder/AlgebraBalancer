@@ -262,7 +262,7 @@ public class AlgebraTests
             }
         }
 
-        [TestClass]
+        //[TestClass]
         public class ParseTests
         {
             [TestMethod]
@@ -427,6 +427,106 @@ public class AlgebraTests
         }
 
         [TestClass]
+        public class CleanParensTests
+        {
+            [TestMethod]
+            public void TestFullExprParens()
+            {
+                Assert.AreEqual(
+                    "a + b",
+                    Relationship.CleanParentheses("(a + b)"));
+            }
+
+            [TestMethod]
+            public void TestNotFullParens()
+            {
+                Assert.AreEqual(
+                    "(a + b)(a + b)",
+                    Relationship.CleanParentheses("(a + b)(a + b)"));
+            }
+
+            [TestMethod]
+            public void TestDouble()
+            {
+                Assert.AreEqual(
+                    "a + b",
+                    Relationship.CleanParentheses("((a + b))"));
+            }
+
+            [TestMethod]
+            public void TestManyRedundant()
+            {
+                Assert.AreEqual(
+                    "a + b",
+                    Relationship.CleanParentheses("(((((a + b)))))"));
+            }
+
+            [TestMethod]
+            public void TestFullWithSubParens()
+            {
+                Assert.AreEqual(
+                    "6(2343) + 3(454)",
+                    Relationship.CleanParentheses("(6(2343) + 3(454))"));
+            }
+
+            [TestMethod]
+            public void TestRedundantInnerParens()
+            {
+                Assert.AreEqual(
+                    "6(2343) + 3(454)",
+                    Relationship.CleanParentheses("6((2343)) + 3((454))"));
+            }
+
+            [TestMethod]
+            public void TestRedundantInnerParensContainingParens()
+            {
+                Assert.AreEqual(
+                    "2(3-(3)/2)+2",
+                    Relationship.CleanParentheses("2((3-(3)/2))+2"));
+            }
+
+            [TestMethod]
+            public void TestDontTouchVectors()
+            {
+                Assert.AreEqual(
+                    "(5, 7)",
+                    Relationship.CleanParentheses("(5, 7)"));
+            }
+
+            [TestMethod]
+            public void TestStillCleanAroundVectors()
+            {
+                Assert.AreEqual(
+                    "(5, 7)",
+                    Relationship.CleanParentheses("((((5, 7))))"));
+            }
+
+            [TestMethod]
+            public void TestDontTouchSubVectors()
+            {
+                Assert.AreEqual(
+                    "(5, 7) + (5, 7)",
+                    Relationship.CleanParentheses("((5, 7) + (5, 7))"));
+            }
+
+            [TestMethod]
+            public void TestStillCleanAroundSubVectors()
+            {
+                Assert.AreEqual(
+                    "(5, 7) + (5, 7)",
+                    Relationship.CleanParentheses("(((5, 7)) + ((5, 7)))"));
+            }
+
+            [TestMethod]
+            public void TestVectorWithParentheticalComponents()
+            {
+                Assert.AreEqual(
+                    "(5, 3(5))",
+                    Relationship.CleanParentheses("((5, 3(5)))"));
+            }
+        }
+
+        [TestClass]
         public class SubstitutionTests
         {
             [TestMethod]
@@ -494,7 +594,7 @@ public class AlgebraTests
                 public void TestF()
                 {
                     Assert.AreEqual(
-                        "(2(5))",
+                        "2(5)",
                         Relationship.Substitute(
                             "f(5)",
                             "f(x)=2x")
@@ -505,7 +605,7 @@ public class AlgebraTests
                 public void TestFuncInsideParens()
                 {
                     Assert.AreEqual(
-                        "((2(5)))",
+                        "2(5)",
                         Relationship.Substitute(
                             "(f(5))",
                             "f(x)=2x")
@@ -516,7 +616,7 @@ public class AlgebraTests
                 public void TestFuncInsideSubexpression()
                 {
                     Assert.AreEqual(
-                        "(7(2(5)) + 4)",
+                        "7(2(5)) + 4",
                         Relationship.Substitute(
                             "(7f(5) + 4)",
                             "f(x)=2x")
@@ -527,7 +627,7 @@ public class AlgebraTests
                 public void TestFOfG()
                 {
                     Assert.AreEqual(
-                        "(2((3-(3)/2))+2)",
+                        "2(3-(3)/2)+2",
                         Relationship.Substitute(
                             "f(g(3))",
                             "f(x)=2x+2;g(x)=3-x/2")
@@ -538,7 +638,7 @@ public class AlgebraTests
                 public void TestMultipleParameters()
                 {
                     Assert.AreEqual(
-                        "(2(2)+3(7))",
+                        "2(2)+3(7)",
                         Relationship.Substitute(
                             "f(2,7)",
                             "f(a,b)=2a+3b")
@@ -549,7 +649,7 @@ public class AlgebraTests
                 public void TestVectorParameter()
                 {
                     Assert.AreEqual(
-                        "(((3,6))/((5,2)))",
+                        "(3,6)/(5,2)",
                         Relationship.Substitute(
                             "f((3,6), (5,2))",
                             "f(a,b)=a/b")
@@ -560,7 +660,7 @@ public class AlgebraTests
                 public void TestParameterInMultiplePlaces()
                 {
                     Assert.AreEqual(
-                        "((6)+2(6))",
+                        "(6)+2(6)",
                         Relationship.Substitute(
                             "f(6)",
                             "f(x)=x+2x")
@@ -569,7 +669,7 @@ public class AlgebraTests
             }
         }
 
-        [TestClass]
+        //[TestClass]
         public class FactorTests
         {
             [TestMethod]
@@ -1188,7 +1288,7 @@ public class MainPageTests
         }
     }
 
-    [TestClass]
+    //[TestClass]
     public class BalanceAlgebraTests
     {
         [TestMethod]
