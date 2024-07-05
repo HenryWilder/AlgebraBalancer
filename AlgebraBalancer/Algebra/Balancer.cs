@@ -270,38 +270,6 @@ public class Relationship
         }
     }
 
-    public static List<(int start, string text)> GetTupleArgs(string str, int index)
-    {
-        List<(int, string)> result = [];
-        int depth = 0;
-        int start = index;
-        for (int i = index; i < str.Length; ++i)
-        {
-            char ch = str[i];
-            if (ch == ',')
-            {
-                if (depth == 0)
-                {
-                    result.Add((start, str.Substring(start, i - 1)));
-                    start = i + 1;
-                }
-            }
-            else if ("([{".Contains(ch))
-            {
-                ++depth;
-            }
-            else if (")]}".Contains(ch))
-            {
-                --depth;
-                if (depth == -1)
-                {
-                    return result;
-                }
-            }
-        }
-        return result;
-    }
-
     private static readonly Regex rxBracket = new(@"[(){}\[\]]");
 
     private static readonly Regex rxFunction =
