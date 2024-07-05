@@ -361,7 +361,7 @@ public sealed partial class MainPage : Page
     {
         List<string> items = [];
         string[] lines = notesText.Split('\r'); // A 'let' statement should take up an entire line
-        foreach (string line in lines)
+        foreach (string line in lines.Reverse()) // Latest should shadow previous
         {
             var match = rxLet.Match(line);
             if (match.Success)
@@ -387,7 +387,7 @@ public sealed partial class MainPage : Page
         string[] defs = GetLetDefinitions(
                 notesText.Substring(0, Math.Max(startOfLine - 1, 0))
             )
-            .Select(x => rxBe.Replace(x, "=")) // Warning: Might need to use \s instead of space
+            .Select(x => rxBe.Replace(x, "="))
             .ToArray();
 
         string[] args = lineText.Split(" with ");
