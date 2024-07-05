@@ -315,16 +315,18 @@ public class Relationship
         new(@"(?<=^(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*(?(open)(?!)));",
             RegexOptions.Compiled);
 
+    private static readonly Regex rxSubstitutionSplit = new(@"\s*(?:;|\sand\s)\s*");
+
     public static string Substitute(string expr, string sub)
     {
-        (string variable, string value)[] substitutions = sub
-            .Split(";")
-            .Select((x) =>
-            {
-                string[] parts = x.Split("=");
-                return (parts[0].Trim(), parts[1].Trim());
-            })
-            .ToArray();
+        (string variable, string value)[] substitutions =
+            rxSubstitutionSplit.Split(sub)
+                .Select((x) =>
+                {
+                    string[] parts = x.Split("=");
+                    return (parts[0].Trim(), parts[1].Trim());
+                })
+                .ToArray();
 
         foreach (var (variable, value) in substitutions)
         {
