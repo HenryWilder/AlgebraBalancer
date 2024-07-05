@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
+
+using Substitution = (string variable, string value);
 
 namespace AlgebraBalancer.Algebra.Balancer;
 
@@ -305,6 +308,33 @@ public class Relationship
         return expr;
     }
 
+    private static readonly DataTable dt = new();
+    private static readonly Regex rxImpliedMul = new(@"(?<=\))\s*(?=[\d\(])|(?<=[\d\)])\s*(?=\()");
+
+    public static string SolveIfTrivial(string expr)
+    {
+        // Smallest we expect to display
+        const double EPSILON = 0.000000000000001;
+
+        try
+        {
+            object computed = dt.Compute(rxImpliedMul.Replace(expr, "*"), "");
+            if (computed is not null)
+            {
+                double computedDouble = Convert.ToDouble(computed);
+
+                // Only integers are "trivial" here
+                if (Math.Abs(computedDouble - Math.Round(computedDouble)) < EPSILON)
+                {
+                    return Convert.ToInt64(computed).ToString();
+                }
+            }
+        }
+        catch { }
+
+        return expr;
+    }
+
     private static readonly Regex rxBracket = new(@"[(){}\[\]]");
 
     private static readonly Regex rxName =
@@ -358,20 +388,22 @@ public class Relationship
     private static readonly Regex rxSubstitutionSplit = new(@"\s*(?:;|\sand\s)\s*");
 
     private static readonly Regex rxMappedFunction = 
-        new(@"\{(?:\s*(?'in'.+?)\s*(?:\|?->|↦)\s*(?'out'(?:[^(),]|(?'open'\()|(?'-open'\)))*(?(open)(?!))),?)+\s*\}",
+        new(@"\{(?:\s*(?'in'.+?)\s*(?:\|?->|↦)\s*(?'out'[^(),]+|\((?:[^()]|(?'open'\()|(?'-open'\)))*(?(open)(?!))\)),?)+\s*\}",
             RegexOptions.Compiled);
 
-    public static string Substitute(string expr, string sub)
+    public static Substitution[] ParseSubstitutions(string substitutionStr)
     {
-        (string variable, string value)[] substitutions =
-            rxSubstitutionSplit.Split(sub)
-                .Select((x) =>
-                {
-                    string[] parts = x.Split("=");
-                    return (parts[0].Trim(), parts[1].Trim());
-                })
-                .ToArray();
+        return rxSubstitutionSplit.Split(substitutionStr)
+            .Select((x) =>
+            {
+                string[] parts = x.Split("=");
+                return (parts[0].Trim(), parts[1].Trim());
+            })
+            .ToArray();
+    }
 
+    public static string Substitute(string expr, Substitution[] substitutions, int allowedDepth = 100)
+    {
         foreach (var (variable, value) in substitutions)
         {
             var signatureMatch = rxFunction.Match(variable);
@@ -392,7 +424,7 @@ public class Relationship
                 var mappedFunctionDef = rxMappedFunction.Match(functionDefinition);
                 if (mappedFunctionDef.Success)
                 {
-                    var inputs = mappedFunctionDef.Groups["in"].Captures;
+                    var inputs  = mappedFunctionDef.Groups["in"].Captures;
                     var outputs = mappedFunctionDef.Groups["out"].Captures;
                     var mapping = inputs
                         .Zip(outputs, (i, o) => (i.Value.Trim(), o.Value.Trim()))
@@ -401,7 +433,7 @@ public class Relationship
                     fnReplacement = (string[] callParams) =>
                         mapping.TryGetValue(callParams[0], out string associated)
                             ? associated
-                            : "undefined";
+                            : "∄";
                 }
                 else
                 {
@@ -411,7 +443,7 @@ public class Relationship
                         for (int i = 0; i < Math.Min(signatureParamList.Length, callParams.Length); ++i)
                         {
                             string paramName = signatureParamList[i];
-                            string paramValue = $"({callParams[i]})";
+                            string paramValue = $"({CleanParentheses(callParams[i])})";
                             replacement = replacement.Replace(paramName, paramValue);
                         }
                         return replacement;
@@ -427,7 +459,14 @@ public class Relationship
                         {
                             string[] callParams;
                             {
-                                string callParamList = callMatch.Groups[2].Value;
+                                string callParamListStr = callMatch.Groups[2].Value;
+                                // Expand recursively (up to recursionsRemaining) before passing parameters
+                                string callParamList = allowedDepth > 0
+                                    ? Substitute(callParamListStr, substitutions, allowedDepth - 1)
+                                    : callParamListStr;
+
+                                string[] callParamItems;
+                                // todo: there's probably a cleaner way to do this
                                 if (rxBracket.IsMatch(callParamList))
                                 {
                                     string semicolonDelimitedParams =
@@ -436,18 +475,17 @@ public class Relationship
                                     string minorCommaDelimitedParams =
                                         rxContainedSemicolons.Replace(semicolonDelimitedParams, ",");
 
-                                    callParams = minorCommaDelimitedParams
-                                        .Split(";")
-                                        .Select(x => x.Trim())
-                                        .ToArray();
+                                    callParamItems = minorCommaDelimitedParams.Split(";");
                                 }
                                 else
                                 {
-                                    callParams = callParamList
-                                        .Split(",")
-                                        .Select(x => x.Trim())
-                                        .ToArray();
+                                    callParamItems = callParamList.Split(",");
                                 }
+                                callParams = callParamItems
+                                    .Select(SolveIfTrivial)
+                                    .Select(CleanParentheses)
+                                    .Select(x => x.Trim())
+                                    .ToArray();
                             }
 
                             return "(" + fnReplacement(callParams) + ")";
@@ -466,6 +504,9 @@ public class Relationship
         }
         return CleanParentheses(expr);
     }
+
+    public static string Substitute(string expr, string substitutionStr) =>
+        Substitute(expr, ParseSubstitutions(substitutionStr));
 
     public static string Factor(string expr)
     {

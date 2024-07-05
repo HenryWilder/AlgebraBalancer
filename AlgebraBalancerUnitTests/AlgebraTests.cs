@@ -4,6 +4,7 @@ using AlgebraBalancer.Algebra;
 using static AlgebraBalancer.ExactMath;
 using AlgebraBalancer.Algebra.Balancer;
 using AlgebraBalancer;
+using System.Text.RegularExpressions;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -578,13 +579,26 @@ public class AlgebraTests
             [TestMethod]
             public void TestSubstituteRecursive()
             {
-                // Should stop after one iteration
                 Assert.AreEqual(
                     "((2x)-(2x)^2) + 5 = 2(2(2x)) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
                         "x=2y;y=2x")
                 );
+            }
+
+            [TestMethod]
+            public void TestSubstituteRecursionNotInfinite()
+            {
+                try
+                {
+                    string result = Relationship.Substitute("f(x)", "f(x) = f(f(x))");
+                    Assert.IsTrue(new Regex(@"(?:f\()+x(?:\))+").IsMatch(result));
+                }
+                catch (System.Exception err)
+                {
+                    Assert.Fail($"Expected:no exception. Actual:<{err.Message}>.");
+                }
             }
 
             [TestMethod]
@@ -704,7 +718,7 @@ public class AlgebraTests
                     }
 
                     [TestMethod]
-                    public void TestDouble()
+                    public void TestTwo()
                     {
                         Assert.AreEqual(
                             "(5) (2)",
@@ -737,6 +751,61 @@ public class AlgebraTests
                             Relationship.Substitute(
                                 "f(2)",
                                 "f(x)={2->(3,5)}")
+                        );
+                    }
+
+                    [TestMethod]
+                    public void TestParentheticMapping()
+                    {
+                        Assert.AreEqual(
+                            "7",
+                            Relationship.Substitute(
+                                "f((((9))))",
+                                "f(x)={9->7}")
+                        );
+                    }
+
+                    [TestMethod]
+                    public void TestParameterExpression()
+                    {
+                        Assert.AreEqual(
+                            "2",
+                            Relationship.Substitute(
+                                "f(2*2+(10/5)-1)",
+                                "f(x)={5->2}")
+                        );
+                    }
+
+                    [TestMethod]
+                    public void TestParenthesesMultiplicationInParameterExpression()
+                    {
+                        Assert.AreEqual(
+                            "43",
+                            Relationship.Substitute(
+                                "f(2(3))",
+                                "f(x)={6->43}")
+                        );
+                    }
+
+                    [TestMethod]
+                    public void TestNestedMapping()
+                    {
+                        Assert.AreEqual(
+                            "8",
+                            Relationship.Substitute(
+                                "f(3)",
+                                "f(x)=f'(x);f'(x)={3->8}")
+                        );
+                    }
+
+                    [TestMethod]
+                    public void TestExpandBeforePassing()
+                    {
+                        Assert.AreEqual(
+                            "345",
+                            Relationship.Substitute(
+                                "f(n)",
+                                "f(x)=f'(2x);f'(x)={20->345};n=10")
                         );
                     }
                 }
