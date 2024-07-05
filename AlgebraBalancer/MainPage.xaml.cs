@@ -11,7 +11,6 @@ using Windows.System;
 using System.Data;
 using System.Collections.ObjectModel;
 using AlgebraBalancer.Algebra.Balancer;
-using System.Reflection;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -356,7 +355,7 @@ public sealed partial class MainPage : Page
     }
 
     private static readonly Regex rxLet = new(@"^let\s+(.+)\s*(?:\sbe\s|=)\s*(.+)\s*$", RegexOptions.IgnoreCase);
-    public static List<string> GetLetDefinitions(in string notesText)
+    public static List<string> GetLetDefinitions(string notesText)
     {
         List<string> items = [];
         string[] lines = notesText.Split('\r'); // A 'let' statement should take up an entire line
