@@ -742,10 +742,6 @@ public class AlgebraTests
                     [TestMethod]
                     public void TestVectorOutput()
                     {
-                        // todo: currently outputs "{2->(3,5)}" instead, because the comma
-                        // in the vector confuses it and makes it think it's an unmapped function
-                        // (it expects the comma to separate mapped pairs; when it doesn't do that,
-                        //  the pattern match fails and assumes "ok, not mapped then")
                         Assert.AreEqual(
                             "(3,5)", 
                             Relationship.Substitute(
