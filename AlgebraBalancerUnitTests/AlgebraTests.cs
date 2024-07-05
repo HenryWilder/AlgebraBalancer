@@ -1125,7 +1125,7 @@ public class MainPageTests
         public void TestWhitespaceBefore()
         {
             string notesText       = @$"2x + 3     \\x=3{SEL_BEG_IN}";
-            string expectNotesText = @$"2(3) + 3     {SEL_BEG_EX}";
+            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
             MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
