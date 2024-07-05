@@ -354,7 +354,9 @@ public sealed partial class MainPage : Page
         selectionStartFinal = insertEnd;
     }
 
-    private static readonly Regex rxLet = new(@"^let\s+(.+)\s*(?:\sbe\s|=)\s*(.+)\s*$", RegexOptions.IgnoreCase);
+    private static readonly Regex rxLet = new(
+        @"^let\s+((?:.+\s*(?:\sbe\s|=)\s*.+)(?:\s*(?:\sand\s|;)\s*.+\s*(?:\sbe\s|=)\s*.+)*)\s*$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
     public static List<string> GetLetDefinitions(string notesText)
     {
         List<string> items = [];
@@ -364,14 +366,13 @@ public sealed partial class MainPage : Page
             var match = rxLet.Match(line);
             if (match.Success)
             {
-                string name = match.Groups[1].Value;
-                string value = match.Groups[2].Value;
-                items.Add(name + "=" + value);
+                items.Add(match.Groups[1].Value);
             }
         }
         return items;
     }
 
+    private static readonly Regex rxBe = new(@"\s+be\s+", RegexOptions.IgnoreCase);
     public static void SubstituteVars(
         int selectionStart,
         in string notesText,
@@ -383,9 +384,15 @@ public sealed partial class MainPage : Page
         int lineLength = endOfLine - startOfLine;
         string lineText = notesText.Substring(startOfLine, lineLength);
 
-        string[] args = lineText.Split(@" with ");
+        string[] defs = GetLetDefinitions(
+                notesText.Substring(0, Math.Max(startOfLine - 1, 0))
+            )
+            .Select(x => rxBe.Replace(x, "=")) // Warning: Might need to use \s instead of space
+            .ToArray();
+
+        string[] args = lineText.Split(" with ");
         string expr = args[0];
-        string sub = (args.Length > 1 ? args[1] : "") + string.Join(";", GetLetDefinitions(notesText.Substring(0, startOfLine)));
+        string sub = (args.Length > 1 ? args[1] : "") + string.Join(";", defs);
         string newExpr = sub.Contains("=")
             ? Relationship.Substitute(expr, sub).TrimEnd()
             : expr;
