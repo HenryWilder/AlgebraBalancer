@@ -587,6 +587,17 @@ public class AlgebraTests
                 );
             }
 
+            [TestMethod]
+            public void TestOperatorIsNotName()
+            {
+                Assert.AreEqual(
+                    "(4)+(4)-(4)*(4)/(4)=(4)%(4)^(4)&(4)|(4)",
+                    Relationship.Substitute(
+                        "x+x-x*x/x=x%x^x&x|x",
+                        "x=4")
+                );
+            }
+
             [TestClass]
             public class FunctionTests
             {
@@ -665,6 +676,54 @@ public class AlgebraTests
                             "f(6)",
                             "f(x)=x+2x")
                     );
+                }
+
+                [TestMethod]
+                public void TestOperatorIsNotName()
+                {
+                    Assert.AreEqual(
+                        "(2(x))+(2(x))-(2(x))*(2(x))/(2(x))=(2(x))%(2(x))^(2(x))&(2(x))|(2(x))",
+                        Relationship.Substitute(
+                            "f(x)+f(x)-f(x)*f(x)/f(x)=f(x)%f(x)^f(x)&f(x)|f(x)",
+                            "f(x)=2x")
+                    );
+                }
+
+                [TestClass]
+                public class MappedFunctionTests
+                {
+                    [TestMethod]
+                    public void TestSingle()
+                    {
+                        Assert.AreEqual(
+                            "5",
+                            Relationship.Substitute(
+                                "f(3)",
+                                "f(x)={3->5}")
+                        );
+                    }
+
+                    [TestMethod]
+                    public void TestDouble()
+                    {
+                        Assert.AreEqual(
+                            "(5) (2)",
+                            Relationship.Substitute(
+                                "f(3) f(7)",
+                                "f(x)={3->5,7->2}")
+                        );
+                    }
+
+                    [TestMethod]
+                    public void TestMany()
+                    {
+                        Assert.AreEqual(
+                            "(5) (2) (6) (2)",
+                            Relationship.Substitute(
+                                "f(3) f(7) f(4) f(9)",
+                                "f(x)={3->5,7->2,4->6,9->2}")
+                        );
+                    }
                 }
             }
         }

@@ -307,8 +307,48 @@ public class Relationship
 
     private static readonly Regex rxBracket = new(@"[(){}\[\]]");
 
+    private static readonly Regex rxName =
+        new(@"(?:["
+                // Normal
+                + @"_"
+                + @"A-Z"
+                + @"a-z"
+
+                // Greek
+                + @"ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇"
+                + @"αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ"
+
+                // Math-style
+                + @"𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"
+                + @"𝑎𝑏𝑐𝑑𝑒𝑓𝑔𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧"
+                + @"𝚤𝚥"
+
+                // Blackboard Bold
+                + @"𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡"
+                + @"𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ"
+                + @"𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫"
+                + @"ℼℽℾℿ⅀"
+
+                // Fraktur
+                + @"𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ"
+                + @"𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷"
+
+                // Caligraphic
+                + @"𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵"
+                + @"𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏"
+
+                // Subscript
+                + @"₀₁₂₃₄₅₆₇₈₉"
+                + @"ₐₑₕₖₗₘₙₒₚₛₜₓ"
+
+                // Prime
+                + @"`'"""
+                + @"′″‴"
+                + @"‵‶‷"
+            + "]|⁻¹)+");
+
     private static readonly Regex rxFunction =
-        new(@"([^\s\d(){}\[\]]+)\(((?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*(?(open)(?!)))\)",
+        new(@$"({rxName})\(((?:[^(){{}}\[\]]|(?'open'[({{\[])|(?'-open'[)}}\]]))*(?(open)(?!)))\)",
             RegexOptions.Compiled);
 
     private static readonly Regex rxContainedSemicolons =
@@ -316,6 +356,10 @@ public class Relationship
             RegexOptions.Compiled);
 
     private static readonly Regex rxSubstitutionSplit = new(@"\s*(?:;|\sand\s)\s*");
+
+    private static readonly Regex rxMappedFunction = 
+        new(@"\{(?:\s*(?'in'.+?)\s*(?:\|?->|↦)\s*(?'out'(?:[^(),]|(?'open'\()|(?'-open'\)))*(?(open)(?!))),?)+\s*\}",
+            RegexOptions.Compiled);
 
     public static string Substitute(string expr, string sub)
     {
@@ -344,9 +388,40 @@ public class Relationship
 
                 string functionDefinition = value;
 
+                Func<string[], string> fnReplacement;
+                var mappedFunctionDef = rxMappedFunction.Match(functionDefinition);
+                if (mappedFunctionDef.Success)
+                {
+                    var inputs = mappedFunctionDef.Groups["in"].Captures;
+                    var outputs = mappedFunctionDef.Groups["out"].Captures;
+                    var mapping = inputs
+                        .Zip(outputs, (i, o) => (i.Value.Trim(), o.Value.Trim()))
+                        .ToDictionary(x => x.Item1, x => x.Item2);
+
+                    fnReplacement = (string[] callParams) =>
+                        mapping.TryGetValue(callParams[0], out string associated)
+                            ? associated
+                            : "undefined";
+                }
+                else
+                {
+                    fnReplacement = (string[] callParams) =>
+                    {
+                        string replacement = functionDefinition;
+                        for (int i = 0; i < Math.Min(signatureParamList.Length, callParams.Length); ++i)
+                        {
+                            string paramName = signatureParamList[i];
+                            string paramValue = $"({callParams[i]})";
+                            replacement = replacement.Replace(paramName, paramValue);
+                        }
+                        return replacement;
+                    };
+                }
+
                 expr = rxFunction.Replace(
                     expr,
-                    (Match callMatch) => {
+                    (Match callMatch) =>
+                    {
                         string callName = callMatch.Groups[1].Value;
                         if (callName == functionName)
                         {
@@ -375,15 +450,7 @@ public class Relationship
                                 }
                             }
 
-                            string replacement = functionDefinition;
-                            for (int i = 0; i < Math.Min(signatureParamList.Length, callParams.Length); ++i)
-                            {
-                                string paramName = signatureParamList[i];
-                                string paramValue = $"({callParams[i]})";
-                                replacement = replacement.Replace(paramName, paramValue);
-                            }
-
-                            return "(" + replacement + ")";
+                            return "(" + fnReplacement(callParams) + ")";
                         }
                         else
                         {
