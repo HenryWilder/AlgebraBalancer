@@ -384,7 +384,7 @@ public sealed partial class MainPage : Page
         int lineLength = endOfLine - startOfLine;
         string lineText = notesText.Substring(startOfLine, lineLength);
 
-        string[] args = lineText.Split(@"\\");
+        string[] args = lineText.Split(@" with ");
         string expr = args[0];
         string sub = (args.Length > 1 ? args[1] : "") + string.Join(";", GetLetDefinitions(notesText));
         string newExpr = sub.Contains("=")
