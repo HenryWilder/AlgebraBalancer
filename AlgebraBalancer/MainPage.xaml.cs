@@ -355,6 +355,24 @@ public sealed partial class MainPage : Page
         selectionStartFinal = insertEnd;
     }
 
+    private static readonly Regex rxLet = new(@"^let\s+(.+)\s*(?:\sbe\s|=)\s*(.+)\s*$", RegexOptions.IgnoreCase);
+    public static List<string> GetLetDefinitions(in string notesText)
+    {
+        List<string> items = [];
+        string[] lines = notesText.Split('\r'); // A 'let' statement should take up an entire line
+        foreach (string line in lines)
+        {
+            var match = rxLet.Match(line);
+            if (match.Success)
+            {
+                string name = match.Groups[1].Value;
+                string value = match.Groups[2].Value;
+                items.Add(name + "=" + value);
+            }
+        }
+        return items;
+    }
+
     public static void SubstituteVars(
         int selectionStart,
         in string notesText,
@@ -368,7 +386,7 @@ public sealed partial class MainPage : Page
 
         string[] args = lineText.Split(@"\\");
         string expr = args[0];
-        string sub = args[1];
+        string sub = (args.Length > 1 ? args[1] : "") + string.Join(";", GetLetDefinitions(notesText));
         string newExpr = Relationship.Substitute(expr, sub).TrimEnd();
 
         selectionStartFinal = startOfLine + newExpr.Length;
@@ -504,27 +522,15 @@ public sealed partial class MainPage : Page
                     out newNotesText
                 );
             }
-            // Balance Algebra
+            // Substitution
             else
             {
-                if (new Regex(@"^.*\\\\.*=.*$", RegexOptions.Multiline).IsMatch(Notes.Text))
-                {
-                    SubstituteVars(
-                        Notes.SelectionStart,
-                        Notes.Text,
-                        out newSelectionStart,
-                        out newNotesText
-                    );
-                }
-                else
-                {
-                    BalanceAlgebra(
-                        Notes.SelectionStart,
-                        Notes.Text,
-                        out newSelectionStart,
-                        out newNotesText
-                    );
-                }
+                SubstituteVars(
+                    Notes.SelectionStart,
+                    Notes.Text,
+                    out newSelectionStart,
+                    out newNotesText
+                );
             }
             Notes.Text = newNotesText;
             Notes.SelectionStart = newSelectionStart;
