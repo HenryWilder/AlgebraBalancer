@@ -447,7 +447,7 @@ public class AlgebraTests
                     "((6)-(6)^2) + 5 = 2(4) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
-                        "x=4,y=6")
+                        "x=4;y=6")
                 );
             }
 
@@ -459,7 +459,7 @@ public class AlgebraTests
                     "((2x)-(2x)^2) + 5 = 2(4) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
-                        "x=4,y=2x")
+                        "x=4;y=2x")
                 );
             }
 
@@ -471,7 +471,7 @@ public class AlgebraTests
                     "((2(4))-(2(4))^2) + 5 = 2(4) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
-                        "y=2x,x=4")
+                        "y=2x;x=4")
                 );
             }
 
@@ -483,8 +483,89 @@ public class AlgebraTests
                     "((2x)-(2x)^2) + 5 = 2(2(2x)) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
-                        "x=2y,y=2x")
+                        "x=2y;y=2x")
                 );
+            }
+
+            [TestClass]
+            public class FunctionTests
+            {
+                [TestMethod]
+                public void TestF()
+                {
+                    Assert.AreEqual(
+                        "(2(5))",
+                        Relationship.Substitute(
+                            "f(5)",
+                            "f(x)=2x")
+                    );
+                }
+
+                [TestMethod]
+                public void TestFuncInsideParens()
+                {
+                    Assert.AreEqual(
+                        "((2(5)))",
+                        Relationship.Substitute(
+                            "(f(5))",
+                            "f(x)=2x")
+                    );
+                }
+
+                [TestMethod]
+                public void TestFuncInsideSubexpression()
+                {
+                    Assert.AreEqual(
+                        "(7(2(5)) + 4)",
+                        Relationship.Substitute(
+                            "(7f(5) + 4)",
+                            "f(x)=2x")
+                    );
+                }
+
+                [TestMethod]
+                public void TestFOfG()
+                {
+                    Assert.AreEqual(
+                        "(2((3-(3)/2))+2)",
+                        Relationship.Substitute(
+                            "f(g(3))",
+                            "f(x)=2x+2;g(x)=3-x/2")
+                    );
+                }
+
+                [TestMethod]
+                public void TestMultipleParameters()
+                {
+                    Assert.AreEqual(
+                        "(2(2)+3(7))",
+                        Relationship.Substitute(
+                            "f(2,7)",
+                            "f(a,b)=2a+3b")
+                    );
+                }
+
+                [TestMethod]
+                public void TestVectorParameter()
+                {
+                    Assert.AreEqual(
+                        "(((3,6))/((5,2)))",
+                        Relationship.Substitute(
+                            "f((3,6), (5,2))",
+                            "f(a,b)=a/b")
+                    );
+                }
+
+                [TestMethod]
+                public void TestParameterInMultiplePlaces()
+                {
+                    Assert.AreEqual(
+                        "((6)+2(6))",
+                        Relationship.Substitute(
+                            "f(6)",
+                            "f(x)=x+2x")
+                    );
+                }
             }
         }
 

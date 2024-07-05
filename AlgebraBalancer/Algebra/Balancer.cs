@@ -270,10 +270,52 @@ public class Relationship
         }
     }
 
+    public static List<(int start, string text)> GetTupleArgs(string str, int index)
+    {
+        List<(int, string)> result = [];
+        int depth = 0;
+        int start = index;
+        for (int i = index; i < str.Length; ++i)
+        {
+            char ch = str[i];
+            if (ch == ',')
+            {
+                if (depth == 0)
+                {
+                    result.Add((start, str.Substring(start, i - 1)));
+                    start = i + 1;
+                }
+            }
+            else if ("([{".Contains(ch))
+            {
+                ++depth;
+            }
+            else if (")]}".Contains(ch))
+            {
+                --depth;
+                if (depth == -1)
+                {
+                    return result;
+                }
+            }
+        }
+        return result;
+    }
+
+    private static readonly Regex rxBracket = new(@"[(){}\[\]]");
+
+    private static readonly Regex rxFunction =
+        new(@"([^\s\d(){}\[\]]+)\(((?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*(?(open)(?!)))\)",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxContainedSemicolons =
+        new(@"(?<=^(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*(?(open)(?!)));",
+            RegexOptions.Compiled);
+
     public static string Substitute(string expr, string sub)
     {
         (string variable, string value)[] substitutions = sub
-            .Split(",")
+            .Split(";")
             .Select((x) =>
             {
                 string[] parts = x.Split("=");
@@ -283,7 +325,72 @@ public class Relationship
 
         foreach (var (variable, value) in substitutions)
         {
-            expr = expr.Replace(variable, $"({value})");
+            var signatureMatch = rxFunction.Match(variable);
+            if (signatureMatch.Success)
+            {
+                string functionName =
+                    signatureMatch.Groups[1].Value;
+
+                string[] signatureParamList =
+                    signatureMatch.Groups[2].Value
+                        .Split(",")
+                        .Select(x => x.Trim())
+                        .ToArray();
+
+                string functionDefinition = value;
+
+                expr = rxFunction.Replace(
+                    expr,
+                    (Match callMatch) => {
+                        string callName = callMatch.Groups[1].Value;
+                        if (callName == functionName)
+                        {
+                            string[] callParams;
+                            {
+                                string callParamList = callMatch.Groups[2].Value;
+                                if (rxBracket.IsMatch(callParamList))
+                                {
+                                    string semicolonDelimitedParams =
+                                        callParamList.Replace(",", ";");
+
+                                    string minorCommaDelimitedParams =
+                                        rxContainedSemicolons.Replace(semicolonDelimitedParams, ",");
+
+                                    callParams = minorCommaDelimitedParams
+                                        .Split(";")
+                                        .Select(x => x.Trim())
+                                        .ToArray();
+                                }
+                                else
+                                {
+                                    callParams = callParamList
+                                        .Split(",")
+                                        .Select(x => x.Trim())
+                                        .ToArray();
+                                }
+                            }
+
+                            string replacement = functionDefinition;
+                            for (int i = 0; i < Math.Min(signatureParamList.Length, callParams.Length); ++i)
+                            {
+                                string paramName = signatureParamList[i];
+                                string paramValue = $"({callParams[i]})";
+                                replacement = replacement.Replace(paramName, paramValue);
+                            }
+
+                            return "(" + replacement + ")";
+                        }
+                        else
+                        {
+                            return callMatch.Groups[0].Value;
+                        }
+                    }
+                );
+            }
+            else
+            {
+                expr = expr.Replace(variable, $"({value})");
+            }
         }
         return expr;
     }

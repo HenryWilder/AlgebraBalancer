@@ -369,7 +369,7 @@ public sealed partial class MainPage : Page
         string[] args = lineText.Split(@"\\");
         string expr = args[0];
         string sub = args[1];
-        string newExpr = Relationship.Substitute(expr, sub);
+        string newExpr = Relationship.Substitute(expr, sub).TrimEnd();
 
         selectionStartFinal = startOfLine + newExpr.Length;
         notesTextFinal = notesText
