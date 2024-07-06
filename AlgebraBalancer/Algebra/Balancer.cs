@@ -375,7 +375,8 @@ public class Relationship
                 + @"`'"""
                 + @"′″‴"
                 + @"‵‶‷"
-            + "]|⁻¹)+");
+            + "]|⁻¹)+",
+            RegexOptions.Compiled);
 
     private static readonly Regex rxFunction =
         new(@$"({rxName})\(((?:[^(){{}}\[\]]|(?'open'[({{\[])|(?'-open'[)}}\]]))*(?(open)(?!)))\)",
@@ -388,7 +389,7 @@ public class Relationship
     private static readonly Regex rxSubstitutionSplit = new(@"\s*(?:;|\sand\s)\s*");
 
     private static readonly Regex rxMappedFunction = 
-        new(@"\{(?:\s*(?'in'.+?)\s*(?:\|?->|↦)\s*(?'out'[^(),]+|\((?:[^()]|(?'open'\()|(?'-open'\)))*(?(open)(?!))\)),?)+\s*\}",
+        new(@"\{(?:\s*(?'in'.+?)\s*(?:\|?->|↦|→)\s*(?'out'[^(),]+|\((?:[^()]|(?'open'\()|(?'-open'\)))*(?(open)(?!))\)),?)+\s*\}",
             RegexOptions.Compiled);
 
     public static Substitution[] ParseSubstitutions(string substitutionStr)
@@ -400,6 +401,32 @@ public class Relationship
                 return (parts[0].Trim(), parts[1].Trim());
             })
             .ToArray();
+    }
+
+    private static readonly Regex rxAnonymousFunction =
+        new(@$"\((?:(?'arg1'{rxName})(?:\s+(?'argn'{rxName}))*)\s*(?:=>|⇒|\|->|↦)\s*(?'expr'(?:[^()]|(?'eo'\()|(?'-eo'\)))*(?(eo)(?!)))\)\((?'call'(?:[^()]|(?'co'\()|(?'-co'\)))*(?(co)(?!)))\)",
+            RegexOptions.Compiled);
+
+    public static string AnonymousCalls(string expr, int allowedSubCalls = 20)
+    {
+        return CleanParentheses(rxAnonymousFunction.Replace(expr, (Match match) =>
+        {
+            string[] defArgs = match.Groups["argn"].Captures
+                .Select(x => x.Value)
+                .Prepend(match.Groups["arg1"].Value)
+                .ToArray();
+            string def = match.Groups["expr"].Value;
+            string[] callArgs = match.Groups["call"].Value.Split(",");
+
+            for (int i = 0; i < Math.Min(defArgs.Length, callArgs.Length); ++i)
+            {
+                string defArg = defArgs[i]; // Should already be trimmed by regex
+                string callArg = AnonymousCalls(callArgs[i].Trim(), allowedSubCalls - 1);
+                def = CleanParentheses(def.Replace(defArg, $"({callArg})"));
+            }
+
+            return "(" + (allowedSubCalls > 0 ? AnonymousCalls(def, allowedSubCalls - 1) : def) + ")";
+        }));
     }
 
     public static string Substitute(string expr, Substitution[] substitutions, int allowedDepth = 100)
@@ -488,7 +515,7 @@ public class Relationship
                                     .ToArray();
                             }
 
-                            return "(" + fnReplacement(callParams) + ")";
+                            return "(" + AnonymousCalls(fnReplacement(callParams)) + ")";
                         }
                         else
                         {

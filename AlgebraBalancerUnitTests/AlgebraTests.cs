@@ -822,6 +822,84 @@ public class AlgebraTests
                         );
                     }
                 }
+
+                [TestClass]
+                public class AnonymousCallsTests
+                {
+                    [TestMethod]
+                    public void TestBasic()
+                    {
+                        Assert.AreEqual(
+                            "2(4)",
+                            Relationship.AnonymousCalls("(x=>2x)(4)"));
+                    }
+
+                    [TestMethod]
+                    public void TestTwoArgs()
+                    {
+                        Assert.AreEqual(
+                            "(5)+(7)",
+                            Relationship.AnonymousCalls("(x y=>x+y)(5,7)"));
+                    }
+
+                    [TestMethod]
+                    public void TestWithinGreaterExpression()
+                    {
+                        Assert.AreEqual(
+                            "2((3)/2)+6",
+                            Relationship.AnonymousCalls("2(x=>x/2)(3)+6"));
+                    }
+
+                    [TestMethod]
+                    public void TestSubstitutionWithLambdaParamter()
+                    {
+                        Assert.AreEqual(
+                            "2(3(5))",
+                            Relationship.Substitute(
+                                "f(x=>3x)",
+                                "f(x)=2x(5)"));
+                    }
+
+                    [TestMethod]
+                    public void TestSubstitutionWithMultiArgumentLambdaParamter()
+                    {
+                        Assert.AreEqual(
+                            "2(1)+(n)",
+                            Relationship.Substitute(
+                                "f(a b=>2a+b)",
+                                "f(x)=x(1, n)"));
+                    }
+
+                    [TestMethod]
+                    public void TestSubstitutionWithMultipleLambdaParamters()
+                    {
+                        Assert.AreEqual(
+                            "2(3(9))",
+                            Relationship.Substitute(
+                                "f(x=>2x,y=>3y)",
+                                "f(a,b)=a(b(9))"));
+                    }
+
+                    [TestMethod]
+                    public void TestSubstitutionWithMultipleLambdaParamtersSharingArgNames()
+                    {
+                        Assert.AreEqual(
+                            "2(3(9))",
+                            Relationship.Substitute(
+                                "f(x=>2x,x=>3x)",
+                                "f(a,b)=a(b(9))"));
+                    }
+
+                    [TestMethod]
+                    public void TestSubstitutionWithMultipleOutOfOrderLambdaParamtersSharingArgNames()
+                    {
+                        Assert.AreEqual(
+                            "3(2(9))",
+                            Relationship.Substitute(
+                                "f(x=>2x,x=>3x)",
+                                "f(a,b)=b(a(9))"));
+                    }
+                }
             }
         }
 

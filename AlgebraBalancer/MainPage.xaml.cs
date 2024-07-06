@@ -377,7 +377,14 @@ public sealed partial class MainPage : Page
         return items;
     }
 
-    private static readonly Regex rxBe = new(@"\s+be\s+", RegexOptions.IgnoreCase);
+    private static readonly Regex rxWith =
+        new(@"\s+(?:with|for|using|where|in which|given( that)?)\s+",
+            RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+
+    private static readonly Regex rxBe =
+        new(@"\s+((be(ing)?|is)( ((defined|the same) as|an alias (of|to|for)|(equal|equivalent) to|the same as))?|(has|having|sharing) (a|the) (value|definition)( of)?|:=|≔)\s+",
+            RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+
     public static void SubstituteVars(
         int selectionStart,
         in string notesText,
@@ -396,9 +403,9 @@ public sealed partial class MainPage : Page
             .Select(x => rxBe.Replace(x, "="))
             .ToArray());
 
-        string[] args = lineText.Split(" with ");
+        string[] args = rxWith.Split(lineText, 2);
         string expr = args[0];
-        string defsThisLine = args.Length > 1 ? args[1] : "";
+        string defsThisLine = args.Length > 1 ? rxBe.Replace(args[1], "=") : "";
         string sub = string.Join(";", new List<string>([defsThisLine, defs]).Where(x => !string.IsNullOrWhiteSpace(x)));
         string newExpr = sub.Contains("=")
             ? "\r" + Relationship.Substitute(expr, sub).TrimEnd()
