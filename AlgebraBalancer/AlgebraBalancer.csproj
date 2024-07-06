@@ -136,6 +136,15 @@
     </Compile>
     <Compile Include="MathAlign.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Solver.cs" />
+    <Compile Include="Substitute\AnonymousFormula.cs" />
+    <Compile Include="Substitute\Formula.cs" />
+    <Compile Include="Substitute\ISubstitutible.cs" />
+    <Compile Include="Substitute\MappedFormula.cs" />
+    <Compile Include="Substitute\PiecewiseFormula.cs" />
+    <Compile Include="Substitute\SubstitutionParser.cs" />
+    <Compile Include="Substitute\Substitutor.cs" />
+    <Compile Include="Substitute\Variable.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

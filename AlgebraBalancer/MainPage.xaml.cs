@@ -120,8 +120,6 @@ public sealed partial class MainPage : Page
 
     private static readonly Regex rxWS = new(@"[ \t\n\r]+");
 
-    private readonly static DataTable dt = new();
-
     private readonly static Regex rxImpliedMul = new(@"(?<=\))\s*(?=[0-9\(])|(?<=[0-9\)])\s*(?=\()");
     private readonly static Regex rxSquare = new(@"(\d+\.?\d*)([²³⁴])");
 
@@ -320,70 +318,19 @@ public sealed partial class MainPage : Page
     )
     {
         string addText;
-        try
+        if (Solver.TrySolveDouble(expr, out string result))
         {
-            expr = rxImpliedMul.Replace(expr, "*");
-            expr = rxSquare.Replace(expr, (Match match) => {
-                string baseValue = match.Groups[1].Value;
-                int expValue = match.Groups[2].Value switch
-                {
-                    "²" => 2,
-                    "³" => 3,
-                    "⁴" => 4,
-                    _ => throw new NotImplementedException(),
-                };
-                // Weird workaround for Math.pow() not working with DataTable
-                string subexpr = "(" + baseValue;
-                for (int i = 1; i < expValue; ++i)
-                {
-                    subexpr += "*" + baseValue;
-                }
-                subexpr += ")";
-                return subexpr;
-            });
-            double value = Convert.ToDouble(dt.Compute(expr, ""));
-            addText = $" = {value}";
+            addText = $" = {result}";
         }
-        catch (Exception err)
+        else
         {
-            addText = $" = <{err.Message}>";
+            addText = $" = <{result}>";
         }
         int insertAt = selectionStart + selectionLength;
         int insertEnd = insertAt + addText.Length;
         notesTextFinal = notesText.Insert(insertAt, addText);
         selectionStartFinal = insertEnd;
     }
-
-    private static readonly Regex rxLet = new(
-        @"^let\s+((?:.+\s*(?:\sbe\s|=)\s*.+)(?:\s*(?:\sand\s|;)\s*.+\s*(?:\sbe\s|=)\s*.+)*)\s*$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex rxItemSplit = new(
-        @"\s*(?:\sand\s|;)\s*",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    public static List<string> GetLetDefinitions(string notesText)
-    {
-        List<string> items = [];
-        string[] lines = notesText.Split('\r'); // A 'let' statement should take up an entire line
-        foreach (string line in lines.Reverse()) // Latest should shadow previous
-        {
-            var match = rxLet.Match(line);
-            if (match.Success)
-            {
-                items.AddRange(rxItemSplit.Split(match.Groups[1].Value));
-            }
-        }
-        return items;
-    }
-
-    private static readonly Regex rxWith =
-        new(@"\s+(?:with|for|using|where|in which|given( that)?)\s+",
-            RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
-
-    private static readonly Regex rxBe =
-        new(@"\s+((be(ing)?|is)( ((defined|the same) as|an alias (of|to|for)|(equal|equivalent) to|the same as))?|(has|having|sharing) (a|the) (value|definition)( of)?|:=|≔)\s+",
-            RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
 
     public static void SubstituteVars(
         int selectionStart,
@@ -392,27 +339,30 @@ public sealed partial class MainPage : Page
         out string notesTextFinal
     )
     {
-        var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
-        int lineLength = endOfLine - startOfLine;
-        string lineText = notesText.Substring(startOfLine, lineLength);
+        //var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
+        //int lineLength = endOfLine - startOfLine;
+        //string lineText = notesText.Substring(startOfLine, lineLength);
 
-        string defs = string.Join(";",
-            GetLetDefinitions(
-                notesText.Substring(0, Math.Max(startOfLine - 1, 0))
-            )
-            .Select(x => rxBe.Replace(x, "="))
-            .ToArray());
+        //string defs = string.Join(";",
+        //    GetLetDefinitions(
+        //        notesText.Substring(0, Math.Max(startOfLine - 1, 0))
+        //    )
+        //    .Select(x => rxBe.Replace(x, "="))
+        //    .ToArray());
 
-        string[] args = rxWith.Split(lineText, 2);
-        string expr = args[0];
-        string defsThisLine = args.Length > 1 ? rxBe.Replace(args[1], "=") : "";
-        string sub = string.Join(";", new List<string>([defsThisLine, defs]).Where(x => !string.IsNullOrWhiteSpace(x)));
-        string newExpr = sub.Contains("=")
-            ? "\r" + Relationship.Substitute(expr, sub).TrimEnd()
-            : "";
+        //string[] args = rxWith.Split(lineText, 2);
+        //string expr = args[0];
+        //string defsThisLine = args.Length > 1 ? rxBe.Replace(args[1], "=") : "";
+        //string sub = string.Join(";", new List<string>([defsThisLine, defs]).Where(x => !string.IsNullOrWhiteSpace(x)));
+        //string newExpr = sub.Contains("=")
+        //    ? "\r" + new Substitute.Substitutor(Notes.Text, startOfLine, endOfLine).Substitute().TrimEnd()
+        //    : "";
 
-        selectionStartFinal = endOfLine + newExpr.Length;
-        notesTextFinal = notesText.Insert(endOfLine, newExpr);
+        //selectionStartFinal = endOfLine + newExpr.Length;
+        //notesTextFinal = notesText.Insert(endOfLine, newExpr);
+
+        selectionStartFinal = selectionStart;
+        notesTextFinal = notesText;
     }
 
     private static readonly Regex rxOperator = new(@"^\s*([-+/*])\s*(.*)\s*$");
