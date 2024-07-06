@@ -357,6 +357,11 @@ public sealed partial class MainPage : Page
     private static readonly Regex rxLet = new(
         @"^let\s+((?:.+\s*(?:\sbe\s|=)\s*.+)(?:\s*(?:\sand\s|;)\s*.+\s*(?:\sbe\s|=)\s*.+)*)\s*$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex rxItemSplit = new(
+        @"\s*(?:\sand\s|;)\s*",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public static List<string> GetLetDefinitions(string notesText)
     {
         List<string> items = [];
@@ -366,7 +371,7 @@ public sealed partial class MainPage : Page
             var match = rxLet.Match(line);
             if (match.Success)
             {
-                items.Add(match.Groups[1].Value);
+                items.AddRange(rxItemSplit.Split(match.Groups[1].Value));
             }
         }
         return items;
@@ -384,15 +389,17 @@ public sealed partial class MainPage : Page
         int lineLength = endOfLine - startOfLine;
         string lineText = notesText.Substring(startOfLine, lineLength);
 
-        string[] defs = GetLetDefinitions(
+        string defs = string.Join(";",
+            GetLetDefinitions(
                 notesText.Substring(0, Math.Max(startOfLine - 1, 0))
             )
             .Select(x => rxBe.Replace(x, "="))
-            .ToArray();
+            .ToArray());
 
         string[] args = lineText.Split(" with ");
         string expr = args[0];
-        string sub = (args.Length > 1 ? args[1] : "") + string.Join(";", defs);
+        string defsThisLine = args.Length > 1 ? args[1] : "";
+        string sub = string.Join(";", new List<string>([defsThisLine, defs]).Where(x => !string.IsNullOrWhiteSpace(x)));
         string newExpr = sub.Contains("=")
             ? Relationship.Substitute(expr, sub).TrimEnd()
             : expr;

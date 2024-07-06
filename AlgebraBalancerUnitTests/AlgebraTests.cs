@@ -2,9 +2,13 @@
 using AlgebraBalancer.Notation;
 using AlgebraBalancer.Algebra;
 using static AlgebraBalancer.ExactMath;
+using static AlgebraBalancer.MainPage;
 using AlgebraBalancer.Algebra.Balancer;
 using AlgebraBalancer;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -660,6 +664,19 @@ public class AlgebraTests
                 }
 
                 [TestMethod]
+                public void TestOrderDoesntMatter()
+                {
+                    Assert.AreEqual(
+                        Relationship.Substitute(
+                            "f(g(3))",
+                            "f(x)=2x+2;g(x)=3-x/2"),
+                        Relationship.Substitute(
+                            "f(g(3))",
+                            "g(x)=3-x/2;f(x)=2x+2")
+                    );
+                }
+
+                [TestMethod]
                 public void TestMultipleParameters()
                 {
                     Assert.AreEqual(
@@ -954,7 +971,7 @@ public class MainPageTests
             }
 
             GetTextSelectionPositions(ref notesText, out int selectionStart, out int expectStart, out _, out int expectLength);
-            var (lineStart, lineEnd) = MainPage.GetLineContainingPosition(notesText, selectionStart);
+            var (lineStart, lineEnd) = GetLineContainingPosition(notesText, selectionStart);
             Assert.AreEqual(
                 (
                     Sanatize(notesText.Substring(expectStart, expectLength)),
@@ -969,67 +986,102 @@ public class MainPageTests
         [TestMethod]
         public void TestBetweenNewlines()
         {
-            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}oran{SEL_BEG_IN}ge{SEL_END_EX}\rbanana\rmango");
+            AssertPredictedLineRange(
+                $"apple\r" +
+                $"{SEL_BEG_EX}oran{SEL_BEG_IN}ge{SEL_END_EX}\r" +
+                $"banana\r" +
+                $"mango");
         }
 
         [TestMethod]
         public void TestBetweenNewlinesButNotFirst()
         {
-            AssertPredictedLineRange($"apple\rorange\r{SEL_BEG_EX}ban{SEL_BEG_IN}ana{SEL_END_EX}\rmango");
+            AssertPredictedLineRange(
+                $"apple\r" +
+                $"orange\r" +
+                $"{SEL_BEG_EX}ban{SEL_BEG_IN}ana{SEL_END_EX}\r" +
+                $"mango");
         }
 
         [TestMethod]
         public void TestFirstLine()
         {
-            AssertPredictedLineRange($"{SEL_BEG_EX}ap{SEL_BEG_IN}ple{SEL_END_EX}\rorange\rbanana\rmango");
+            AssertPredictedLineRange(
+                $"{SEL_BEG_EX}ap{SEL_BEG_IN}ple{SEL_END_EX}\r" +
+                $"orange\r" +
+                $"banana\r" +
+                $"mango");
         }
 
         [TestMethod]
         public void TestLastLine()
         {
-            AssertPredictedLineRange($"apple\rorange\rbanana\r{SEL_BEG_EX}man{SEL_BEG_IN}go{SEL_END_EX}");
+            AssertPredictedLineRange(
+                $"apple\r" +
+                $"orange\r" +
+                $"banana\r" +
+                $"{SEL_BEG_EX}man{SEL_BEG_IN}go{SEL_END_EX}");
         }
 
         [TestMethod]
         public void TestStart()
         {
-            AssertPredictedLineRange($"{SEL_BEG_EX}{SEL_BEG_IN}apple{SEL_END_EX}\rorange\rbanana\rmango");
+            AssertPredictedLineRange(
+                $"{SEL_BEG_EX}{SEL_BEG_IN}apple{SEL_END_EX}\r" +
+                $"orange\r" +
+                $"banana\r" +
+                $"mango");
         }
 
         [TestMethod]
         public void TestEnd()
         {
-            AssertPredictedLineRange($"apple\rorange\rbanana\r{SEL_BEG_EX}mango{SEL_BEG_IN}{SEL_END_EX}");
+            AssertPredictedLineRange(
+                $"apple\r" +
+                $"orange\r" +
+                $"banana\r" +
+                $"{SEL_BEG_EX}mango{SEL_BEG_IN}{SEL_END_EX}");
         }
 
         [TestMethod]
         public void TestEmptyString()
         {
-            AssertPredictedLineRange($"{SEL_BEG_EX}{SEL_BEG_IN}{SEL_END_EX}");
+            AssertPredictedLineRange(
+                $"{SEL_BEG_EX}{SEL_BEG_IN}{SEL_END_EX}");
         }
 
         [TestMethod]
         public void TestSingleLineString()
         {
-            AssertPredictedLineRange($"{SEL_BEG_EX}app{SEL_BEG_IN}le{SEL_END_EX}");
+            AssertPredictedLineRange(
+                $"{SEL_BEG_EX}app{SEL_BEG_IN}le{SEL_END_EX}");
         }
 
         [TestMethod]
         public void TestEmptyLine()
         {
-            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}{SEL_BEG_IN}{SEL_END_EX}\rbanana");
+            AssertPredictedLineRange(
+                $"apple\r" +
+                $"{SEL_BEG_EX}{SEL_BEG_IN}{SEL_END_EX}\r" +
+                $"banana");
         }
 
         [TestMethod]
         public void TestStartOfLine()
         {
-            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}{SEL_BEG_IN}orange{SEL_END_EX}\rbanana");
+            AssertPredictedLineRange(
+                $"apple\r" +
+                $"{SEL_BEG_EX}{SEL_BEG_IN}orange{SEL_END_EX}\r" +
+                $"banana");
         }
 
         [TestMethod]
         public void TestEndOfLine()
         {
-            AssertPredictedLineRange($"apple\r{SEL_BEG_EX}orange{SEL_BEG_IN}{SEL_END_EX}\rbanana");
+            AssertPredictedLineRange(
+                $"apple\r" +
+                $"{SEL_BEG_EX}orange{SEL_BEG_IN}{SEL_END_EX}\r" +
+                $"banana");
         }
     }
 
@@ -1044,7 +1096,7 @@ public class MainPageTests
         {
             string notesText = $"app{SEL_BEG_IN}le {SEL_BEG_EX}& orange";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1053,7 +1105,7 @@ public class MainPageTests
         {
             string notesText = $"apple {SEL_BEG_EX}& ora{SEL_BEG_IN}nge";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1062,7 +1114,7 @@ public class MainPageTests
         {
             string notesText = $"{SEL_BEG_IN}apple {SEL_BEG_EX}& orange";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1071,7 +1123,7 @@ public class MainPageTests
         {
             string notesText = $"apple {SEL_BEG_EX}& orange{SEL_BEG_IN}";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1080,7 +1132,7 @@ public class MainPageTests
         {
             string notesText = $"apple & ora{SEL_BEG_IN}nge{SEL_BEG_EX}";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1089,7 +1141,7 @@ public class MainPageTests
         {
             string notesText = $"{SEL_BEG_EX}app{SEL_BEG_IN}le & orange";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1098,7 +1150,7 @@ public class MainPageTests
         {
             string notesText = $"apple {SEL_BEG_IN}& orange{SEL_BEG_EX}";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1107,7 +1159,7 @@ public class MainPageTests
         {
             string notesText = $"{SEL_BEG_EX}apple {SEL_BEG_IN}& orange";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1116,7 +1168,7 @@ public class MainPageTests
         {
             string notesText = $"apple & or{SEL_BEG_IN}ange{SEL_BEG_EX}\rbanana & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1125,7 +1177,7 @@ public class MainPageTests
         {
             string notesText = $"apple & orange\r{SEL_BEG_EX}banan{SEL_BEG_IN}a & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1134,7 +1186,7 @@ public class MainPageTests
         {
             string notesText = $"apple & orange{SEL_BEG_IN}\r{SEL_BEG_EX}banana & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1143,7 +1195,7 @@ public class MainPageTests
         {
             string notesText = $"apple {SEL_BEG_EX}& orange{SEL_BEG_IN}\rbanana & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1152,7 +1204,7 @@ public class MainPageTests
         {
             string notesText = $"apple & orange\r{SEL_BEG_IN}banana {SEL_BEG_EX}& mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_RIGHT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
 
@@ -1161,7 +1213,7 @@ public class MainPageTests
         {
             string notesText = $"apple & orange{SEL_BEG_EX}\r{SEL_BEG_IN}banana & mango";
             GetTextSelectionPositions(ref notesText, out int initStart, out int expectStart, out _, out _);
-            MainPage.ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
+            ColumnJump(JUMP_LEFT, notesText, initStart, out int newSelectionStart, out int _);
             Assert.AreEqual(expectStart, newSelectionStart);
         }
     }
@@ -1178,7 +1230,7 @@ public class MainPageTests
             string notesText       = $"apple orange\rbanana mango{SEL_BEG_IN}\rstrawberry kiwi";
             string expectNotesText = $"apple orange\rbanana mango\rbanana mango{SEL_BEG_EX}\rstrawberry kiwi";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1189,7 +1241,7 @@ public class MainPageTests
             string notesText       = $"apple orange\rbanana mango{SEL_BEG_IN}\rstrawberry kiwi";
             string expectNotesText = $"apple orange\rbanana mango{SEL_BEG_EX}\rbanana mango\rstrawberry kiwi";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1200,7 +1252,7 @@ public class MainPageTests
             string notesText = $"apple orange\rbanana m{SEL_BEG_IN}ango\rstrawberry kiwi";
             string expectNotesText = $"apple orange\rbanana mango\rbanana m{SEL_BEG_EX}ango\rstrawberry kiwi";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1211,7 +1263,7 @@ public class MainPageTests
             string notesText = $"apple orange\rbanana m{SEL_BEG_IN}ango\rstrawberry kiwi";
             string expectNotesText = $"apple orange\rbanana m{SEL_BEG_EX}ango\rbanana mango\rstrawberry kiwi";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1222,7 +1274,7 @@ public class MainPageTests
             string notesText = $"apple orange{SEL_BEG_IN}\rbanana mango\rstrawberry kiwi";
             string expectNotesText = $"apple orange\rapple orange{SEL_BEG_EX}\rbanana mango\rstrawberry kiwi";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1233,7 +1285,7 @@ public class MainPageTests
             string notesText = $"apple orange{SEL_BEG_IN}\rbanana mango\rstrawberry kiwi";
             string expectNotesText = $"apple orange{SEL_BEG_EX}\rapple orange\rbanana mango\rstrawberry kiwi";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1244,7 +1296,7 @@ public class MainPageTests
             string notesText = $"apple orange\rbanana mango\rstrawberry kiwi{SEL_BEG_IN}";
             string expectNotesText = $"apple orange\rbanana mango\rstrawberry kiwi\rstrawberry kiwi{SEL_BEG_EX}";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(DOWNWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1255,7 +1307,7 @@ public class MainPageTests
             string notesText = $"apple orange\rbanana mango\rstrawberry kiwi{SEL_BEG_IN}";
             string expectNotesText = $"apple orange\rbanana mango\rstrawberry kiwi{SEL_BEG_EX}\rstrawberry kiwi";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            DuplicateLine(UPWARD, selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1276,7 +1328,7 @@ public class MainPageTests
                 out int selectionStart,  out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1291,7 +1343,7 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1306,7 +1358,7 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1321,7 +1373,7 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -1336,94 +1388,139 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            MainPage.CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
     }
 
     /// <summary>
-    /// These tests are specifically for confirming that <see cref="MainPage.SubstituteVars"/> is handling the parsing corectly.
+    /// These tests are specifically for confirming that <see cref="SubstituteVars"/> is handling the parsing corectly.
     /// Other tests related to substitution should be handled by <see cref="SubstitutionTests">.
     /// </summary>
     [TestClass]
     public class SubstituteVarsTests
     {
+        private static void AssertSubstitutionMatchesPrediction(string expectNotesText, string notesText)
+        {
+            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+            SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+        }
+
         [TestMethod]
         public void TestBasic()
         {
-            string notesText       = @$"2x + 3 with x=3{SEL_BEG_IN}";
-            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+            AssertSubstitutionMatchesPrediction(
+                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with x=3{SEL_BEG_IN}");
         }
 
         [TestMethod]
         public void TestWhitespaceBefore()
         {
-            string notesText       = @$"2x + 3      with x=3{SEL_BEG_IN}";
-            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+            AssertSubstitutionMatchesPrediction(
+                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3      with x=3{SEL_BEG_IN}");
         }
 
         [TestMethod]
         public void TestWhitespaceBetween()
         {
-            string notesText       = @$"2x + 3 with      x=3{SEL_BEG_IN}";
-            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+            AssertSubstitutionMatchesPrediction(
+                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with      x=3{SEL_BEG_IN}");
         }
 
         [TestMethod]
         public void TestWhitespaceAfter()
         {
-            string notesText       = @$"2x + 3 with x=3     {SEL_BEG_IN}";
-            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+            AssertSubstitutionMatchesPrediction(
+                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with x=3     {SEL_BEG_IN}");
         }
 
         [TestMethod]
         public void TestLineBefore()
         {
-            string notesText       = @$"3x-5{'\r'}2x + 3 with x=3{SEL_BEG_IN}";
-            string expectNotesText = @$"3x-5{'\r'}2(3) + 3{SEL_BEG_EX}";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+            AssertSubstitutionMatchesPrediction(
+                $"3x-5\r" +
+                $"2(3) + 3{SEL_BEG_EX}",
+
+                $"3x-5\r" +
+                $"2x + 3 with x=3{SEL_BEG_IN}");
         }
 
         [TestMethod]
         public void TestLineAfter()
         {
-            string notesText       = @$"2x + 3 with x=3{SEL_BEG_IN}{'\r'}3x-5";
-            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}{'\r'}3x-5";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+            AssertSubstitutionMatchesPrediction(
+                $"2(3) + 3{SEL_BEG_EX}\r" +
+                $"3x-5",
+
+                $"2x + 3 with x=3{SEL_BEG_IN}\r" +
+                $"3x-5");
         }
 
         [TestMethod]
         public void TestSelectingWithin()
         {
-            string notesText       = @$"2x +{SEL_BEG_IN} 3 with x=3";
-            string expectNotesText = @$"2(3) + 3{SEL_BEG_EX}";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.SubstituteVars(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+            AssertSubstitutionMatchesPrediction(
+                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x +{SEL_BEG_IN} 3 with x=3");
+        }
+
+        [TestClass]
+        public class LetTests
+        {
+            [TestMethod]
+            public void TestOne()
+            {
+                CollectionAssert.AreEqual(
+                    (string[])["x = 2"],
+                    GetLetDefinitions(
+                        "let x = 2"));
+            }
+
+            [TestMethod]
+            public void TestTwo()
+            {
+                CollectionAssert.AreEqual(
+                    (string[])["y = 2", "x = 2"],
+                    GetLetDefinitions(
+                        "let x = 2\r" +
+                        "let y = 2"));
+            }
+
+            [TestMethod]
+            public void TestSameLineSemi()
+            {
+                CollectionAssert.AreEqual(
+                    (string[])["y = 2", "x = 2"],
+                    GetLetDefinitions(
+                        "let y = 2; x = 2"));
+            }
+
+            [TestMethod]
+            public void TestSameLineAnd()
+            {
+                CollectionAssert.AreEqual(
+                    (string[])["y = 2", "x = 2"],
+                    GetLetDefinitions(
+                        "let y = 2 and x = 2"));
+            }
+        }
+
+        [TestMethod]
+        public void TestDontAppendLets()
+        {
+            AssertSubstitutionMatchesPrediction(
+                $"let y=x\r" +
+                $"2{SEL_BEG_EX}",
+
+                $"let y=x\r" +
+                $"a with a=2{SEL_BEG_IN}");
         }
     }
 
@@ -1436,7 +1533,7 @@ public class MainPageTests
             string notesText       = @$"4 - 2 = 3  with +2{SEL_BEG_IN}";
             string expectNotesText = @$"4 = 3 + 2{SEL_BEG_EX}";
             GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            MainPage.BalanceAlgebra(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+            BalanceAlgebra(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
