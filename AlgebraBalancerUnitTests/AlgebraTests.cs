@@ -486,7 +486,7 @@ public class AlgebraTests
             public void TestRedundantInnerParensContainingParens()
             {
                 Assert.AreEqual(
-                    "2(3-(3)/2)+2",
+                    "2(3-3/2)+2",
                     Relationship.CleanParentheses("2((3-(3)/2))+2"));
             }
 
@@ -538,7 +538,7 @@ public class AlgebraTests
             public void TestSubstituteX()
             {
                 Assert.AreEqual(
-                    "((4)-(4)^2) + 5 = 2(4) - 3",
+                    "(4-(4)^2) + 5 = 2(4) - 3",
                     Relationship.Substitute(
                         "(x-x^2) + 5 = 2x - 3",
                         "x=4")
@@ -549,7 +549,7 @@ public class AlgebraTests
             public void TestSubstituteXY()
             {
                 Assert.AreEqual(
-                    "((6)-(6)^2) + 5 = 2(4) - 3",
+                    "(6-(6)^2) + 5 = 2(4) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
                         "x=4;y=6")
@@ -561,7 +561,7 @@ public class AlgebraTests
             {
                 // Should stop after one iteration
                 Assert.AreEqual(
-                    "((2x)-(2x)^2) + 5 = 2(4) - 3",
+                    "(2x-(2x)^2) + 5 = 2(4) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
                         "x=4;y=2x")
@@ -584,7 +584,7 @@ public class AlgebraTests
             public void TestSubstituteRecursive()
             {
                 Assert.AreEqual(
-                    "((2x)-(2x)^2) + 5 = 2(2(2x)) - 3",
+                    "(2x-(2x)^2) + 5 = 2(2(2x)) - 3",
                     Relationship.Substitute(
                         "(y-y^2) + 5 = 2x - 3",
                         "x=2y;y=2x")
@@ -609,7 +609,7 @@ public class AlgebraTests
             public void TestOperatorIsNotName()
             {
                 Assert.AreEqual(
-                    "(4)+(4)-(4)*(4)/(4)=(4)%(4)^(4)&(4)|(4)",
+                    "4+4-4*4/4=4%4^(4)&4|4",
                     Relationship.Substitute(
                         "x+x-x*x/x=x%x^x&x|x",
                         "x=4")
@@ -656,7 +656,7 @@ public class AlgebraTests
                 public void TestFOfG()
                 {
                     Assert.AreEqual(
-                        "2(3-(3)/2)+2",
+                        "2(3-3/2)+2",
                         Relationship.Substitute(
                             "f(g(3))",
                             "f(x)=2x+2;g(x)=3-x/2")
@@ -702,7 +702,7 @@ public class AlgebraTests
                 public void TestParameterInMultiplePlaces()
                 {
                     Assert.AreEqual(
-                        "(6)+2(6)",
+                        "6+2(6)",
                         Relationship.Substitute(
                             "f(6)",
                             "f(x)=x+2x")
@@ -838,7 +838,7 @@ public class AlgebraTests
                     public void TestTwoArgs()
                     {
                         Assert.AreEqual(
-                            "(5)+(7)",
+                            "5+7",
                             Relationship.AnonymousCalls("(x y=>x+y)(5,7)"));
                     }
 
@@ -846,7 +846,7 @@ public class AlgebraTests
                     public void TestWithinGreaterExpression()
                     {
                         Assert.AreEqual(
-                            "2((3)/2)+6",
+                            "2(3/2)+6",
                             Relationship.AnonymousCalls("2(x=>x/2)(3)+6"));
                     }
 
@@ -864,7 +864,7 @@ public class AlgebraTests
                     public void TestSubstitutionWithMultiArgumentLambdaParamter()
                     {
                         Assert.AreEqual(
-                            "2(1)+(n)",
+                            "2(1)+n",
                             Relationship.Substitute(
                                 "f(a b=>2a+b)",
                                 "f(x)=x(1, n)"));

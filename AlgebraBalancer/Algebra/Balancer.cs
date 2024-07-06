@@ -282,6 +282,17 @@ public class Relationship
         @"^\s*\(((?:[^()]|(?'inner'\()|(?'-inner'\)))*(?(inner)(?!)))\)\s*$",
         RegexOptions.Compiled);
 
+    private static readonly Regex rxUnnededTermParentheses = new(
+        @"(?<=^|[^\d\s)])\s*\(\s*(\w+)\s*\)\s*(?=[^\d\s(]|$)",
+        RegexOptions.Compiled);
+
+    ///// <summary>
+    ///// Like <see cref="rxUnnededTermParentheses"/> but without allowing internal multiplication
+    ///// </summary>
+    //private static readonly Regex rxUnnededExponentBaseParentheses = new(
+    //    @"(?<=^|[^\d\s)])\s*\(\s*(\d+|.)\s*\)\s*(?=[^\d\s(]|$)",
+    //    RegexOptions.Compiled);
+
     public static string CleanParentheses(string expr)
     {
         while (rxUnneededOuterParens.IsMatch(expr))
@@ -305,6 +316,8 @@ public class Relationship
             });
             if (!hasNonVector) break;
         }
+        expr = rxUnnededTermParentheses.Replace(expr, (x) => x.Groups[1].Value);
+        expr = rxUnnededExponentBaseParentheses.Replace(expr, (x) => x.Groups[1].Value);
         return expr;
     }
 
