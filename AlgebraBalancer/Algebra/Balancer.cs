@@ -482,7 +482,7 @@ public class Relationship
                         for (int i = 0; i < Math.Min(signatureParamList.Length, callParams.Length); ++i)
                         {
                             string paramName = signatureParamList[i];
-                            string paramValue = $"({CleanParentheses(callParams[i])})";
+                            string paramValue = "(" + CleanParentheses(SolveIfTrivial(callParams[i])) + ")";
                             replacement = replacement.Replace(paramName, paramValue);
                         }
                         return replacement;
@@ -521,7 +521,6 @@ public class Relationship
                                     callParamItems = callParamList.Split(",");
                                 }
                                 callParams = callParamItems
-                                    .Select(SolveIfTrivial)
                                     .Select(CleanParentheses)
                                     .Select(x => x.Trim())
                                     .ToArray();
