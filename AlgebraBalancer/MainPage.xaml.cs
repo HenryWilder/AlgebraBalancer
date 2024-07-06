@@ -401,13 +401,11 @@ public sealed partial class MainPage : Page
         string defsThisLine = args.Length > 1 ? args[1] : "";
         string sub = string.Join(";", new List<string>([defsThisLine, defs]).Where(x => !string.IsNullOrWhiteSpace(x)));
         string newExpr = sub.Contains("=")
-            ? Relationship.Substitute(expr, sub).TrimEnd()
-            : expr;
+            ? "\r" + Relationship.Substitute(expr, sub).TrimEnd()
+            : "";
 
-        selectionStartFinal = startOfLine + newExpr.Length;
-        notesTextFinal = notesText
-            .Remove(startOfLine, lineLength)
-            .Insert(startOfLine, newExpr);
+        selectionStartFinal = endOfLine + newExpr.Length;
+        notesTextFinal = notesText.Insert(endOfLine, newExpr);
     }
 
     private static readonly Regex rxOperator = new(@"^\s*([-+/*])\s*(.*)\s*$");

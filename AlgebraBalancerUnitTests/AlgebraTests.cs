@@ -1413,7 +1413,7 @@ public class MainPageTests
         public void TestBasic()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with x=3\r2(3) + 3{SEL_BEG_EX}",
                 $"2x + 3 with x=3{SEL_BEG_IN}");
         }
 
@@ -1421,7 +1421,7 @@ public class MainPageTests
         public void TestWhitespaceBefore()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3      with x=3\r2(3) + 3{SEL_BEG_EX}",
                 $"2x + 3      with x=3{SEL_BEG_IN}");
         }
 
@@ -1429,7 +1429,7 @@ public class MainPageTests
         public void TestWhitespaceBetween()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with      x=3\r2(3) + 3{SEL_BEG_EX}",
                 $"2x + 3 with      x=3{SEL_BEG_IN}");
         }
 
@@ -1437,7 +1437,7 @@ public class MainPageTests
         public void TestWhitespaceAfter()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with x=3     \r2(3) + 3{SEL_BEG_EX}",
                 $"2x + 3 with x=3     {SEL_BEG_IN}");
         }
 
@@ -1446,6 +1446,7 @@ public class MainPageTests
         {
             AssertSubstitutionMatchesPrediction(
                 $"3x-5\r" +
+                $"2x + 3 with x=3\r" +
                 $"2(3) + 3{SEL_BEG_EX}",
 
                 $"3x-5\r" +
@@ -1456,6 +1457,7 @@ public class MainPageTests
         public void TestLineAfter()
         {
             AssertSubstitutionMatchesPrediction(
+                $"2x + 3 with x=3\r" +
                 $"2(3) + 3{SEL_BEG_EX}\r" +
                 $"3x-5",
 
@@ -1467,7 +1469,9 @@ public class MainPageTests
         public void TestSelectingWithin()
         {
             AssertSubstitutionMatchesPrediction(
+                $"2x + 3 with x=3\r" +
                 $"2(3) + 3{SEL_BEG_EX}",
+
                 $"2x +{SEL_BEG_IN} 3 with x=3");
         }
 
@@ -1517,6 +1521,7 @@ public class MainPageTests
         {
             AssertSubstitutionMatchesPrediction(
                 $"let y=x\r" +
+                $"a with a=2\r" +
                 $"2{SEL_BEG_EX}",
 
                 $"let y=x\r" +
