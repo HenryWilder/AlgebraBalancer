@@ -283,7 +283,7 @@ public class Relationship
         RegexOptions.Compiled);
 
     private static readonly Regex rxUnnededTermParentheses = new(
-        @"(?<=^|[^\d\s)])\s*\(\s*(\w+)\s*\)\s*(?=[^\d\s(]|$)",
+        @"(?<=^|[-+/*%=|<>({\[])\s*\(\s*(\w+)\s*\)\s*(?=[-+/*%=|<>)}\]]|$)",
         RegexOptions.Compiled);
 
     ///// <summary>
@@ -317,7 +317,6 @@ public class Relationship
             if (!hasNonVector) break;
         }
         expr = rxUnnededTermParentheses.Replace(expr, (x) => x.Groups[1].Value);
-        expr = rxUnnededExponentBaseParentheses.Replace(expr, (x) => x.Groups[1].Value);
         return expr;
     }
 

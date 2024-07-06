@@ -597,7 +597,7 @@ public class AlgebraTests
                 try
                 {
                     string result = Relationship.Substitute("f(x)", "f(x) = f(f(x))");
-                    Assert.IsTrue(new Regex(@"(?:f\()+x(?:\))+").IsMatch(result));
+                    Assert.IsTrue(new Regex(@"(?:f\()+x\)+").IsMatch(result));
                 }
                 catch (System.Exception err)
                 {
@@ -609,7 +609,7 @@ public class AlgebraTests
             public void TestOperatorIsNotName()
             {
                 Assert.AreEqual(
-                    "4+4-4*4/4=4%4^(4)&4|4",
+                    "4+4-4*4/4=4%(4)^(4)&(4)|4",
                     Relationship.Substitute(
                         "x+x-x*x/x=x%x^x&x|x",
                         "x=4")
