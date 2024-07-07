@@ -51,6 +51,8 @@ public class AnonymousFormula : ISubstitutible
     public readonly string[] parameterNames;
     public readonly SubstitutableString definition;
 
+    public string Name => string.Empty;
+
     /// <summary>
     /// <paramref name="capture"/> = "(6)"
     /// </summary>
@@ -68,4 +70,6 @@ public class AnonymousFormula : ISubstitutible
         }
         return capture;
     }
+
+    public Regex GetRegex() => throw new NotImplementedException();
 }

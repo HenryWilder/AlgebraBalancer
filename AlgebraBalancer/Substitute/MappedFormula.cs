@@ -41,6 +41,8 @@ public class MappedFormula : ISubstitutible
     public readonly string name;
     public readonly Dictionary<string, string> mapping;
 
+    public string Name => name;
+
     /// <summary>
     /// <paramref name="capture"/> = "f(6)"
     /// </summary>
@@ -57,4 +59,6 @@ public class MappedFormula : ISubstitutible
         }
         return capture;
     }
+
+    public Regex GetRegex() => new(name + Formula.rxParameterList);
 }

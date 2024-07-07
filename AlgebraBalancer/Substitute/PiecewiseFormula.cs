@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AlgebraBalancer.Substitute;
@@ -25,6 +26,8 @@ public class PiecewiseFormula : ISubstitutible
     public readonly string name;
     public readonly (Func<string, bool>, string)[] cases;
 
+    public string Name => name;
+
     /// <summary>
     /// <paramref name="capture"/> = "f(5, 3)"
     /// </summary>
@@ -32,4 +35,6 @@ public class PiecewiseFormula : ISubstitutible
     {
         return capture;
     }
+
+    public Regex GetRegex() => throw new NotImplementedException();
 }

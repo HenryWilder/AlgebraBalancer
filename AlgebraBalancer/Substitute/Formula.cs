@@ -41,6 +41,8 @@ public class Formula : ISubstitutible
     public readonly string[] parameterNames;
     public readonly SubstitutableString definition;
 
+    public string Name => name;
+
     /// <summary>
     /// <paramref name="capture"/> = "f(43, 7)"
     /// </summary>
@@ -58,4 +60,6 @@ public class Formula : ISubstitutible
         }
         return capture;
     }
+
+    public Regex GetRegex() => new(name + rxParameterList);
 }

@@ -30,8 +30,12 @@ public class Variable : ISubstitutible
     public readonly string name;
     public readonly string value;
 
+    public string Name => name;
+
     /// <summary>
     /// <paramref name="capture"/> = "x"
     /// </summary>
     public string GetReplacement(string capture) => "(" + value + ")";
+
+    public Regex GetRegex() => new(name);
 }

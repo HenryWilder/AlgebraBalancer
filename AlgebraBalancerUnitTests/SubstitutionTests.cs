@@ -398,4 +398,46 @@ public class SubstitutionTests
             ));
         }
     }
+
+    [TestClass]
+    public class SubstitutorTests
+    {
+        private static string Substitute(string doc, int beg, int end) => new Substitutor(doc, beg, end).Substitute();
+
+        [TestMethod]
+        public void TestVariable()
+        {
+            Assert.AreEqual(
+                "3",
+            AtLine(Substitute,
+                "let a = 3\r" +
+                "a",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestFormula()
+        {
+            Assert.AreEqual(
+                "3(6)+2(7)+5",
+            AtLine(Substitute,
+                "let f(a,b) = 3a+2b+5\r" +
+                "f(6,7)",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestMappedFormula()
+        {
+            Assert.AreEqual(
+                "orange and apple",
+            AtLine(Substitute,
+                "let f(x) = {5->apple,6->orange}\r" +
+                "f(6) and f(5)",
+                1
+            ));
+        }
+    }
 }
