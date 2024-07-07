@@ -35,7 +35,8 @@ public class Variable : ISubstitutible
     /// <summary>
     /// <paramref name="capture"/> = "x"
     /// </summary>
-    public string GetReplacement(string capture) => "(" + value + ")";
+    public string GetReplacement(string capture, Substitutor substitutor, int maxDepth = 20) =>
+        "(" + (maxDepth > 0 ? substitutor.Substitute(value, maxDepth) : value) + ")";
 
     public Regex GetRegex() => new(name);
 }

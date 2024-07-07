@@ -46,7 +46,7 @@ public class Formula : ISubstitutible
     /// <summary>
     /// <paramref name="capture"/> = "f(43, 7)"
     /// </summary>
-    public string GetReplacement(string capture)
+    public string GetReplacement(string capture, Substitutor substitutor, int maxDepth = 20)
     {
         var match = rxParameterList.Match(capture);
         if (match.Success)
@@ -54,7 +54,7 @@ public class Formula : ISubstitutible
             var argCaptures = match.Groups["args"].Captures;
             var callArgs = parameterNames
                 .Zip(argCaptures, (k, v) => new { k, v })
-                .ToDictionary(x => x.k, x => "(" + x.v.Value + ")");
+                .ToDictionary(x => x.k, x => "(" + (maxDepth > 0 ? substitutor.Substitute(x.v.Value, maxDepth) : x.v.Value) + ")");
 
             return definition.GetSubstituted(callArgs);
         }

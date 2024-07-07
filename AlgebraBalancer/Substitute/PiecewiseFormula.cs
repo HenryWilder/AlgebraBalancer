@@ -31,7 +31,7 @@ public class PiecewiseFormula : ISubstitutible
     /// <summary>
     /// <paramref name="capture"/> = "f(5, 3)"
     /// </summary>
-    public string GetReplacement(string capture)
+    public string GetReplacement(string capture, Substitutor substitutor, int maxDepth = 20)
     {
         return capture;
     }

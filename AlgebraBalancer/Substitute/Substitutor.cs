@@ -8,22 +8,19 @@ using System.Threading.Tasks;
 namespace AlgebraBalancer.Substitute;
 public class Substitutor
 {
-    public Substitutor(string document, int lineStart, int lineEnd)
+    public Substitutor(string document, int lineStart, int lineEnd, out string expr)
     {
         substitutions = SubstitutionParser.Parse(document, lineStart, lineEnd, out int newEndOfLine);
         expr = document.Substring(lineStart, newEndOfLine - lineStart);
     }
 
     private readonly List<ISubstitutible> substitutions;
-    private readonly string expr;
 
-    public string Substitute()
+    public string Substitute(string expr, int maxDepth = 20)
     {
-        string expr = this.expr;
-
         foreach (var item in substitutions)
         {
-            expr = item.GetRegex().Replace(expr, (match) => item.GetReplacement(match.Value));
+            expr = item.GetRegex().Replace(expr, (match) => item.GetReplacement(match.Value, this, maxDepth - 1));
         }
 
         return ParenCleaner.CleanParentheses(expr);

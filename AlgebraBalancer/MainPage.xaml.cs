@@ -341,8 +341,8 @@ public sealed partial class MainPage : Page
     )
     {
         var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
-        var substitutor = new Substitutor(notesText, startOfLine, endOfLine);
-        string newExpr = "\r" + substitutor.Substitute();
+        var substitutor = new Substitutor(notesText, startOfLine, endOfLine, out string expr);
+        string newExpr = "\r" + substitutor.Substitute(expr);
         selectionStartFinal = endOfLine + newExpr.Length;
         notesTextFinal = notesText.Insert(endOfLine, newExpr);
     }

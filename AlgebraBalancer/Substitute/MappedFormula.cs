@@ -46,16 +46,18 @@ public class MappedFormula : ISubstitutible
     /// <summary>
     /// <paramref name="capture"/> = "f(6)"
     /// </summary>
-    public string GetReplacement(string capture)
+    public string GetReplacement(string capture, Substitutor substitutor, int maxDepth = 20)
     {
         var match = Formula.rxParameterList.Match(capture);
         if (match.Success)
         {
             // Expects only one capture
             string lookupKey = match.Groups["args"].Value;
-            return mapping.TryGetValue(lookupKey, out string value)
-                ? value
-                : "∄"; 
+            lookupKey = ParenCleaner.CleanParentheses(maxDepth > 0 ? substitutor.Substitute(lookupKey, maxDepth) : lookupKey);
+            bool solved = Solver.TrySolveInteger(lookupKey, out string solution);
+            return mapping.TryGetValue(solved ? solution : lookupKey, out string value)
+                ? "(" + (maxDepth > 0 ? substitutor.Substitute(value, maxDepth) : value) + ")"
+                : "(∄)"; 
         }
         return capture;
     }
