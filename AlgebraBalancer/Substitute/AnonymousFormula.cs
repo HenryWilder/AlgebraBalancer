@@ -9,33 +9,63 @@ using System.Xml.Linq;
 namespace AlgebraBalancer.Substitute;
 public class AnonymousFormula : ISubstitutible
 {
-    public string Name { get; }
+    private AnonymousFormula(string[] parameterNames, SubstitutableString definition)
+    {
+        this.parameterNames = parameterNames;
+        this.definition = definition;
+    }
+
+    public static readonly Regex rxArgList =
+        new(@$"(?:(?'args'{Variable.rxName})(?:(?(wrapper)[,\s]|\s)\s*(?'args'{Variable.rxName}))*)",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxArgDefSep =
+        new(@"\s*(?:=>|⇒|\|->|↦)\s*",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxDef =
+        new(@"(?:[^()]|(?'eo'\()|(?'-eo'\)))*(?(eo)(?!))",
+            RegexOptions.Compiled);
 
     private static readonly Regex rxAnonymousFunction =
-        new(@$"\((?:(?'arg1'{Variable.rxName})(?:\s+(?'argn'{Variable.rxName}))*)\s*(?:=>|⇒|\|->|↦)\s*(?'expr'(?:[^()]|(?'eo'\()|(?'-eo'\)))*(?(eo)(?!)))\)\((?'call'(?:[^()]|(?'co'\()|(?'-co'\)))*(?(co)(?!)))\)",
-        RegexOptions.Compiled);
+        new(@$"(?'wrapper'\()?{rxArgList}{rxArgDefSep}(?'expr'{rxDef})(?(wrapper)\))",
+            RegexOptions.Compiled);
 
-    public string GetReplacement(string capture) => throw new NotImplementedException();
+    /// <summary>
+    /// <paramref name="val"/> = "(a b => 2a-b)"
+    /// </summary>
+    public static AnonymousFormula TryDefine(string val)
+    {
+        var match = rxAnonymousFunction.Match(val);
+        if (match.Success)
+        {
+            string[] argNames = match.Groups["args"].Captures
+                .Select(x => x.Value)
+                .ToArray();
+            string definition = match.Groups["expr"].Value;
+            return new AnonymousFormula(argNames, new SubstitutableString(definition, argNames));
+        }
+        return null;
+    }
 
-    //public static string AnonymousCalls(string expr, int allowedSubCalls = 20)
-    //{
-    //    return CleanParentheses(rxAnonymousFunction.Replace(expr, (Match match) =>
-    //    {
-    //        string[] defArgs = match.Groups["argn"].Captures
-    //            .Select(x => x.Value)
-    //            .Prepend(match.Groups["arg1"].Value)
-    //            .ToArray();
-    //        string def = match.Groups["expr"].Value;
-    //        string[] callArgs = match.Groups["call"].Value.Split(",");
+    private readonly string[] parameterNames;
+    private readonly SubstitutableString definition;
 
-    //        for (int i = 0; i < Math.Min(defArgs.Length, callArgs.Length); ++i)
-    //        {
-    //            string defArg = defArgs[i]; // Should already be trimmed by regex
-    //            string callArg = AnonymousCalls(callArgs[i].Trim(), allowedSubCalls - 1);
-    //            def = CleanParentheses(def.Replace(defArg, $"({callArg})"));
-    //        }
+    /// <summary>
+    /// <paramref name="capture"/> = "(6)"
+    /// </summary>
+    public string GetReplacement(string capture)
+    {
+        var match = Formula.rxParameterList.Match(capture);
+        if (match.Success)
+        {
+            var argCaptures = match.Groups["args"].Captures;
+            var callArgs = parameterNames
+                .Zip(argCaptures, (k, v) => new { k, v })
+                .ToDictionary(x => x.k, x => "(" + x.v.Value + ")");
 
-    //        return "(" + (allowedSubCalls > 0 ? AnonymousCalls(def, allowedSubCalls - 1) : def) + ")";
-    //    }));
-    //}
+            return definition.GetSubstituted(callArgs);
+        }
+        return capture;
+    }
 }

@@ -12,34 +12,38 @@ public class Formula : ISubstitutible
 {
     private Formula(string name, string[] parameterNames, SubstitutableString definition)
     {
-        Name = name;
+        this.name = name;
         this.parameterNames = parameterNames;
         this.definition = definition;
     }
-
-    public static Formula Define(string variable, string value)
-    {
-        var match = rxParameterList.Match(variable);
-        if (match.Success)
-        {
-            string name = variable.Substring(0, match.Index);
-            string[] argNames = match.Groups["args"].Captures.Select(x => x.Value).ToArray();
-            return new Formula(name, argNames, new SubstitutableString(value, argNames));
-        }
-        else
-        {
-            throw new Exception("Formula missing argument list");
-        }
-    }
-
-    public string Name { get; }
-    private readonly string[] parameterNames;
-    private readonly SubstitutableString definition;
 
     public static readonly Regex rxParameterList =
         new(@"\((?'args'(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*?(?(open)(?!)))(?:,\s*(?'args'(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*?(?(open)(?!))))*\)",
             RegexOptions.Compiled);
 
+    /// <summary>
+    /// <paramref name="key"/> = "f(a, b)"
+    /// <paramref name="val"/> = "2a+b"
+    /// </summary>
+    public static Formula TryDefine(string key, string val)
+    {
+        var match = rxParameterList.Match(key);
+        if (match.Success)
+        {
+            string name = key.Substring(0, match.Index);
+            string[] argNames = match.Groups["args"].Captures.Select(x => x.Value).ToArray();
+            return new Formula(name, argNames, new SubstitutableString(val, argNames));
+        }
+        return null;
+    }
+
+    public string name;
+    private readonly string[] parameterNames;
+    private readonly SubstitutableString definition;
+
+    /// <summary>
+    /// <paramref name="capture"/> = "f(43, 7)"
+    /// </summary>
     public string GetReplacement(string capture)
     {
         var match = rxParameterList.Match(capture);
@@ -52,9 +56,6 @@ public class Formula : ISubstitutible
 
             return definition.GetSubstituted(callArgs);
         }
-        else
-        {
-            return capture;
-        }
+        return capture;
     }
 }

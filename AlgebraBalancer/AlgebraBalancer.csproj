@@ -141,6 +141,7 @@
     <Compile Include="Substitute\Formula.cs" />
     <Compile Include="Substitute\ISubstitutible.cs" />
     <Compile Include="Substitute\MappedFormula.cs" />
+    <Compile Include="Substitute\ParenCleaner.cs" />
     <Compile Include="Substitute\PiecewiseFormula.cs" />
     <Compile Include="Substitute\SubstitutableString.cs" />
     <Compile Include="Substitute\SubstitutionParser.cs" />
