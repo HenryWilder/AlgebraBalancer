@@ -22,8 +22,8 @@ public class PiecewiseFormula : ISubstitutible
         return null;
     }
 
-    public string name;
-    private (Func<string, bool>, string)[] cases;
+    public readonly string name;
+    public readonly (Func<string, bool>, string)[] cases;
 
     /// <summary>
     /// <paramref name="capture"/> = "f(5, 3)"

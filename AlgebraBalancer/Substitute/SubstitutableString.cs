@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AlgebraBalancer.Substitute;
 public class SubstitutableString
 {
-    private readonly string str;
+    public readonly string str;
     private readonly (int pos, string arg)[] replacements;
 
     public SubstitutableString(string str, params string[] argNames)

@@ -48,8 +48,8 @@ public class AnonymousFormula : ISubstitutible
         return null;
     }
 
-    private readonly string[] parameterNames;
-    private readonly SubstitutableString definition;
+    public readonly string[] parameterNames;
+    public readonly SubstitutableString definition;
 
     /// <summary>
     /// <paramref name="capture"/> = "(6)"

@@ -38,8 +38,8 @@ public class MappedFormula : ISubstitutible
         return null;
     }
 
-    public string name;
-    private readonly Dictionary<string, string> mapping;
+    public readonly string name;
+    public readonly Dictionary<string, string> mapping;
 
     /// <summary>
     /// <paramref name="capture"/> = "f(6)"

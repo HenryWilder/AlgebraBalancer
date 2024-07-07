@@ -37,9 +37,9 @@ public class Formula : ISubstitutible
         return null;
     }
 
-    public string name;
-    private readonly string[] parameterNames;
-    private readonly SubstitutableString definition;
+    public readonly string name;
+    public readonly string[] parameterNames;
+    public readonly SubstitutableString definition;
 
     /// <summary>
     /// <paramref name="capture"/> = "f(43, 7)"

@@ -84,7 +84,25 @@ public static class SubstitutionParser
 
         List<ISubstitutible> substitutions = [];
 
-        // todo
+        foreach (var (key, val) in items)
+        {
+            if (AnonymousFormula.TryDefine(val) is AnonymousFormula a and not null)
+            {
+                substitutions.Add(a);
+            }
+            else if (MappedFormula.TryDefine(key, val) is MappedFormula m and not null)
+            {
+                substitutions.Add(m);
+            }
+            else if (Formula.TryDefine(key, val) is Formula f and not null)
+            {
+                substitutions.Add(f);
+            }
+            else if (Variable.TryDefine(key, val) is Variable x and not null)
+            {
+                substitutions.Add(x);
+            }
+        }
 
         return substitutions;
     }

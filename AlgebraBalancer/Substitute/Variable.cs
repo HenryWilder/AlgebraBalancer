@@ -27,8 +27,8 @@ public class Variable : ISubstitutible
         return null;
     }
 
-    public string name;
-    private readonly string value;
+    public readonly string name;
+    public readonly string value;
 
     /// <summary>
     /// <paramref name="capture"/> = "x"

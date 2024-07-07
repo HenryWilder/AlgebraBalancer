@@ -6,6 +6,7 @@ using System.Linq;
 using System;
 
 using static AlgebraBalancerUnitTests.TestHelper;
+using System.Collections;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -160,6 +161,19 @@ public class SubstitutionTests
     }
 
     [TestClass]
+    public class MappedFormulaTests
+    {
+        [TestMethod]
+        public void TestBasic()
+        {
+            var f = MappedFormula.TryDefine("f(x)", "{2->3,5->8}");
+            Assert.AreEqual("3", f.GetReplacement("f(2)"));
+            Assert.AreEqual("8", f.GetReplacement("f(5)"));
+            Assert.AreEqual("∄", f.GetReplacement("f(8)"));
+        }
+    }
+
+    [TestClass]
     public class GetStatementClausesTests
     {
         public TestContext TestContext { get; set; }
@@ -296,6 +310,91 @@ public class SubstitutionTests
                 "let a = 3, b = 5, c = 1\r" +
                 "x with x = 9",
                 1
+            ));
+        }
+    }
+
+    [TestClass]
+    public class ParseTests
+    {
+        private void AssertSubstitutiblesAreEqual(IEnumerable<ISubstitutible> expect, IEnumerable<ISubstitutible> actual)
+        {
+            Assert.AreEqual(expect.Count(), actual.Count(), "Number of elements");
+            foreach (var (e, a) in expect.Zip(actual, Tuple.Create))
+            {
+                if (e is Variable ve && a is Variable va)
+                {
+                    Assert.AreEqual(ve.name, va.name, "Variable name");
+                    Assert.AreEqual(ve.value, va.value, "Variable value");
+                }
+                else if (e is Formula fe && a is Formula fa)
+                {
+                    Assert.AreEqual(fe.name, fa.name, "Formula name");
+                    CollectionAssert.AreEqual(fe.parameterNames, fa.parameterNames, "Formula parameter names");
+                    Assert.AreEqual(fe.definition.str, fa.definition.str, "Formula definition string");
+                }
+                else if (e is MappedFormula me && a is MappedFormula ma)
+                {
+                    Assert.AreEqual(me.name, ma.name, "MappedFormula name");
+                    CollectionAssert.AreEqual(me.mapping, ma.mapping, "MappedFormula mapping");
+                }
+                else if (e is AnonymousFormula ae && a is AnonymousFormula aa)
+                {
+                    Assert.AreEqual(ae.parameterNames, aa.parameterNames, "AnonymousFormula parameter names");
+                    Assert.AreEqual(ae.definition.str, aa.definition.str, "AnonymousFormula definition string");
+                }
+                else
+                {
+                    Assert.Fail("Type mismatch");
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestVariable()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                Variable.TryDefine("a", "3"),
+            ], AtLine(SubstitutionParser.Parse,
+                "let a = 3\r",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestFormula()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                Formula.TryDefine("f(a,b)", "3a+b"),
+            ], AtLine(SubstitutionParser.Parse,
+                "let f(a,b) = 3a+b\r",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestMappedFormula()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                MappedFormula.TryDefine("f(x)", "{2->3,5->9}"),
+            ], AtLine(SubstitutionParser.Parse,
+                "let f(x) = {2->3,5->9}\r",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestCombined()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                MappedFormula.TryDefine("f(x)", "{2->3,5->9}"),
+                Formula.TryDefine("f(a,b)", "3a+b"),
+                Variable.TryDefine("a", "3"),
+            ], AtLine(SubstitutionParser.Parse,
+                "let a = 3\r" +
+                "let f(a,b) = 3a+b\r" +
+                "let f(x) = {2->3,5->9}\r",
+                3
             ));
         }
     }
