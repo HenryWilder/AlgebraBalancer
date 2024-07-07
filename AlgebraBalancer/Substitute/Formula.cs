@@ -8,43 +8,6 @@ using System.Xml.Linq;
 
 namespace AlgebraBalancer.Substitute;
 
-public class SubstitutableString
-{
-    private readonly string str;
-    private readonly (int pos, string arg)[] replacements;
-
-    public SubstitutableString(string str, params string[] argNames)
-    {
-        this.str = str;
-
-        List<(int pos, string arg)> repl = [];
-
-        Regex anyArg = new(@$"({string.Join("|", argNames)})");
-
-        foreach (Match match in anyArg.Matches(this.str))
-        {
-            repl.Add((match.Index, match.Groups[1].Value));
-        }
-
-        replacements = [..repl.OrderByDescending(rep => rep.pos)];
-    }
-
-    public string GetSubstituted(Dictionary<string, string> parameters)
-    {
-        string subStr = str;
-        foreach (var (pos, arg) in replacements)
-        {
-            if (parameters.TryGetValue(arg, out string replaceWith))
-            {
-                subStr = subStr
-                    .Remove(pos, arg.Length)
-                    .Insert(pos, replaceWith);
-            }
-        }
-        return subStr;
-    }
-}
-
 public class Formula : ISubstitutible
 {
     private Formula(string name, string[] parameterNames, SubstitutableString definition)
@@ -56,21 +19,42 @@ public class Formula : ISubstitutible
 
     public static Formula Define(string variable, string value)
     {
-        string name = Variable.rxName.Match(variable).Groups[0].Value;
-        return new Formula(name, [""], new SubstitutableString(""));
+        var match = rxParameterList.Match(variable);
+        if (match.Success)
+        {
+            string name = variable.Substring(0, match.Index);
+            string[] argNames = match.Groups["args"].Captures.Select(x => x.Value).ToArray();
+            return new Formula(name, argNames, new SubstitutableString(value, argNames));
+        }
+        else
+        {
+            throw new Exception("Formula missing argument list");
+        }
     }
 
     public string Name { get; }
-    private string[] parameterNames;
-    private SubstitutableString definition;
+    private readonly string[] parameterNames;
+    private readonly SubstitutableString definition;
 
     public static readonly Regex rxParameterList =
-        new(@"\((?'args'(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*?(?(open)(?!)))(?:,\s*(?'args'(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*?(?(open)(?!))))*\)$",
+        new(@"\((?'args'(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*?(?(open)(?!)))(?:,\s*(?'args'(?:[^(){}\[\]]|(?'open'[({\[])|(?'-open'[)}\]]))*?(?(open)(?!))))*\)",
             RegexOptions.Compiled);
 
     public string GetReplacement(string capture)
     {
-        //rxParameterList.Match(capture);
-        return "";
+        var match = rxParameterList.Match(capture);
+        if (match.Success)
+        {
+            var argCaptures = match.Groups["args"].Captures;
+            var callArgs = parameterNames
+                .Zip(argCaptures, (k, v) => new { k, v })
+                .ToDictionary(x => x.k, x => "(" + x.v.Value + ")");
+
+            return definition.GetSubstituted(callArgs);
+        }
+        else
+        {
+            return capture;
+        }
     }
 }

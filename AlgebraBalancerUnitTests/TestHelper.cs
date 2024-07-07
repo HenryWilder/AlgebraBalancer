@@ -131,11 +131,17 @@ internal static class TestHelper
         string[] lines = document.Split(LINE_SPLIT);
         int lineStart = 0;
         int lineEnd = lines[0].Length;
-        for (int i = 0; i < lineNumber; ++i)
+        for (int i = 1; i <= lineNumber; ++i)
         {
             lineStart = lineEnd + LINE_SPLIT.Length;
             lineEnd = lineStart + lines[i].Length;
         }
         return (lineStart, lineEnd);
+    }
+
+    public static T AtLine<T>(Func<string, int, int, T> func, string document, int lineNumber)
+    {
+        var (lineStart, lineEnd) = GetLineRange(document, lineNumber);
+        return func(document, lineStart, lineEnd);
     }
 }
