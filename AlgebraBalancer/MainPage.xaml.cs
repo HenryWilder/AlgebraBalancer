@@ -11,6 +11,7 @@ using Windows.System;
 using System.Data;
 using System.Collections.ObjectModel;
 using AlgebraBalancer.Algebra.Balancer;
+using AlgebraBalancer.Substitute;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -339,30 +340,11 @@ public sealed partial class MainPage : Page
         out string notesTextFinal
     )
     {
-        //var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
-        //int lineLength = endOfLine - startOfLine;
-        //string lineText = notesText.Substring(startOfLine, lineLength);
-
-        //string defs = string.Join(";",
-        //    GetLetDefinitions(
-        //        notesText.Substring(0, Math.Max(startOfLine - 1, 0))
-        //    )
-        //    .Select(x => rxBe.Replace(x, "="))
-        //    .ToArray());
-
-        //string[] args = rxWith.Split(lineText, 2);
-        //string expr = args[0];
-        //string defsThisLine = args.Length > 1 ? rxBe.Replace(args[1], "=") : "";
-        //string sub = string.Join(";", new List<string>([defsThisLine, defs]).Where(x => !string.IsNullOrWhiteSpace(x)));
-        //string newExpr = sub.Contains("=")
-        //    ? "\r" + new Substitute.Substitutor(Notes.Text, startOfLine, endOfLine).Substitute().TrimEnd()
-        //    : "";
-
-        //selectionStartFinal = endOfLine + newExpr.Length;
-        //notesTextFinal = notesText.Insert(endOfLine, newExpr);
-
-        selectionStartFinal = selectionStart;
-        notesTextFinal = notesText;
+        var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
+        var substitutor = new Substitutor(notesText, startOfLine, endOfLine);
+        string newExpr = "\r" + substitutor.Substitute();
+        selectionStartFinal = endOfLine + newExpr.Length;
+        notesTextFinal = notesText.Insert(endOfLine, newExpr);
     }
 
     private static readonly Regex rxOperator = new(@"^\s*([-+/*])\s*(.*)\s*$");

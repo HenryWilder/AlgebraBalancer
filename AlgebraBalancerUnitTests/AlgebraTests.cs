@@ -905,7 +905,9 @@ public class MainPageTests
         public void TestBasic()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2x + 3 with x=3\r2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with x=3\r" +
+                $"2(3) + 3{SEL_BEG_EX}",
+
                 $"2x + 3 with x=3{SEL_BEG_IN}");
         }
 
@@ -913,7 +915,9 @@ public class MainPageTests
         public void TestWhitespaceBefore()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2x + 3      with x=3\r2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3      with x=3\r" +
+                $"2(3) + 3{SEL_BEG_EX}",
+
                 $"2x + 3      with x=3{SEL_BEG_IN}");
         }
 
@@ -921,7 +925,9 @@ public class MainPageTests
         public void TestWhitespaceBetween()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2x + 3 with      x=3\r2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with      x=3\r" +
+                $"2(3) + 3{SEL_BEG_EX}",
+
                 $"2x + 3 with      x=3{SEL_BEG_IN}");
         }
 
@@ -929,7 +935,9 @@ public class MainPageTests
         public void TestWhitespaceAfter()
         {
             AssertSubstitutionMatchesPrediction(
-                $"2x + 3 with x=3     \r2(3) + 3{SEL_BEG_EX}",
+                $"2x + 3 with x=3     \r" +
+                $"2(3) + 3{SEL_BEG_EX}",
+
                 $"2x + 3 with x=3     {SEL_BEG_IN}");
         }
 

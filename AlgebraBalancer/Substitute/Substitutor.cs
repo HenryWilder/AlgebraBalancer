@@ -6,10 +6,16 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AlgebraBalancer.Substitute;
-public class Substitutor(string document, int lineStart, int lineEnd)
+public class Substitutor
 {
-    private readonly List<ISubstitutible> substitutions = SubstitutionParser.Parse(document, lineStart, lineEnd);
-    private readonly string expr = document.Substring(lineStart, lineEnd - lineStart);
+    public Substitutor(string document, int lineStart, int lineEnd)
+    {
+        substitutions = SubstitutionParser.Parse(document, lineStart, lineEnd, out int newEndOfLine);
+        expr = document.Substring(lineStart, newEndOfLine - lineStart);
+    }
+
+    private readonly List<ISubstitutible> substitutions;
+    private readonly string expr;
 
     public string Substitute()
     {

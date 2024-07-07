@@ -235,12 +235,15 @@ public class SubstitutionTests
     [TestClass]
     public class ParseDefinesTests
     {
+        private static List<(string, string)> ParseDefines(string doc, int beg, int end) =>
+            SubstitutionParser.ParseDefines(doc, beg, end, out _);
+
         [TestMethod]
         public void TestBasic()
         {
             CollectionAssert.AreEqual((List<(string, string)>)[
                 ("a", "5")
-            ], AtLine(SubstitutionParser.ParseDefines,
+            ], AtLine(ParseDefines,
                 "let a = 5\r",
                 1
             ));
@@ -253,7 +256,7 @@ public class SubstitutionTests
                 ("a", "3"),
                 ("b", "5"),
                 ("c", "1"),
-            ], AtLine(SubstitutionParser.ParseDefines,
+            ], AtLine(ParseDefines,
                 "let a = 3, b = 5, c = 1\r",
                 1
             ));
@@ -266,7 +269,7 @@ public class SubstitutionTests
                 ("a", "(3, 4)"),
                 ("b", "(5, 6)"),
                 ("c", "(1, 67)"),
-            ], AtLine(SubstitutionParser.ParseDefines, 
+            ], AtLine(ParseDefines, 
                 "let a = (3, 4), b = (5, 6), c = (1, 67)\r",
                 1
             ));
@@ -279,7 +282,7 @@ public class SubstitutionTests
                 ("c", "1"),
                 ("b", "5"),
                 ("a", "3"),
-            ], AtLine(SubstitutionParser.ParseDefines,
+            ], AtLine(ParseDefines,
                 "let a = 3\r" +
                 "let b = 5\r" +
                 "let c = 1\r",
@@ -292,7 +295,7 @@ public class SubstitutionTests
         {
             CollectionAssert.AreEqual(((string, string)[])[
                 ("a", "3"),
-            ], AtLine(SubstitutionParser.ParseDefines,
+            ], AtLine(ParseDefines,
                 "a with a = 3",
                 0
             ));
@@ -306,7 +309,7 @@ public class SubstitutionTests
                 ("b", "5"),
                 ("c", "1"),
                 ("x", "9"),
-            ], AtLine(SubstitutionParser.ParseDefines,
+            ], AtLine(ParseDefines,
                 "let a = 3, b = 5, c = 1\r" +
                 "x with x = 9",
                 1
@@ -350,12 +353,15 @@ public class SubstitutionTests
             }
         }
 
+        private static List<ISubstitutible> Parse(string doc, int beg, int end) =>
+            SubstitutionParser.Parse(doc, beg, end, out _);
+
         [TestMethod]
         public void TestVariable()
         {
             AssertSubstitutiblesAreEqual((ISubstitutible[])[
                 Variable.TryDefine("a", "3"),
-            ], AtLine(SubstitutionParser.Parse,
+            ], AtLine(Parse,
                 "let a = 3\r",
                 1
             ));
@@ -366,7 +372,7 @@ public class SubstitutionTests
         {
             AssertSubstitutiblesAreEqual((ISubstitutible[])[
                 Formula.TryDefine("f(a,b)", "3a+b"),
-            ], AtLine(SubstitutionParser.Parse,
+            ], AtLine(Parse,
                 "let f(a,b) = 3a+b\r",
                 1
             ));
@@ -377,7 +383,7 @@ public class SubstitutionTests
         {
             AssertSubstitutiblesAreEqual((ISubstitutible[])[
                 MappedFormula.TryDefine("f(x)", "{2->3,5->9}"),
-            ], AtLine(SubstitutionParser.Parse,
+            ], AtLine(Parse,
                 "let f(x) = {2->3,5->9}\r",
                 1
             ));
@@ -390,7 +396,7 @@ public class SubstitutionTests
                 MappedFormula.TryDefine("f(x)", "{2->3,5->9}"),
                 Formula.TryDefine("f(a,b)", "3a+b"),
                 Variable.TryDefine("a", "3"),
-            ], AtLine(SubstitutionParser.Parse,
+            ], AtLine(Parse,
                 "let a = 3\r" +
                 "let f(a,b) = 3a+b\r" +
                 "let f(x) = {2->3,5->9}\r",

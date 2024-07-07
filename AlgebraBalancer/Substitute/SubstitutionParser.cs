@@ -18,7 +18,7 @@ public static class SubstitutionParser
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex rxKeyValSep =
-        new(@"\s+(?:(be(?:ing)?|is)|:=|≔|(?<!:)=)\s+",
+        new(@"\s*(?:\s(?:be(?:ing)?|is)\s|:=|≔|(?<!:)=)\s*",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex rxClause =
@@ -30,7 +30,7 @@ public static class SubstitutionParser
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex rxStatement =
-        new(@$"^(?:(?'clause'{rxClause})(?:{rxClauseSep}(?'clause'{rxClause}))*)$",
+        new(@$"^\s*(?:(?'clause'{rxClause})(?:{rxClauseSep}(?'clause'{rxClause}))*)\s*$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex rxLet =
@@ -49,15 +49,15 @@ public static class SubstitutionParser
         return keys.Zip(vals, (k, v) => (k.Value, v.Value)).ToArray();
     }
 
-    public static List<(string key, string value)> ParseDefines(string document, int startOfLine, int endOfLine)
+    public static List<(string key, string value)> ParseDefines(string document, int startOfLine, int endOfLine, out int newEndOfLine)
     {
         List<(string key, string value)> items = [];
 
-        string[] lines = document
+        string[] linesBefore = document
             .Substring(0, Math.Max(startOfLine - 1, 0))
             .Split("\r");
 
-        foreach (string line in lines.Reverse())
+        foreach (string line in linesBefore.Reverse())
         {
             var letStatement = rxLet.Match(line);
             if (letStatement.Success)
@@ -73,14 +73,20 @@ public static class SubstitutionParser
         {
             string statement = withStatement.Groups["statement"].Value;
             items.AddRange(GetStatementClauses(statement));
+            newEndOfLine = withStatement.Index;
+        }
+        else
+        {
+            newEndOfLine = endOfLine;
         }
 
         return items;
     }
 
-    public static List<ISubstitutible> Parse(string document, int startOfLine, int endOfLine)
+    public static List<ISubstitutible> Parse(string document, int startOfLine, int endOfLine, out int newEndOfLine)
     {
-        var items = ParseDefines(document, startOfLine, endOfLine);
+        var items = ParseDefines(document, startOfLine, endOfLine, out int parsedEndOfLine);
+        newEndOfLine = parsedEndOfLine;
 
         List<ISubstitutible> substitutions = [];
 
