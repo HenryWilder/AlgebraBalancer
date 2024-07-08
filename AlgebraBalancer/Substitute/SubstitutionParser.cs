@@ -73,7 +73,7 @@ public static class SubstitutionParser
             if (letStatement.Success)
             {
                 string statement = letStatement.Groups["statement"].Value;
-                items.AddRange(GetStatementClauses(statement));
+                items.AddRange(GetStatementClauses(statement).Reverse());
             }
         }
 

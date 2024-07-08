@@ -305,10 +305,10 @@ public class SubstitutionTests
         public void TestLetAndWith()
         {
             CollectionAssert.AreEqual(((string, string)[])[
-                ("a", "3"),
-                ("b", "5"),
-                ("c", "1"),
                 ("x", "9"),
+                ("c", "1"),
+                ("b", "5"),
+                ("a", "3"),
             ], AtLine(ParseDefines,
                 "let a = 3, b = 5, c = 1\r" +
                 "x with x = 9",
@@ -405,7 +405,7 @@ public class SubstitutionTests
         }
 
         [TestMethod]
-        public void TestLetShadowing()
+        public void TestLetStatementShadowing()
         {
             AssertSubstitutiblesAreEqual((ISubstitutible[])[
                 Variable.TryDefine("a", "5"),
@@ -417,7 +417,18 @@ public class SubstitutionTests
         }
 
         [TestMethod]
-        public void TestWithLetShadowing()
+        public void TestLetClauseShadowing()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                Variable.TryDefine("a", "12"),
+            ], AtLine(Parse,
+                "let a = 3, a = 12\r",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestWithStatementLetShadowing()
         {
             AssertSubstitutiblesAreEqual((ISubstitutible[])[
                 Variable.TryDefine("a", "7"),
@@ -429,7 +440,7 @@ public class SubstitutionTests
         }
 
         [TestMethod]
-        public void TestWithShadowing()
+        public void TestWithClauseShadowing()
         {
             AssertSubstitutiblesAreEqual((ISubstitutible[])[
                 Variable.TryDefine("a", "9"),
