@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 
 using AlgebraBalancer.Algebra;
 using AlgebraBalancer.Notation;
-
-using Windows.UI.Xaml.Controls;
 
 using static AlgebraBalancer.Notation.Bald;
 

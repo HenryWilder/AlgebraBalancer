@@ -1,7 +1,6 @@
 ﻿using System;
 
 using AlgebraBalancer.Notation;
-using static AlgebraBalancer.Notation.Bald;
 
 namespace AlgebraBalancer.Algebra;
 public struct RadicalFraction : IAlgebraicExpression

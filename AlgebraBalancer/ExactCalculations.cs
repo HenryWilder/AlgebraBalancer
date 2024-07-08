@@ -157,9 +157,6 @@ internal class ExactCalculations
 
         // Quadratic
         {
-            result.Add($"{a}𝑥² + {b}𝑥 + {c} = 0 => 𝑥 = ");
-            result.Add($"  (-({b})±√(({b})²-4({a})({c})))/2({a})");
-
             var formula = new Algebra.RadicalFraction(-b, new Algebra.Radical(b * b - 4 * a * c), 2 * a);
             string unsimplified = formula.ToString();
             string simplified = formula.Simplified().ToString();

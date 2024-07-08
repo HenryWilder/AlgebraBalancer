@@ -106,7 +106,7 @@ public class SubstitutionTests
         public void TestBasic()
         {
             var x = Variable.TryDefine("x", "5");
-            Assert.AreEqual("(5)", x.GetReplacement("x"));
+            Assert.AreEqual("(5)", x.GetReplacement("x", new Substitutor("", 0, 0, out _)));
         }
     }
 
@@ -117,14 +117,14 @@ public class SubstitutionTests
         public void TestBasic()
         {
             var f = Formula.TryDefine("f(x)", "3x");
-            Assert.AreEqual("3(7)", f.GetReplacement("f(7)"));
+            Assert.AreEqual("3(7)", f.GetReplacement("f(7)", new Substitutor("", 0, 0, out _)));
         }
 
         [TestMethod]
         public void TestMultipleParameters()
         {
             var f = Formula.TryDefine("f(a,b)", "3a+2b");
-            Assert.AreEqual("3(2)+2(6)", f.GetReplacement("f(2,6)"));
+            Assert.AreEqual("3(2)+2(6)", f.GetReplacement("f(2,6)", new Substitutor("", 0, 0, out _)));
         }
     }
 
@@ -135,28 +135,28 @@ public class SubstitutionTests
         public void TestBasic()
         {
             var f = AnonymousFormula.TryDefine("x=>3x");
-            Assert.AreEqual("3(7)", f.GetReplacement("(7)"));
+            Assert.AreEqual("3(7)", f.GetReplacement("(7)", new Substitutor("", 0, 0, out _)));
         }
 
         [TestMethod]
         public void TestMultipleParameters()
         {
             var f = AnonymousFormula.TryDefine("a b=>3a+2b");
-            Assert.AreEqual("3(2)+2(6)", f.GetReplacement("(2,6)"));
+            Assert.AreEqual("3(2)+2(6)", f.GetReplacement("(2,6)", new Substitutor("", 0, 0, out _)));
         }
 
         [TestMethod]
         public void TestWrappedParameters()
         {
             var f = AnonymousFormula.TryDefine("(a,b=>3a+2b)");
-            Assert.AreEqual("3(2)+2(6)", f.GetReplacement("(2,6)"));
+            Assert.AreEqual("3(2)+2(6)", f.GetReplacement("(2,6)", new Substitutor("", 0, 0, out _)));
         }
 
         [TestMethod]
         public void TestUnwrappedWrappedParameters()
         {
             var f = AnonymousFormula.TryDefine("a,b=>3a+2b");
-            Assert.AreEqual("3a+2(2)", f.GetReplacement("(2,6)")); // because `a` should be considered separate, and 6 gets dropped
+            Assert.AreEqual("3a+2(2)", f.GetReplacement("(2,6)", new Substitutor("", 0, 0, out _))); // because `a` should be considered separate, and 6 gets dropped
         }
     }
 
@@ -167,9 +167,9 @@ public class SubstitutionTests
         public void TestBasic()
         {
             var f = MappedFormula.TryDefine("f(x)", "{2->3,5->8}");
-            Assert.AreEqual("3", f.GetReplacement("f(2)"));
-            Assert.AreEqual("8", f.GetReplacement("f(5)"));
-            Assert.AreEqual("∄", f.GetReplacement("f(8)"));
+            Assert.AreEqual("(3)", f.GetReplacement("f(2)", new Substitutor("", 0, 0, out _)));
+            Assert.AreEqual("(8)", f.GetReplacement("f(5)", new Substitutor("", 0, 0, out _)));
+            Assert.AreEqual("(∄)", f.GetReplacement("f(8)", new Substitutor("", 0, 0, out _)));
         }
     }
 
@@ -393,14 +393,49 @@ public class SubstitutionTests
         public void TestCombined()
         {
             AssertSubstitutiblesAreEqual((ISubstitutible[])[
-                MappedFormula.TryDefine("f(x)", "{2->3,5->9}"),
+                MappedFormula.TryDefine("g(x)", "{2->3,5->9}"),
                 Formula.TryDefine("f(a,b)", "3a+b"),
                 Variable.TryDefine("a", "3"),
             ], AtLine(Parse,
                 "let a = 3\r" +
                 "let f(a,b) = 3a+b\r" +
-                "let f(x) = {2->3,5->9}\r",
+                "let g(x) = {2->3,5->9}\r",
                 3
+            ));
+        }
+
+        [TestMethod]
+        public void TestLetShadowing()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                Variable.TryDefine("a", "5"),
+            ], AtLine(Parse,
+                "let a = 3\r" +
+                "let a = 5\r",
+                2
+            ));
+        }
+
+        [TestMethod]
+        public void TestWithLetShadowing()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                Variable.TryDefine("a", "7"),
+            ], AtLine(Parse,
+                "let a = 1\r" +
+                "a with a = 7",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestWithShadowing()
+        {
+            AssertSubstitutiblesAreEqual((ISubstitutible[])[
+                Variable.TryDefine("a", "9"),
+            ], AtLine(Parse,
+                "a with a = 7, a = 9",
+                0
             ));
         }
     }
@@ -408,7 +443,7 @@ public class SubstitutionTests
     [TestClass]
     public class SubstitutorTests
     {
-        private static string Substitute(string doc, int beg, int end) => new Substitutor(doc, beg, end).Substitute();
+        private static string Substitute(string doc, int beg, int end) => new Substitutor(doc, beg, end, out string expr).Substitute(expr);
 
         [TestMethod]
         public void TestVariable()
@@ -438,10 +473,22 @@ public class SubstitutionTests
         public void TestMappedFormula()
         {
             Assert.AreEqual(
-                "orange and apple",
+                "(b) and (a)",
             AtLine(Substitute,
-                "let f(x) = {5->apple,6->orange}\r" +
+                "let f(x) = {5->a,6->b}\r" +
                 "f(6) and f(5)",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestMappedFormulaRecursion()
+        {
+            Assert.AreEqual(
+                "9",
+            AtLine(Substitute,
+                "let f(x) = {1->7,7->9}\r" +
+                "f(f(1))",
                 1
             ));
         }

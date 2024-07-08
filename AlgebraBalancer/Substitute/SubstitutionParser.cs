@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace AlgebraBalancer.Substitute;
 public static class SubstitutionParser
@@ -53,6 +50,19 @@ public static class SubstitutionParser
     {
         List<(string key, string value)> items = [];
 
+        string lineBeingOperated = document.Substring(startOfLine, endOfLine - startOfLine);
+        var withStatement = rxWith.Match(lineBeingOperated);
+        if (withStatement.Success)
+        {
+            string statement = withStatement.Groups["statement"].Value;
+            items.AddRange(GetStatementClauses(statement).Reverse());
+            newEndOfLine = startOfLine + withStatement.Index;
+        }
+        else
+        {
+            newEndOfLine = endOfLine;
+        }
+
         string[] linesBefore = document
             .Substring(0, Math.Max(startOfLine - 1, 0))
             .Split("\r");
@@ -65,19 +75,6 @@ public static class SubstitutionParser
                 string statement = letStatement.Groups["statement"].Value;
                 items.AddRange(GetStatementClauses(statement));
             }
-        }
-
-        string lineBeingOperated = document.Substring(startOfLine, endOfLine - startOfLine);
-        var withStatement = rxWith.Match(lineBeingOperated);
-        if (withStatement.Success)
-        {
-            string statement = withStatement.Groups["statement"].Value;
-            items.AddRange(GetStatementClauses(statement));
-            newEndOfLine = withStatement.Index;
-        }
-        else
-        {
-            newEndOfLine = endOfLine;
         }
 
         return items;

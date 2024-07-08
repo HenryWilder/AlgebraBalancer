@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Windows.UI.Core;
 using Windows.System;
-using System.Data;
 using System.Collections.ObjectModel;
 using AlgebraBalancer.Algebra.Balancer;
 using AlgebraBalancer.Substitute;
