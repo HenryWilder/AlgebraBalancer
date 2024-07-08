@@ -1,21 +1,13 @@
 ﻿using System;
+using System.Linq;
 
 using AlgebraBalancer.Notation;
-using static AlgebraBalancer.Notation.Bald;
 
 namespace AlgebraBalancer.Algebra;
-public struct Fraction : IAlgebraicExpression
+public struct Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpression
 {
-    public Fraction() { }
-
-    public Fraction(int numerator, int denominator) =>
-        (this.numerator, this.denominator) = (new Number(numerator), new Number(denominator));
-
-    public Fraction(IAlgebraicAtomic numerator, IAlgebraicAtomic denominator) =>
-        (this.numerator, this.denominator) = (numerator, denominator);
-
-    public IAlgebraicAtomic numerator = new Number(1);
-    public IAlgebraicAtomic denominator = new Number(1);
+    public int numerator = numerator;
+    public int denominator = denominator;
 
     public override readonly string ToString() =>
         $"{numerator}/{denominator}";
@@ -24,38 +16,89 @@ public struct Fraction : IAlgebraicExpression
 
     public readonly IAlgebraicNotation Simplified()
     {
-        if (this.numerator is null || this.denominator is null)
-        {
-            throw new NullReferenceException("fractions should not contain null");
-        }
-        if (this.numerator is Undefined || this.denominator is Undefined)
-        {
-            return UNDEFINED;
-        }
-        if (this.numerator is not Number || this.denominator is not Number)
-        {
-            return this;
-        }
-
-        var numerator = (Number)this.numerator;
-        var denominator = (Number)this.denominator;
-
         if (denominator == 0)
         {
-            return new Undefined();
+            return Bald.UNDEFINED;
         }
 
         if (numerator % denominator == 0)
         {
-            return new Number(numerator / denominator);
+            return (Number)(numerator / denominator);
         }
 
-        int sign = (numerator < 0 != denominator < 0) ? -1 : 1;
+        int[] gcfAssociated = ExactMath
+            .CommonFactors(
+                Math.Abs(numerator),
+                Math.Abs(denominator))
+            .Last()
+            .associated;
 
-        int numeratorAbs = Math.Abs(numerator);
-        int denominatorAbs = Math.Abs(denominator);
+        int simplifiedNumerator = gcfAssociated[0];
+        int simplifiedDenominator = gcfAssociated[1];
 
-        int gcf = ExactMath.GCF(numeratorAbs, denominatorAbs);
-        return new Fraction(sign * numeratorAbs / gcf, denominatorAbs / gcf);
+        return new Fraction(
+            (numerator < 0 != denominator < 0)
+                ? -simplifiedNumerator
+                : simplifiedNumerator,
+            simplifiedDenominator);
+    }
+
+    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs)
+    {
+        return rhs switch
+        {
+            Number num => new Fraction(
+                numerator + num * denominator,
+                denominator),
+            Fraction frac => new Fraction(
+                numerator * frac.denominator + frac.numerator * denominator,
+                denominator * frac.denominator),
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs)
+    {
+        return rhs switch
+        {
+            Number num => new Fraction(
+                numerator + num * denominator,
+                denominator),
+            Fraction frac => new Fraction(
+                numerator * frac.denominator - frac.numerator * denominator,
+                denominator * frac.denominator),
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
+    {
+        return rhs switch
+        {
+            Number num => new Fraction(
+                numerator * num,
+                denominator),
+            Fraction frac => new Fraction(
+                numerator * frac.numerator,
+                denominator * frac.denominator),
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
+    {
+        return rhs switch
+        {
+            Number num => new Fraction(
+                numerator * num,
+                denominator),
+            Fraction frac => new Fraction(
+                numerator * frac.denominator,
+                denominator * frac.numerator),
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public readonly IAlgebraicNotation Pow(int exponent)
+    {
+        var newNumerator = ExactMath.Power(numerator, exponent);
+        var newDenominator = ExactMath.Power(denominator, exponent);
+        return newNumerator.Div(newDenominator);
     }
 }

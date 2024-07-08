@@ -130,12 +130,6 @@ internal class ExactCalculations
                     bPart = new Algebra.Fraction(b, numMag).Simplified();
                     cPart = new Algebra.Fraction(c, numMag).Simplified();
                 }
-                else if (magnitude is IAlgebraicAtomic atomMag)
-                {
-                    aPart = new Algebra.Fraction(new Number(a), atomMag).Simplified();
-                    bPart = new Algebra.Fraction(new Number(b), atomMag).Simplified();
-                    cPart = new Algebra.Fraction(new Number(c), atomMag).Simplified();
-                }
                 else
                 {
                     throw new NotImplementedException();

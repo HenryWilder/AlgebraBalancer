@@ -325,30 +325,53 @@ public class SubstitutionTests
             Assert.AreEqual(expect.Count(), actual.Count(), "Number of elements");
             foreach (var (e, a) in expect.Zip(actual, Tuple.Create))
             {
-                if (e is Variable ve && a is Variable va)
+                switch (e)
                 {
-                    Assert.AreEqual(ve.name, va.name, "Variable name");
-                    Assert.AreEqual(ve.value, va.value, "Variable value");
-                }
-                else if (e is Formula fe && a is Formula fa)
-                {
-                    Assert.AreEqual(fe.name, fa.name, "Formula name");
-                    CollectionAssert.AreEqual(fe.parameterNames, fa.parameterNames, "Formula parameter names");
-                    Assert.AreEqual(fe.definition.str, fa.definition.str, "Formula definition string");
-                }
-                else if (e is MappedFormula me && a is MappedFormula ma)
-                {
-                    Assert.AreEqual(me.name, ma.name, "MappedFormula name");
-                    CollectionAssert.AreEqual(me.mapping, ma.mapping, "MappedFormula mapping");
-                }
-                else if (e is AnonymousFormula ae && a is AnonymousFormula aa)
-                {
-                    Assert.AreEqual(ae.parameterNames, aa.parameterNames, "AnonymousFormula parameter names");
-                    Assert.AreEqual(ae.definition.str, aa.definition.str, "AnonymousFormula definition string");
-                }
-                else
-                {
-                    Assert.Fail("Type mismatch");
+                    case Variable ve:
+                        if (a is Variable va)
+                        {
+                            Assert.AreEqual(ve.name, va.name, "Variable name");
+                            Assert.AreEqual(ve.value, va.value, "Variable value");
+                        }
+                        else
+                        {
+                            Assert.Fail("Expected Variable");
+                        }
+                        break;
+                    case Formula fe:
+                        if (a is Formula fa)
+                        {
+                            Assert.AreEqual(fe.name, fa.name, "Formula name");
+                            CollectionAssert.AreEqual(fe.parameterNames, fa.parameterNames, "Formula parameter names");
+                            Assert.AreEqual(fe.definition.str, fa.definition.str, "Formula definition string");
+                        }
+                        else
+                        {
+                            Assert.Fail("Expected Formula");
+                        }
+                        break;
+                    case MappedFormula me:
+                        if (a is MappedFormula ma)
+                        {
+                            Assert.AreEqual(me.name, ma.name, "MappedFormula name");
+                            CollectionAssert.AreEqual(me.mapping, ma.mapping, "MappedFormula mapping");
+                        }
+                        else
+                        {
+                            Assert.Fail("Expected MappedFormula");
+                        }
+                        break;
+                    case AnonymousFormula ae:
+                        if (a is AnonymousFormula aa)
+                        {
+                            Assert.AreEqual(ae.parameterNames, aa.parameterNames, "AnonymousFormula parameter names");
+                            Assert.AreEqual(ae.definition.str, aa.definition.str, "AnonymousFormula definition string");
+                        }
+                        else
+                        {
+                            Assert.Fail("Expected AnonymousFormula");
+                        }
+                        break;
                 }
             }
         }

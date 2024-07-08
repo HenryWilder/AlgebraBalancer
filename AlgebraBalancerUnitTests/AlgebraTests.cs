@@ -173,6 +173,26 @@ public class AlgebraTests
     }
 
     [TestClass]
+    public class RadicalFractionTests
+    {
+        [TestMethod]
+        public void TestBasic()
+        {
+            Assert.AreEqual(new Number(1), new RadicalFraction(new Radical(), 1).Simplified());
+        }
+
+        [TestClass]
+        public class ToStringTests
+        {
+            [TestMethod]
+            public void TestBasic()
+            {
+                Assert.AreEqual(1, 0);
+            }
+        }
+    }
+
+    [TestClass]
     public class ImaginaryTests
     {
         [TestMethod]
