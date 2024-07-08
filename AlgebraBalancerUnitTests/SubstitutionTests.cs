@@ -481,6 +481,30 @@ public class SubstitutionTests
         }
 
         [TestMethod]
+        public void TestFormulaRecursion()
+        {
+            Assert.AreEqual(
+                "2(x+4)",
+            AtLine(Substitute,
+                "let f(x) = 2x, g(x) = x+4\r" +
+                "f(g(x))",
+                1
+            ));
+        }
+
+        [TestMethod]
+        public void TestFormulaRecursionNotInfinite()
+        {
+            Assert.IsTrue(
+                new Regex(@"(?:f\()+x\)+").IsMatch(
+            AtLine(Substitute,
+                "let f(x) = f(f(x))\r" +
+                "f(x)",
+                1
+            )));
+        }
+
+        [TestMethod]
         public void TestMappedFormula()
         {
             Assert.AreEqual(
