@@ -3,11 +3,27 @@ using System.Linq;
 using System.Collections.Generic;
 
 using AlgebraBalancer.Algebra;
+using static AlgebraBalancer.Notation.IAlgebraicNotation;
 
 namespace AlgebraBalancer.Notation;
 
 public interface IAlgebraicNotation
 {
+    public enum NotationKind
+    {
+        Algebraic,
+        Number,
+        MultipleSolutions,
+        Fraction,
+        Radical,
+        RadicalFraction,
+        Imaginary,
+        Complex,
+        Inoperable, // Tiny, Huge, Undefined, etc.
+    }
+
+    public NotationKind Kind { get; }
+
     public string AsEquality(string lhs);
     /// <summary>Does not simplify</summary>
     public IAlgebraicNotation Add(IAlgebraicNotation rhs);
@@ -19,11 +35,17 @@ public interface IAlgebraicNotation
     public IAlgebraicNotation Div(IAlgebraicNotation rhs);
     /// <summary>Does not simplify</summary>
     public IAlgebraicNotation Pow(int exponent);
+    /// <summary>Does not simplify -- always returns the same type as the input</summary>
+    public IAlgebraicNotation Neg();
+    /// <summary>Does not simplify</summary>
+    public IAlgebraicNotation Reciprocal();
 }
 
 public struct MultipleSolutions(params IAlgebraicNotation[] solutions) : IAlgebraicNotation
 {
     public IAlgebraicNotation[] solutions = solutions;
+
+    public readonly NotationKind Kind => NotationKind.MultipleSolutions;
 
     public readonly string AsEquality(string lhs) =>
         lhs + " = " + string.Join<IAlgebraicNotation>(", ", solutions);
@@ -38,6 +60,10 @@ public struct MultipleSolutions(params IAlgebraicNotation[] solutions) : IAlgebr
         new MultipleSolutions(solutions.Select(x => x.Div(rhs)).ToArray());
     public readonly IAlgebraicNotation Pow(int exponent) =>
         new MultipleSolutions(solutions.Select(x => x.Pow(exponent)).ToArray());
+    public readonly IAlgebraicNotation Neg() =>
+        new MultipleSolutions(solutions.Select(x => x.Neg()).ToArray());
+    public readonly IAlgebraicNotation Reciprocal() =>
+        new MultipleSolutions(solutions.Select(x => x.Reciprocal()).ToArray());
 }
 
 public interface IAlgebraicExpression : IAlgebraicNotation
@@ -50,6 +76,8 @@ public interface IAlgebraicAtomic : IAlgebraicNotation { }
 public struct Number(int value) : IAlgebraicAtomic
 {
     public int value = value;
+
+    public readonly NotationKind Kind => NotationKind.Number;
 
     public static implicit operator int(Number num) => num.value;
     public static implicit operator Number(int value) => new(value);
@@ -92,11 +120,21 @@ public struct Number(int value) : IAlgebraicAtomic
     {
         return ExactMath.Power(value, exponent);
     }
+    public readonly IAlgebraicNotation Neg()
+    {
+        return (Number)(-value);
+    }
+    public readonly IAlgebraicNotation Reciprocal()
+    {
+        return new Fraction(1, value);
+    }
 }
 
 public struct Imaginary(int coef) : IAlgebraicAtomic
 {
     public int coef = coef;
+
+    public readonly NotationKind Kind => NotationKind.Imaginary;
 
     public static implicit operator Complex(Imaginary imag) => new(0, imag.coef);
     public override readonly string ToString() => (coef == 1 ? "" : coef.ToString()) + "𝑖";
@@ -179,12 +217,24 @@ public struct Imaginary(int coef) : IAlgebraicAtomic
             }
             : Bald.NOT_ENOUGH_INFO;
     }
+    public readonly IAlgebraicNotation Neg()
+    {
+        return new Imaginary(-coef);
+    }
+    public readonly IAlgebraicNotation Reciprocal()
+    {
+        return coef is 1 or -1
+            ? new Imaginary(-coef)
+            : throw new NotImplementedException(); // Imaginary fraction
+    }
 }
 
 // todo
 public struct Variable : IAlgebraicAtomic
 {
     public string name;
+
+    public readonly NotationKind Kind => NotationKind.Inoperable;
 
     public override readonly string ToString() => name;
     public readonly string AsEquality(string lhs) => $"{lhs} = {name}";
@@ -194,10 +244,13 @@ public struct Variable : IAlgebraicAtomic
     public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs) => throw new NotImplementedException();
     public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs) => throw new NotImplementedException();
     public readonly IAlgebraicNotation Pow(int exponent) => throw new NotImplementedException();
+    public readonly IAlgebraicNotation Neg() => throw new NotImplementedException();
+    public readonly IAlgebraicNotation Reciprocal() => throw new NotImplementedException();
 }
 
 public struct Undefined : IAlgebraicAtomic
 {
+    public readonly NotationKind Kind => NotationKind.Inoperable;
     public override readonly string ToString() => "∄";
     public readonly string AsEquality(string lhs) => $"∄{lhs}";
 
@@ -206,10 +259,13 @@ public struct Undefined : IAlgebraicAtomic
     public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs) => this;
     public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs) => this;
     public readonly IAlgebraicNotation Pow(int exponent) => this;
+    public readonly IAlgebraicNotation Neg() => this;
+    public readonly IAlgebraicNotation Reciprocal() => this;
 }
 
 public struct Huge : IAlgebraicAtomic
 {
+    public readonly NotationKind Kind => NotationKind.Inoperable;
     public override readonly string ToString() => "𝑥 : |𝑥|≥2³²";
     public readonly string AsEquality(string lhs) => $"|{lhs}| ≥ 2³²";
 
@@ -218,10 +274,13 @@ public struct Huge : IAlgebraicAtomic
     public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs) => rhs is Huge ? this : Bald.NOT_ENOUGH_INFO;
     public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs) => this;
     public readonly IAlgebraicNotation Pow(int exponent) => this;
+    public readonly IAlgebraicNotation Neg() => this;
+    public readonly IAlgebraicNotation Reciprocal() => Bald.TINY;
 }
 
 public struct Tiny : IAlgebraicAtomic
 {
+    public readonly NotationKind Kind => NotationKind.Inoperable;
     public override readonly string ToString() => "𝑥 : |𝑥|≤2⁻³²";
     public readonly string AsEquality(string lhs) => $"|{lhs}| ≤ 2⁻³²";
 
@@ -230,10 +289,13 @@ public struct Tiny : IAlgebraicAtomic
     public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs) => rhs is Fraction or Number or Tiny ? this : Bald.NOT_ENOUGH_INFO;
     public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs) => rhs is Number or Huge ? this : Bald.NOT_ENOUGH_INFO;
     public readonly IAlgebraicNotation Pow(int exponent) => exponent > 0 ? this : Bald.NOT_ENOUGH_INFO;
+    public readonly IAlgebraicNotation Neg() => this;
+    public readonly IAlgebraicNotation Reciprocal() => Bald.HUGE;
 }
 
 public struct NotEnoughInfo : IAlgebraicAtomic
 {
+    public readonly NotationKind Kind => NotationKind.Inoperable;
     public override readonly string ToString() => "?";
     public readonly string AsEquality(string lhs) => $"{lhs} = ?";
 
@@ -242,6 +304,8 @@ public struct NotEnoughInfo : IAlgebraicAtomic
     public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs) => this;
     public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs) => this;
     public readonly IAlgebraicNotation Pow(int exponent) => this;
+    public readonly IAlgebraicNotation Neg() => this;
+    public readonly IAlgebraicNotation Reciprocal() => this;
 }
 
 /// <summary>

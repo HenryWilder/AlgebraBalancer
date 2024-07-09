@@ -178,7 +178,7 @@ public class AlgebraTests
         [TestMethod]
         public void TestBasic()
         {
-            Assert.AreEqual(new Number(1), new RadicalFraction(new Radical(), 1).Simplified());
+            Assert.AreEqual(new Number(1), new RadicalFraction(new Radical(1, 1), 1).Simplified());
         }
 
         [TestClass]
@@ -189,6 +189,44 @@ public class AlgebraTests
             {
                 Assert.AreEqual(1, 0);
             }
+        }
+    }
+
+    [TestClass]
+    public class QuadraticTests
+    {
+        [TestMethod]
+        public void Test1()
+        {
+            var solutions = Quadratic(1, 5, 6).solutions;
+            Assert.AreEqual(new Number(-2), solutions[0]);
+            Assert.AreEqual(new Number(-3), solutions[1]);
+        }
+
+        [TestMethod]
+        public void Test2()
+        {
+            var solutions = Quadratic(1, 3, -10).solutions;
+            Assert.AreEqual(new Number(2), solutions[0]);
+            Assert.AreEqual(new Number(-5), solutions[1]);
+        }
+
+        [TestMethod]
+        public void Test3()
+        {
+            var solutions = Quadratic(9, -6, 1).solutions;
+            Assert.AreEqual(new Fraction(1, 3), solutions[0]);
+            Assert.AreEqual(new Fraction(1, 3), solutions[1]);
+        }
+    }
+
+    [TestClass]
+    public class VertexFormTests
+    {
+        [TestMethod]
+        public void Test1()
+        {
+
         }
     }
 

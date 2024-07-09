@@ -180,4 +180,95 @@ public class ExactMath
 
         return new Radical(n);
     }
+
+    public static MultipleSolutions Quadratic(int a, int b, int c)
+    {
+        //tex:$$-b$$
+        int negativeB = -b;
+
+        //tex:$$b^2$$
+        int bSquared = b * b;
+
+        //tex:$$4ac$$
+        int fourAC = 4 * a * c;
+
+        //tex:$$b^2 - 4ac$$
+        int radicand = bSquared - fourAC;
+
+        //tex:$$2a$$
+        int denominator = 2 * a;
+
+        //tex:$$\frac{-b}{2a}$$
+        var leftSide =
+            new Fraction(
+                negativeB,
+                denominator)
+            .Simplified();
+
+        //tex:$$\frac{\sqrt{b^2-4ac}}{2a}$$
+        var rightSide =
+            new RadicalFraction(
+                new Radical(radicand),
+                denominator)
+            .Simplified();
+
+        //tex:$$\frac{-b+\sqrt{b^2-4ac}}{2a}$$
+        var solution1 = leftSide.Add(rightSide);
+        if (solution1 is IAlgebraicExpression expr1)
+            solution1 = expr1.Simplified();
+
+        //tex:$$\frac{-b-\sqrt{b^2-4ac}}{2a}$$
+        var solution2 = leftSide.Sub(rightSide);
+        if (solution2 is IAlgebraicExpression expr2)
+            solution2 = expr2.Simplified();
+
+        return new MultipleSolutions(solution1, solution2);
+    }
+
+    public struct VertexForm(int a, IAlgebraicNotation h, IAlgebraicNotation k)
+    {
+        public int a = a;
+        public IAlgebraicNotation h = h;
+        public IAlgebraicNotation k = k;
+
+        public override readonly string ToString() => $"{a}(𝑥-{h})²+{k}";
+    }
+
+    public static VertexForm CompleteSquare(int a, int b, int c)
+    {
+        var b2a = new Fraction(b, 2 * a).Simplified();
+
+        var b2aSquared = b2a.Pow(2);
+        if (b2aSquared is IAlgebraicExpression expr)
+            b2aSquared = expr.Simplified();
+
+        var cMinusB2aSquared = ((Number)c).Sub(b2aSquared);
+        if (cMinusB2aSquared is IAlgebraicExpression expr2)
+            cMinusB2aSquared = expr2.Simplified();
+
+        return new(a, b2aSquared.Neg(), cMinusB2aSquared);
+    }
+
+    public static RadicalFraction ImaginaryFraction(Imaginary numerator, int denominator)
+    {
+        return new(new Radical(numerator.coef, -1), denominator);
+    }
+
+    public static IAlgebraicNotation ImaginaryFraction(int numerator, Imaginary denominator)
+    {
+        var coef = new Fraction(numerator, denominator.coef).Simplified();
+
+        if (coef is Number num)
+        {
+            return new Imaginary(num);
+        }
+        else if (coef is Fraction frac)
+        {
+            return ImaginaryFraction(new Imaginary(frac.numerator), frac.denominator);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

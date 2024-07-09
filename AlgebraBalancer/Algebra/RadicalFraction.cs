@@ -2,6 +2,8 @@
 
 using AlgebraBalancer.Notation;
 
+using static AlgebraBalancer.Notation.IAlgebraicNotation;
+
 namespace AlgebraBalancer.Algebra;
 public struct RadicalFraction : IAlgebraicExpression
 {
@@ -13,72 +15,104 @@ public struct RadicalFraction : IAlgebraicExpression
     public RadicalFraction(int numerator, Radical denominator) =>
         (this.numerator, this.denominator) = (denominator * numerator, denominator.Squared());
 
-    public RadicalFraction(int leadingTerm, Radical numerator, int denominator) =>
-        (this.leadingTerm, this.numerator, this.denominator) = (leadingTerm, numerator, denominator);
-
-    public int leadingTerm = 0;
     public Radical numerator = default;
     public int denominator = 1;
 
+    public readonly NotationKind Kind => NotationKind.RadicalFraction;
+
+    // Does not simplify
     public override readonly string ToString()
     {
-        bool isQuadratic = leadingTerm != 0;
-        bool isFractional = Math.Abs(denominator) != 1;
-
-        string extendedNumerator = isQuadratic
-            ? $"{leadingTerm}±{numerator}"
-            : $"{numerator}";
-
-        return isFractional
-            ? $"({extendedNumerator})/{denominator}"
-            : extendedNumerator;
+        return $"({numerator})/{denominator}";
     }
 
     public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
 
     public readonly IAlgebraicNotation Simplified()
     {
-        //tex:$$\frac{-b\pm\sqrt{b^2-4ac}}{2a} = \boxed{\frac{-b}{2a}}\pm\frac{\sqrt{b^2-4ac}}{2a}$$
-        var simplifiedLeadingTerm = new Fraction(leadingTerm, denominator).Simplified();
-
-        //tex:$$\frac{-b\pm\boxed{\sqrt{b^2-4ac}}}{2a}$$
-        var simplifiedNumerator = numerator.Simplified();
-        
-        //tex:$$\sqrt{b^2-4ac} \in \mathbb{R}\setminus\mathbb{Q}$$
-        if (simplifiedNumerator is Radical simplifiedRadicalNumerator)
+        //tex:$$d = 0 \implies \frac{n}{0} \therefore \nexists$$
+        if (denominator == 0)
         {
-            //tex:$$\left.\frac{m}{2a} \;\middle|\; m\sqrt{\dots} = \sqrt{b^2-4ac}\right.$$
-            var simplifiedRadicalCoefficient = new Fraction(simplifiedRadicalNumerator.coefficient, denominator).Simplified();
+            return Bald.UNDEFINED;
+        }
+        //tex:$$|d|=1 \implies \frac{n}{1} \therefore n \text{ or } \frac{n}{-1} = \frac{-n}{1} \therefore -n$$
+        else if (denominator is 1 or -1)
+        {
+            // Regular radical
+            return new Radical(denominator * numerator.coefficient, numerator.radicand).Simplified();
+        }
 
-            //tex:$$\frac{m}{2a} \in \mathbb{Q}\setminus\mathbb{Z}$$
-            if (simplifiedRadicalCoefficient is Fraction fracCoefficient)
+        //tex:$$\frac{c\sqrt{r}}{d} = \frac{n}{d}$$
+        var simplifiedNumerator = numerator.Simplified();
+
+        //tex:$$n \in \mathbb{Z}$$
+        if (simplifiedNumerator is Number num)
+        {
+            // Regular fraction
+            return new Fraction(num, denominator).Simplified();
+        }
+        //tex:$$ni \mid n \in \mathbb{Z}$$
+        else if (simplifiedNumerator is Imaginary imag)
+        {
+            //tex:$$\frac{ni}{d} = mi$$
+            var newCoef = new Fraction(imag.coef, denominator).Simplified();
+
+            //tex:$$m \in \mathbb{Z}$$
+            if (newCoef is Number whole)
             {
-                var radNumerator = new Radical((Number)fracCoefficient.numerator, numerator.radicand);
-                return new RadicalFraction(radNumerator, (Number)fracCoefficient.denominator);
+                return new Imaginary(whole);
             }
-            //tex:$$\frac{m}{2a} \in \mathbb{Z}$$
-            else if (simplifiedRadicalCoefficient is Number numCoefficient)
-            {
-                return new Radical(numCoefficient, numerator.radicand);
-            }
-            //tex:$$\frac{m}{2a} \notin \mathbb{Q}$$
             else
             {
                 throw new NotImplementedException();
             }
         }
-        //tex:$$\sqrt{b^2-4ac} \in \mathbb{Z}$$
-        else if (simplifiedNumerator is Number simplifiedIntegerNumerator)
+        //tex:$$n \notin \mathbb{Q}$$
+        else if (simplifiedNumerator is Radical rad)
         {
-            return new MultipleSolutions([
-                simplifiedLeadingTerm.Add(simplifiedIntegerNumerator),
-                simplifiedLeadingTerm.Sub(simplifiedIntegerNumerator),
-            ]);
+            //tex:$$\frac{c\sqrt{r}}{d} = \frac{c}{d}\sqrt{r} = m\sqrt{r}$$
+            var newCoef = new Fraction(rad.coefficient, denominator).Simplified();
+
+            //tex:$$m \in \mathbb{Z} \therefore m\sqrt{r}$$
+            if (newCoef is Number newCoefNum)
+            {
+                return new Radical(newCoefNum, rad.radicand).Simplified();
+            }
+            //tex:$$m \in \mathbb{Q}\setminus\mathbb{Z} \therefore \frac{c'\sqrt{r}}{d'}$$
+            else if (newCoef is Fraction newCoefFrac)
+            {
+                return new RadicalFraction(
+                    new Radical(newCoefFrac.numerator, rad.radicand),
+                    newCoefFrac.denominator);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
-        //tex:$$\sqrt{b^2-4ac} \in (\mathbb{C}\setminus\mathbb{R}) \cup ($$
         else
         {
             throw new NotImplementedException();
         }
     }
+
+    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs)
+    {
+        throw new NotImplementedException();
+    }
+    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs)
+    {
+        throw new NotImplementedException();
+    }
+    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
+    {
+        throw new NotImplementedException();
+    }
+    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
+    {
+        throw new NotImplementedException();
+    }
+    public readonly IAlgebraicNotation Pow(int exponent) => throw new NotImplementedException();
+    public readonly IAlgebraicNotation Neg() => this;
+    public readonly IAlgebraicNotation Reciprocal() => new RadicalFraction(denominator, numerator);
 }

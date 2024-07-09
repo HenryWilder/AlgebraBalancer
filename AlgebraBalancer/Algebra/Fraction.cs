@@ -3,11 +3,15 @@ using System.Linq;
 
 using AlgebraBalancer.Notation;
 
+using static AlgebraBalancer.Notation.IAlgebraicNotation;
+
 namespace AlgebraBalancer.Algebra;
 public struct Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpression
 {
     public int numerator = numerator;
     public int denominator = denominator;
+
+    public readonly NotationKind Kind => NotationKind.Fraction;
 
     public override readonly string ToString() =>
         $"{numerator}/{denominator}";
@@ -53,7 +57,7 @@ public struct Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpre
             Fraction frac => new Fraction(
                 numerator * frac.denominator + frac.numerator * denominator,
                 denominator * frac.denominator),
-            _ => throw new NotImplementedException(),
+            _ => throw new NotImplementedException("Can't add radical fractions"),
         };
     }
     public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs)
@@ -101,4 +105,9 @@ public struct Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpre
         var newDenominator = ExactMath.Power(denominator, exponent);
         return newNumerator.Div(newDenominator);
     }
+    public readonly IAlgebraicNotation Neg()
+    {
+        return new Fraction(-numerator, denominator);
+    }
+    public readonly IAlgebraicNotation Reciprocal() => new Fraction(denominator, numerator);
 }

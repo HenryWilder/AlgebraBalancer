@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using AlgebraBalancer.Algebra;
 using AlgebraBalancer.Notation;
 using static AlgebraBalancer.Notation.Bald;
 
@@ -33,9 +34,9 @@ internal class ExactCalculations
         )));
 
         // Root
-        var root = new Algebra.Radical(x).Simplified();
+        var root = new Radical(x).Simplified();
         string middlestep;
-        if (root is Algebra.Radical radical && radical.coefficient != 1 && radical.radicand != 1)
+        if (root is Radical radical && radical.coefficient != 1 && radical.radicand != 1)
         {
             middlestep = $" = (√{radical.coefficient * radical.coefficient})√{radical.radicand}";
         }
@@ -79,7 +80,7 @@ internal class ExactCalculations
         result.Add(ExactMath.Sum(a, b).AsEquality($"{a} + {b}"));
         result.Add(ExactMath.Sum(a, -b).AsEquality($"{a} - {b}"));
         result.Add(ExactMath.Product(a, b).AsEquality($"{a} × {b}"));
-        result.Add(new Algebra.Fraction(a, b).Simplified().AsEquality($"{a} ÷ {b}"));
+        result.Add(new Fraction(a, b).Simplified().AsEquality($"{a} ÷ {b}"));
         result.Add((b != 0 ? new Number(a % b) : UNDEFINED as IAlgebraicAtomic).AsEquality($"{a} % {b}"));
         result.Add(ExactMath.Power(a, b).AsEquality($"{a}{LatexUnicode.ToSuperscript(b.ToString())}"));
 
@@ -114,21 +115,21 @@ internal class ExactCalculations
         var c2 = ExactMath.Power(c, 2);
         if (a2 is Number a2Num && b2 is Number b2Num && c2 is Number c2Num)
         {
-            var magnitude = new Algebra.Radical(a2Num + b2Num + c2Num).Simplified();
+            var magnitude = new Radical(a2Num + b2Num + c2Num).Simplified();
             result.Add(magnitude.AsEquality("|A|"));
             {
                 IAlgebraicNotation aPart, bPart, cPart;
-                if (magnitude is Algebra.Radical radMag)
+                if (magnitude is Radical radMag)
                 {
-                    aPart = new Algebra.RadicalFraction(a, radMag).Simplified();
-                    bPart = new Algebra.RadicalFraction(b, radMag).Simplified();
-                    cPart = new Algebra.RadicalFraction(c, radMag).Simplified();
+                    aPart = new RadicalFraction(a, radMag).Simplified();
+                    bPart = new RadicalFraction(b, radMag).Simplified();
+                    cPart = new RadicalFraction(c, radMag).Simplified();
                 }
                 else if (magnitude is Number numMag)
                 {
-                    aPart = new Algebra.Fraction(a, numMag).Simplified();
-                    bPart = new Algebra.Fraction(b, numMag).Simplified();
-                    cPart = new Algebra.Fraction(c, numMag).Simplified();
+                    aPart = new Fraction(a, numMag).Simplified();
+                    bPart = new Fraction(b, numMag).Simplified();
+                    cPart = new Fraction(c, numMag).Simplified();
                 }
                 else
                 {
@@ -151,12 +152,26 @@ internal class ExactCalculations
 
         // Quadratic
         {
-            var formula = new Algebra.RadicalFraction(-b, new Algebra.Radical(b * b - 4 * a * c), 2 * a);
-            string unsimplified = formula.ToString();
-            string simplified = formula.Simplified().ToString();
+            var solutions = ExactMath.Quadratic(a, b, c);
 
-            result.Add($"{a}𝑥² + {b}𝑥 + {c} = 0 => 𝑥 =\n  (-({b})±√(({b})²-4({a})({c})))/2({a})\n  {unsimplified}" +
-                ((simplified != unsimplified) ? $"\n  {simplified}" : ""));
+            result.Add(
+                $"Quadratic:\n" +
+                $"  {a}𝑥² + {b}𝑥 + {c} = 0 =>\n" +
+                $"  𝑥 = (-({b})±√(({b})²-4({a})({c})))/2({a})\n" +
+                $"    = ({-b}±√({b*b}-{4*a*c}))/{2*a}\n" +
+                $"    = {solutions}");
+        }
+
+        // Vertex form
+        {
+            var vertexForm = ExactMath.CompleteSquare(a, b, c);
+
+            result.Add(
+                $"Vertex form (complete square):\n" +
+                $"  𝑦 = ({a}𝑥² + {b}𝑥) + {c}\n" +
+                $"    = {a}(𝑥² + ({b}/{a})𝑥 + {b}/2({a})) + {c} - ({b})²/4({a})\n" +
+                $"    = {vertexForm}\n" +
+                $"  𝑣 = ({vertexForm.h}, {vertexForm.k})");
         }
 
         return result;

@@ -2,6 +2,8 @@
 
 using AlgebraBalancer.Notation;
 
+using static AlgebraBalancer.Notation.IAlgebraicNotation;
+
 namespace AlgebraBalancer.Algebra;
 /// <summary>
 /// Imaginary radical is represented by a negative radicand
@@ -19,8 +21,7 @@ public struct Radical : IAlgebraicExpression
     public int coefficient = 1;
     public int radicand = 1;
 
-    public static Radical operator *(Radical radical, int mult) =>
-        new() { coefficient = radical.coefficient * mult, radicand = radical.radicand };
+    public readonly NotationKind Kind => NotationKind.Radical;
 
     public readonly int Squared() =>
         coefficient * coefficient * radicand;
@@ -88,4 +89,87 @@ public struct Radical : IAlgebraicExpression
 
         return new Radical(newCoefficient, newRadicand);
     }
+
+    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs) => throw new NotImplementedException();
+    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs) => throw new NotImplementedException();
+    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
+    {
+        if (rhs is Number num)
+        {
+            return new Radical(coefficient * num, radicand);
+        }
+        else if (rhs is Fraction frac)
+        {
+            return new RadicalFraction(new Radical(coefficient * frac.numerator, radicand), frac.denominator);
+        }
+        else if (rhs is Radical rad)
+        {
+            return new Radical(coefficient * rad.coefficient, radicand * rad.radicand);
+        }
+        else if (rhs is Imaginary imag)
+        {
+            return new Radical(coefficient * imag.coef, -radicand);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
+    {
+        if (rhs is Number num)
+        {
+            return new RadicalFraction(this, num);
+        }
+        else if (rhs is Fraction frac)
+        {
+            return new RadicalFraction(new Radical(coefficient * frac.denominator, radicand), frac.numerator);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public readonly IAlgebraicNotation Pow(int exponent)
+    {
+        switch (exponent)
+        {
+            case 0: return (Number)1;
+            case 1: return this;
+        }
+
+        // Negative exponent
+        if (exponent < 0)
+        {
+            return Pow(-exponent).Reciprocal();
+        }
+        // Positive exponent
+        else
+        {
+            var powCoef = ExactMath.Power(coefficient, exponent);
+            if (powCoef is Number powCoefNum)
+            {
+                int rationalPart = exponent / 2;
+                var powRad = ExactMath.Power(radicand, rationalPart);
+                if (powRad is Number powRadNum)
+                {
+                    int irrationalPart = exponent % 2;
+                    int newCoef = powCoefNum * powRadNum;
+                    return irrationalPart == 0 
+                        ? (Number)newCoef
+                        : new Radical(newCoef);
+                }
+                else
+                {
+                    return powRad;
+                }
+            }
+            else
+            {
+                return powCoef;
+            }
+        }
+    }
+    public readonly IAlgebraicNotation Neg() => new Radical(-coefficient, radicand);
+    public readonly IAlgebraicNotation Reciprocal() => new RadicalFraction(1, this);
 }

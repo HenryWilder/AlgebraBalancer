@@ -1,4 +1,7 @@
-﻿using AlgebraBalancer.Notation;
+﻿using System;
+using AlgebraBalancer.Notation;
+
+using static AlgebraBalancer.Notation.IAlgebraicNotation;
 
 namespace AlgebraBalancer.Algebra;
 public struct Complex : IAlgebraicExpression
@@ -27,6 +30,8 @@ public struct Complex : IAlgebraicExpression
     public Number real;
     public Imaginary imag;
 
+    public readonly NotationKind Kind => NotationKind.Complex;
+
     public override readonly string ToString()
     {
         if (IsReal()) return real.ToString();
@@ -43,6 +48,53 @@ public struct Complex : IAlgebraicExpression
         if (IsReal()) return real;
         if (IsImaginary()) return imag;
         else return this;
+    }
+
+    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs)
+    {
+        return rhs switch
+        {
+            Number num => this + num,
+            Complex cmplx => this + cmplx,
+            Imaginary imag => this + imag,
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs)
+    {
+        return Add(rhs.Neg());
+    }
+    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
+    {
+        return rhs switch
+        {
+            Number num => this * num,
+            Complex cmplx => this * cmplx,
+            Imaginary imag => this * imag,
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
+    {
+        return rhs switch
+        {
+            Number num => this * num,
+            Complex cmplx => this * cmplx,
+            Imaginary imag => this * imag,
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public readonly IAlgebraicNotation Pow(int exponent)
+    {
+        throw new NotImplementedException();
+    }
+    public readonly IAlgebraicNotation Neg()
+    {
+        return this * -1;
+    }
+    public readonly IAlgebraicNotation Reciprocal()
+    {
+        throw new NotImplementedException();
     }
 
     public static Complex operator +(Complex a, Complex b)
