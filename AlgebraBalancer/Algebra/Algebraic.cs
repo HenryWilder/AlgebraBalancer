@@ -46,38 +46,120 @@ public struct Algebraic : IAlgebraicExpression
     {
         //tex:$$\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{d}$$
 
-        // Simplify terms
-        //tex:$$\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_m\sqrt{r_n}}{d}$$
+        //tex:
+        //Simplify terms
+        //$$\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_n\sqrt{r_n}}{d}$$
 
         var numeratorTerms = this.numeratorTerms
             .Select(term =>
             {
+                //tex:
+                //PrimeFactors($x$) returns the prime factors of $x$ in the form of
+                //$$
+                //x = p_1^{e_1} \times p_2^{e_2} \times \dots \times p_n^{e_n}
+                //\implies
+                //[
+                //  (\mathtt{prime}_1, \mathtt{exponent}_1),
+                //  (\mathtt{prime}_2, \mathtt{exponent}_2),
+                //  \dots,
+                //  (\mathtt{prime}_n, \mathtt{exponent}_n)
+                //]
+                //$$
+                //In ascending order of $\mathtt{prime}$.
+                //If $x$ is negative, the first element will always be $(-1, 1)$.
+                //If $x$ is prime, there will be exactly one element: $(x, 1)$.
+                //There is no case in which PrimeFactors($x$) should ever return $\{\}$.
                 var primeFactors = ExactMath.PrimeFactors(term.radicand);
 
+                //tex: Let $F_p = \mathtt{primeFactors}$
+
+                //tex:
+                //Let $F_s = \mathtt{simplifyableFactors}$ be $$
+                //\left\{
+                //  \left(p,2\left\lfloor{\frac{e}{2}}\right\rfloor\right)
+                //  \mid
+                //  (p,e) \in F_p,
+                //  e \ge 2
+                //\right\}
+                //$$
                 (int prime, int exponent)[] simplifyableFactors = primeFactors
                     .Where(x => x.exponent >= 2)
                     .Select(x => (x.prime, x.exponent - x.exponent % 2))
                     .ToArray();
 
-                if (simplifyableFactors.Length == 0)
-                {
-                    return term;
-                }
+                //tex:$$
+                //\nexists e \in F_p \mid e \ge 2
+                //\implies
+                //\text{radical term is in simplest form}
+                //\iff
+                //\text{radical index = 2}
+                //$$
+                if (simplifyableFactors.Length == 0) return term;
 
-                int newRadicand = term.radicand / simplifyableFactors
-                    .Select(x => ExactMath.UncheckedUIntPower(x.prime, (uint)x.exponent))
-                    .Aggregate((a, b) => a * b);
-
+                //tex:$$c' := c\prod_{p^e \in F_s}\sqrt{p^e}$$
                 int newCoefficient = term.coefficient * simplifyableFactors
                     .Select(x => ExactMath.UncheckedUIntPower(x.prime, (uint)x.exponent / 2))
                     .Aggregate((a, b) => a * b);
 
+                //tex:$$r' := \frac{r}{\displaystyle\prod_{p^e \in F_s}p^e}$$
+                int newRadicand = term.radicand / simplifyableFactors
+                    .Select(x => ExactMath.UncheckedUIntPower(x.prime, (uint)x.exponent))
+                    .Aggregate((a, b) => a * b);
+
+                //tex:$$c'\sqrt{r'}$$
                 return new Radical(newCoefficient, newRadicand);
             });
 
-        // Factor out
-        //tex:$$\frac{c_0(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_m'\sqrt{r_n})}{d}$$
+        //tex:
+        //Factor out
+        //$$\frac{c_0(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_n'\sqrt{r_n})}{d}$$
 
+        //tex:
+        //CommonFactors($x_1, x_2, \dots, x_n$) returns the common factors in the form
+        //$$
+        //\begin{gathered}
+        //  x_1, x_2, \dots, x_n\\
+        //  = c_1(a_{1,1}, a_{1,2}, \dots, a_{1,n})\\
+        //  = c_2(a_{2,1}, a_{2,2}, \dots, a_{2,n})\\
+        //  \vdots\\
+        //  = c_m(a_{m,1}, a_{m,2}, \dots, a_{m,n})
+        //\end{gathered}
+        //\implies
+        //\begin{bmatrix}
+        //  (\mathtt{common}_1, [
+        //      \mathtt{associated}_{1,1},
+        //      \mathtt{associated}_{1,2},
+        //      \dots,
+        //      \mathtt{associated}_{1,n}
+        //  ]),\\
+        //  (\mathtt{common}_2, [
+        //      \mathtt{associated}_{2,1},
+        //      \mathtt{associated}_{2,2},
+        //      \dots,
+        //      \mathtt{associated}_{2,n}
+        //  ]),\\
+        //  \vdots\\
+        //  (\mathtt{common}_m, [
+        //      \mathtt{associated}_{m,1},
+        //      \mathtt{associated}_{m,2},
+        //      \dots,
+        //      \mathtt{associated}_{m,n}
+        //  ])
+        //\end{bmatrix}
+        //$$
+        //In ascending order of $\mathtt{common}$.
+        //The first element is always
+        //$$(1, [x_1, x_2, \dots, x_n])$$
+        //The last element is always
+        //$$\left(\text{GCF}, \left[\frac{x_1}{\text{GCF}}, \frac{x_2}{\text{GCF}}, \dots, \frac{x_n}{\text{GCF}}\right]\right)$$
+        //If there is only one number (i.e. CommonFactors($x$)), the entire output is always
+        //$$[(1, [x]), (x, [1])]$$
+
+        //tex:
+        //$$
+        //\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_n\sqrt{r_n}}{d}\\
+        //(\mathtt{gcf}, [c_1', c_2', \dots, c_n']) = \text{CommonFactors}(c_1, c_2, \dots, c_n)_n
+        //$$
         (int gcf, int[] associatedFactors) =
             ExactMath.CommonFactors(
                 numeratorTerms
@@ -86,6 +168,10 @@ public struct Algebraic : IAlgebraicExpression
             )
             .Last();
 
+        //tex:
+        //$$
+        //N := [ c_1'\sqrt{r_1}, c_2'\sqrt{r_2}, \dots, c_n'\sqrt{r_n} ]
+        //$$
         numeratorTerms = numeratorTerms
             .Zip(
                 associatedFactors,
@@ -96,48 +182,51 @@ public struct Algebraic : IAlgebraicExpression
                     )
             );
 
-        //tex:$$\frac{c_0'}{d'}(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_m'\sqrt{r_n})$$
-        var coef = new Fraction(gcf, denominator).Simplified();
-        int numeratorCoef;
-        int denominatorCoef;
-        if (coef is Fraction frac)
-        {
-            numeratorCoef = frac.numerator;
-            denominatorCoef = frac.denominator;
-        }
-        else if (coef is Number num)
-        {
-            numeratorCoef = num;
-            denominatorCoef = 1;
-        }
-        else if (coef is Huge or Tiny or Undefined)
-        {
-            return coef;
-        }
-        else
-        {
-            throw new NotImplementedException("I'm not expecting Fraction to return these");
-        }
+        //tex:$$
+        //\frac{c_0}{d} = \frac{m\frac{c_0}{m}}{m\frac{d}{m}} \mid m \in \mathbb{Z} \qquad (m \text{ may be } 1)
+        //$$
+        int coefGCF = ExactMath.GCF(gcf, denominator);
 
-        // Combine like terms
-        //tex:$$\frac{c_0'}{d'}
+        //tex:$$c_0' := \frac{c_0}{m}$$
+        int numeratorCoef = gcf / coefGCF;
+        //tex:$$d' := \frac{d}{m}$$
+        int denominatorCoef = denominator / coefGCF;
+
+        //tex:
+        //Combine like terms
+        //$$\frac{c_0'}{d'}
         //\left(
-        //  \left(c_1'' \gets \sum_{i=1}^{n} c_i' \mid r_i = r_1\right)\sqrt{!\exists r_1 \in r_{1 \dots n}}
+        //  \left(c_1'' := \sum_{i=1}^{n} c_i' \mid r_i = r_1\right)\sqrt{!\exists r_1 \in r_{1 \dots n}}
         //  +
-        //  \left(c_2'' \gets \sum_{i=1}^{n} c_i' \mid r_i = r_2\right)\sqrt{!\exists r_2 \in r_{1 \dots n}}
+        //  \left(c_2'' := \sum_{i=1}^{n} c_i' \mid r_i = r_2\right)\sqrt{!\exists r_2 \in r_{1 \dots n}}
         //  +
         //  \cdots
         //  +
-        //  \left(c_m'' \gets \sum_{i=1}^{n} c_i' \mid r_i = r_n\right)\sqrt{!\exists r_n \in r_{1 \dots n}}
+        //  \left(c_m'' := \sum_{i=1}^{n} c_i' \mid r_i = r_n\right)\sqrt{!\exists r_n \in r_{1 \dots n}}
         //\right)$$
+        //$$\frac{c_0'}{d'}(c_1''\sqrt{r_1} + c_2''\sqrt{r_2} + \dots + c_m''\sqrt{r_n})$$
 
-        //tex:$$\frac{c_0'}{d'}(c_1''\sqrt{r_1} + c_2''\sqrt{r_2} + \dots + c_m''\sqrt{r_n})$$
-
-        var uniqueRadicands = numeratorTerms
+        //tex:
+        //For each unique radicand, find the sum of all coefficients to radicals sharing that radicand.
+        //Let each such sum be an element $c''$.
+        //Let the resulting set be $C$.
+        //$$
+        //C := \left\{
+        //  \left(c'' := \sum_{t_c\sqrt{t_r} \in N} t_c \mid t_r = r\right) \sqrt{r}
+        //  \;\middle|\;
+        //  c'\sqrt{!\exists r} \in N,
+        //  c''\sqrt{r} \ne 0
+        //\right\}
+        //\implies
+        //\underbrace{\left\{
+        //  c_1''\sqrt{r_1}, c_2''\sqrt{r_2}, \dots, c_n''\sqrt{r_n}
+        //\right\}}_{1 \dots n \text{ does not refer to the original index}}
+        //\\
+        //0 \notin C
+        //$$
+        var combined = numeratorTerms
             .Select(x => x.radicand)
-            .Distinct();
-
-        var combined = uniqueRadicands
+            .Distinct()
             .Select(r =>
                 new Radical(
                     numeratorTerms
@@ -153,6 +242,7 @@ public struct Algebraic : IAlgebraicExpression
 
         // Every term in the numerator was equal to 0 and got excluded;
         // this is also known as "being equal to zero".
+        //tex:$$C = \{\} \implies \frac{\sum_{t \in C}}{x \ne 0} = 0$$
         if (combined.Count() == 0)
         {
             return (Number)0;
