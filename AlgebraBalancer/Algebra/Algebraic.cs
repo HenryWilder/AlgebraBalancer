@@ -5,7 +5,7 @@ using AlgebraBalancer.Notation;
 using static AlgebraBalancer.Notation.IAlgebraicNotation;
 
 namespace AlgebraBalancer.Algebra;
-internal struct Algebraic : IAlgebraicExpression
+public struct Algebraic : IAlgebraicExpression
 {
     public readonly NotationKind Kind => NotationKind.Algebraic;
 
@@ -47,7 +47,7 @@ internal struct Algebraic : IAlgebraicExpression
         //tex:$$\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{d}$$
 
         // Simplify terms
-        //tex:$$\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_n\sqrt{r_n}}{d}$$
+        //tex:$$\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_m\sqrt{r_n}}{d}$$
 
         var numeratorTerms = this.numeratorTerms
             .Select(term =>
@@ -58,6 +58,11 @@ internal struct Algebraic : IAlgebraicExpression
                     .Where(x => x.exponent >= 2)
                     .Select(x => (x.prime, x.exponent - x.exponent % 2))
                     .ToArray();
+
+                if (simplifyableFactors.Length == 0)
+                {
+                    return term;
+                }
 
                 int newRadicand = term.radicand / simplifyableFactors
                     .Select(x => ExactMath.UncheckedUIntPower(x.prime, (uint)x.exponent))
@@ -71,7 +76,7 @@ internal struct Algebraic : IAlgebraicExpression
             });
 
         // Factor out
-        //tex:$$\frac{c_0(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_n'\sqrt{r_n})}{d}$$
+        //tex:$$\frac{c_0(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_m'\sqrt{r_n})}{d}$$
 
         (int gcf, int[] associatedFactors) =
             ExactMath.CommonFactors(
@@ -91,7 +96,7 @@ internal struct Algebraic : IAlgebraicExpression
                     )
             );
 
-        //tex:$$\frac{c_0'}{d'}(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_n'\sqrt{r_n})$$
+        //tex:$$\frac{c_0'}{d'}(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_m'\sqrt{r_n})$$
         var coef = new Fraction(gcf, denominator).Simplified();
         int numeratorCoef;
         int denominatorCoef;
@@ -123,10 +128,10 @@ internal struct Algebraic : IAlgebraicExpression
         //  +
         //  \cdots
         //  +
-        //  \left(c_n'' \gets \sum_{i=1}^{n} c_i' \mid r_i = r_n\right)\sqrt{!\exists r_n \in r_{1 \dots n}}
+        //  \left(c_m'' \gets \sum_{i=1}^{n} c_i' \mid r_i = r_n\right)\sqrt{!\exists r_n \in r_{1 \dots n}}
         //\right)$$
 
-        //tex:$$\frac{c_0'}{d'}(c_1''\sqrt{r_1} + c_2''\sqrt{r_2} + \dots + c_n''\sqrt{r_n})$$
+        //tex:$$\frac{c_0'}{d'}(c_1''\sqrt{r_1} + c_2''\sqrt{r_2} + \dots + c_m''\sqrt{r_n})$$
 
         var uniqueRadicands = numeratorTerms
             .Select(x => x.radicand)
@@ -146,12 +151,24 @@ internal struct Algebraic : IAlgebraicExpression
                 x.radicand != 0
             );
 
+        // Every term in the numerator was equal to 0 and got excluded;
+        // this is also known as "being equal to zero".
+        if (combined.Count() == 0)
+        {
+            return (Number)0;
+        }
+
         var alg = new Algebraic(
             combined.Select(x => new Radical(x.coefficient * numeratorCoef, x.radicand)).ToArray(),
             denominatorCoef
         );
 
-        //tex:$$\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_n\sqrt{r_n}}{0} = \frac{1}{0}$$
+        if (alg.denominator < 0)
+        {
+            throw new Exception("That wasn't supposed to happen");
+        }
+
+        //tex:$$\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_m\sqrt{r_n}}{0} = \frac{1}{0}$$
         if (alg.denominator == 0)
         {
             return Bald.UNDEFINED;
@@ -161,7 +178,7 @@ internal struct Algebraic : IAlgebraicExpression
         {
             var numerator = alg.numeratorTerms[0];
             //tex:$$\frac{c\sqrt{r}}{1}$$
-            if (alg.denominator is 1 or -1)
+            if (alg.denominator == 1)
             {
                 //tex:$$\frac{c\sqrt{0}}{1} = 0$$
                 if (numerator.radicand == 0)
@@ -187,12 +204,12 @@ internal struct Algebraic : IAlgebraicExpression
             //tex:$$\frac{c\sqrt{1}}{d} = \frac{c}{d}$$
             else if (numerator.radicand == 1)
             {
-                return new Fraction(numerator.coefficient, denominator);
+                return new Fraction(numerator.coefficient, alg.denominator);
             }
             //tex:$$\frac{c\sqrt{r}}{d}$$
             else
             {
-                return new RadicalFraction(numerator, denominator);
+                return new RadicalFraction(numerator, alg.denominator);
             }
         }
         //tex:$$\frac{c_1\sqrt{\pm 1}+c_2\sqrt{\mp 1}}{1} = \begin{gathered}c_1+c_2i\\\text{or}\\c_2+c_1i\end{gathered} = a+bi$$
@@ -265,7 +282,7 @@ internal struct Algebraic : IAlgebraicExpression
     //tex:$$\begin{gathered}
     //\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{b}
     //\times
-    //\frac{\sqrt{c_1}+\sqrt{c_2}+\dots+\sqrt{c_n}}{d}\\
+    //\frac{\sqrt{c_1}+\sqrt{c_2}+\dots+\sqrt{c_m}}{d}\\
     // =\\
     //\frac{
     //  \sqrt{a_1c_1}+\sqrt{a_1c_2}+\dots+\sqrt{a_1c_m}
@@ -291,12 +308,12 @@ internal struct Algebraic : IAlgebraicExpression
     //tex:$$\begin{gathered}
     //\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{b}
     //\div
-    //\frac{\sqrt{c_1}+\sqrt{c_2}+\dots+\sqrt{c_n}}{d}\\
+    //\frac{\sqrt{c_1}+\sqrt{c_2}+\dots+\sqrt{c_m}}{d}\\
     // =\\
     //\frac{
     //  d\sqrt{a_1}+d\sqrt{a_2}+\dots+d\sqrt{a_n}
     //}{
-    //  b\sqrt{c_1}+b\sqrt{c_2}+\dots+b\sqrt{c_n}
+    //  b\sqrt{c_1}+b\sqrt{c_2}+\dots+b\sqrt{c_m}
     //}\\
     // =\\
     // ?
@@ -306,21 +323,27 @@ internal struct Algebraic : IAlgebraicExpression
         //tex:$$\begin{gathered}
         //\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{b}
         //\div
-        //\frac{\sqrt{c}}{d}\\
+        //\frac{c_0\sqrt{c_1}}{d}\\
         // =\\
-        //\frac{d\sqrt{a_1}+d\sqrt{a_2}+\dots+d\sqrt{a_n}}{b\sqrt{c}}\\
+        //\frac{d\sqrt{a_1}+d\sqrt{a_2}+\dots+d\sqrt{a_n}}{bc_0\sqrt{c_1}}\\
         // =\\
-        //\frac{d\sqrt{a_1}\sqrt{c}+d\sqrt{a_2}\sqrt{c}+\dots+d\sqrt{a_n}\sqrt{c}}{b\sqrt{c}\sqrt{c}}\\
+        //\frac{d\sqrt{a_1}\sqrt{c_1}+d\sqrt{a_2}\sqrt{c_1}+\dots+d\sqrt{a_n}\sqrt{c_1}}{bc_0\sqrt{c_1}\sqrt{c_1}}\\
         // =\\
-        //\frac{d\sqrt{ca_1}+d\sqrt{ca_2}+\dots+d\sqrt{ca_n}}{bc}
+        //\frac{d\sqrt{a_1c_1}+d\sqrt{a_2c_1}+\dots+d\sqrt{a_nc_1}}{bc_0c_1}
         //\end{gathered}$$
         if (rhs.numeratorTerms.Length == 1)
         {
             var rhsNumerator = rhs.numeratorTerms[0];
             var newNumeratorTerms = lhs.numeratorTerms.Select(
-                x => new Radical(x.coefficient * rhs.denominator, x.radicand * rhsNumerator.radicand)
+                x => new Radical(
+                    x.coefficient * rhs.denominator, 
+                    x.radicand * rhsNumerator.radicand
+                )
             );
-            return new(newNumeratorTerms.ToArray(), lhs.denominator * rhsNumerator.radicand);
+            return new(
+                newNumeratorTerms.ToArray(),
+                lhs.denominator * rhsNumerator.coefficient * rhsNumerator.radicand
+            );
         }
         else
         {

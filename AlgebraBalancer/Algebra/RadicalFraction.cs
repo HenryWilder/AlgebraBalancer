@@ -13,7 +13,7 @@ public struct RadicalFraction : IAlgebraicExpression
         (this.numerator, this.denominator) = (numerator, denominator);
 
     public RadicalFraction(int numerator, Radical denominator) =>
-        (this.numerator, this.denominator) = (denominator * numerator, denominator.Squared());
+        (this.numerator, this.denominator) = (new Radical(denominator.coefficient * numerator, denominator.radicand), denominator.Squared());
 
     public Radical numerator = default;
     public int denominator = 1;
