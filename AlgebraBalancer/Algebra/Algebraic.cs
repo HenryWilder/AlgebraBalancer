@@ -231,8 +231,12 @@ public struct Algebraic : IAlgebraicExpression
     public Algebraic(int num) =>
         numerator = new(new Radical(num, 1));
 
+    public static implicit operator Algebraic(int num) => new(num);
+
     public Algebraic(Number num) =>
         numerator = new(new Radical(num, 1));
+
+    public static implicit operator Algebraic(Number num) => new(num);
 
     public Algebraic(Fraction frac) =>
         (numerator, denominator) = (
@@ -240,8 +244,12 @@ public struct Algebraic : IAlgebraicExpression
             Math.Abs(frac.denominator)
         );
 
+    public static implicit operator Algebraic(Fraction frac) => new(frac);
+
     public Algebraic(Radical rad) =>
         numerator = new(rad);
+
+    public static implicit operator Algebraic(Radical rad) => new(rad);
 
     public Algebraic(RadicalFraction radFrac) =>
         (numerator, denominator) = (
@@ -249,11 +257,17 @@ public struct Algebraic : IAlgebraicExpression
             Math.Abs(radFrac.denominator)
         );
 
+    public static implicit operator Algebraic(RadicalFraction radFrac) => new(radFrac);
+
     public Algebraic(Imaginary imag) =>
         numerator = new(new Radical(imag.coef, -1));
 
+    public static implicit operator Algebraic(Imaginary imag) => new(imag);
+
     public Algebraic(Complex cmplx) =>
         numerator = new SumOfRadicals(new Radical(cmplx.real, 1), new Radical(cmplx.imag.coef, -1));
+
+    public static implicit operator Algebraic(Complex cmplx) => new(cmplx);
 
     public Algebraic(Undefined _) =>
         (numerator, denominator) = (new SumOfRadicals(new Radical(0, 1)), 0);
