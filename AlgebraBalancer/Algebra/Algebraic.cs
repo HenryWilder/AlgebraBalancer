@@ -474,23 +474,56 @@ public struct Algebraic : IAlgebraicExpression
 
     public static Algebraic operator /(Algebraic lhs, Algebraic rhs)
     {
-        var numerator = lhs.numerator * rhs.denominator;
+        //tex:$$\begin{gathered}
+        //\frac{\sqrt{a_1} + \sqrt{a_2} + \dots + \sqrt{a_n}}{b}
+        //\div
+        //\frac{\sqrt{c_1} + \sqrt{c_2} + \dots + \sqrt{c_m}}{d}\\
+        // =\\
+        //\frac{d\sqrt{a_1} + d\sqrt{a_2} + \dots + d\sqrt{a_n}}{b\sqrt{c_1} + b\sqrt{c_2} + \dots + b\sqrt{c_m}}
+        //\end{gathered}$$
+        var numerator   = lhs.numerator * rhs.denominator;
         var denominator = rhs.numerator * lhs.denominator;
 
         // Rationalize denominator
         while (denominator.terms.Any(term => !term.IsInteger()))
         {
+            //tex:$$\overline{\sqrt{c_1} + \sqrt{c_2} + \dots + \sqrt{c_m}} = \sqrt{c_1} + \sqrt{c_2} + \dots - \sqrt{c_m}$$
             var conj = denominator.Conjugate();
-            numerator   *= conj;
+
+            //tex:$$\begin{gathered}
+            //\frac{
+            //  \left(d\sqrt{a_1} + d\sqrt{a_2} + \dots + d\sqrt{a_n}\right)\!\left(b\sqrt{c_1} + b\sqrt{c_2} + \dots - b\sqrt{c_m}\right)
+            //}{
+            //  \left(b\sqrt{c_1} + b\sqrt{c_2} + \dots + b\sqrt{c_m}\right)\!\left(b\sqrt{c_1} + b\sqrt{c_2} + \dots - b\sqrt{c_m}\right)
+            //}\\
+            // =\\
+            //\frac{
+            //  bd\sqrt{a_1c_1} + bd\sqrt{a_1c_2} + \dots - bd\sqrt{a_1c_m} +
+            //  bd\sqrt{a_2c_1} + bd\sqrt{a_2c_2} + \dots - bd\sqrt{a_2c_m} +
+            //  \dots +
+            //  bd\sqrt{a_nc_1} + bd\sqrt{a_nc_2} + \dots - bd\sqrt{a_nc_m}
+            //}{
+            //  b^2c_1 + b^2\sqrt{c_1c_2} + \dots - b^2\sqrt{c_1c_m} +
+            //  b^2\sqrt{c_2c_1} + b^2c_2 + \dots - b^2\sqrt{c_2c_m} +
+            //  \dots +
+            //  b^2\sqrt{c_mc_1} + b^2\sqrt{c_mc_2} + \dots - b^2c_m
+            //  \quad = \quad
+            //  b^2c_1 + b^2c_2 + \dots - b^2c_m
+            //}\\
+            //\vdots
+            //\end{gathered}$$
+            numerator *= conj;
             denominator *= conj;
             denominator = denominator.TermsSimplified().LikeTermsCombined();
         }
 
         // If all terms are rationalized and like terms combined, there will only be one term.
+        if (!(denominator.TryMonomial(out var term) && term.IsInteger()))
+        {
+            throw new Exception("Assumption failed");
+        }
 
-        return (denominator.TryMonomial(out var term) && term.IsInteger())
-            ? new Algebraic(numerator, term.coefficient)
-            : throw new Exception("Assumption failed");
+        return new Algebraic(numerator, term.coefficient);
     }
 
     public override readonly bool Equals(object obj) =>
