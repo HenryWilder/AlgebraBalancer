@@ -64,6 +64,16 @@ public class ExactMath
         return isNegativeExponent ? new Algebra.Fraction(1, power) : new Number(power);
     }
 
+    public static int UncheckedUIntPower(int basePart, uint exponent)
+    {
+        int power = basePart;
+        for (uint i = 1; i < exponent; ++i)
+        {
+            power *= basePart;
+        }
+        return power;
+    }
+
     public static bool IsOdd(int n) => (n & 1) != 0;
 
     public static List<(int common, int[] associated)> CommonFactors(params int[] parameters)

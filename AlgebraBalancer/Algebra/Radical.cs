@@ -18,6 +18,9 @@ public struct Radical : IAlgebraicExpression
     public Radical(int coefficient, int radicand) =>
         (this.coefficient, this.radicand) = (coefficient, radicand);
 
+    public Radical(Imaginary imag) =>
+        (coefficient, radicand) = (imag.coef, -1);
+
     public int coefficient = 1;
     public int radicand = 1;
 
