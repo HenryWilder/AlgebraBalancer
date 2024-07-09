@@ -175,4 +175,7 @@ public struct Radical : IAlgebraicExpression
     }
     public readonly IAlgebraicNotation Neg() => new Radical(-coefficient, radicand);
     public readonly IAlgebraicNotation Reciprocal() => new RadicalFraction(1, this);
+
+    public static Radical operator *(Radical lhs, Radical rhs) => new(lhs.coefficient * rhs.coefficient, lhs.radicand * rhs.radicand);
+    public static Radical operator -(Radical rhs) => new(-rhs.coefficient, rhs.radicand);
 }

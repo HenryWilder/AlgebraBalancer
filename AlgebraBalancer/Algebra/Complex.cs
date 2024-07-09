@@ -131,4 +131,6 @@ public struct Complex : IAlgebraicExpression
     {
         return b * a;
     }
+
+    public static Complex operator -(Complex rhs) => new(-rhs.real, -rhs.imag);
 }

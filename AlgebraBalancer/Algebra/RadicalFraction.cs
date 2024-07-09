@@ -113,6 +113,8 @@ public struct RadicalFraction : IAlgebraicExpression
         throw new NotImplementedException();
     }
     public readonly IAlgebraicNotation Pow(int exponent) => throw new NotImplementedException();
-    public readonly IAlgebraicNotation Neg() => this;
+    public readonly IAlgebraicNotation Neg() => new RadicalFraction(-numerator, denominator);
     public readonly IAlgebraicNotation Reciprocal() => new RadicalFraction(denominator, numerator);
+
+    public static RadicalFraction operator -(RadicalFraction rhs) => new(-rhs.numerator, rhs.denominator);
 }

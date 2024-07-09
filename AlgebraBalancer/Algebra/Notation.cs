@@ -128,6 +128,8 @@ public struct Number(int value) : IAlgebraicAtomic
     {
         return new Fraction(1, value);
     }
+
+    public static Number operator -(Number rhs) => new(-rhs.value);
 }
 
 public struct Imaginary(int coef) : IAlgebraicAtomic
@@ -227,6 +229,8 @@ public struct Imaginary(int coef) : IAlgebraicAtomic
             ? new Imaginary(-coef)
             : throw new NotImplementedException(); // Imaginary fraction
     }
+
+    public static Imaginary operator -(Imaginary rhs) => new(-rhs.coef);
 }
 
 // todo
