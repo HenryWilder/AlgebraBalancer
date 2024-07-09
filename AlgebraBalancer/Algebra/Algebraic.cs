@@ -133,21 +133,67 @@ internal struct Algebraic : IAlgebraicExpression
             .Distinct();
 
         var combined = uniqueRadicands
-            .Select(
-                r => new Radical(
+            .Select(r =>
+                new Radical(
                     numeratorTerms
                         .Where(x => x.radicand == r)
                         .Sum(x => x.coefficient),
                     r
                 )
+            )
+            .Where(x =>
+                x.coefficient != 0 &&
+                x.radicand != 0
             );
 
-        var newAlgebraic = new Algebraic(
+        var alg = new Algebraic(
             combined.Select(x => new Radical(x.coefficient * numeratorCoef, x.radicand)).ToArray(),
             denominatorCoef
         );
 
+        if (alg.numeratorTerms.Length == 1)
+        {
+            var numerator = alg.numeratorTerms[0];
+            if (alg.denominator is 1 or -1)
+            {
+                if (numerator.radicand == 0)
+                {
+                    return new Number(0);
+                }
+                if (numerator.radicand == 1)
+                {
+                    return new Number(numerator.coefficient);
+                }
+                else if (numerator.radicand == -1)
+                {
+                    return new Imaginary(numerator.coefficient);
+                }
+                else
+                {
+                    return numerator;
+                }
+            }
+            else if (numerator.radicand == 1)
+            {
+                return new Fraction(numerator.coefficient, denominator);
+            }
+        }
+        else if (
+            alg.denominator == 1 &&
+            alg.numeratorTerms.Length == 2 &&
+            alg.numeratorTerms[0].radicand is 1 or -1 &&
+            alg.numeratorTerms[1].radicand is 1 or -1 &&
+            alg.numeratorTerms[0].radicand < 0 != alg.numeratorTerms[1].radicand < 0
+        )
+        {
+            var (real, imag) = alg.numeratorTerms[0].radicand < 0
+                ? (alg.numeratorTerms[1].coefficient, alg.numeratorTerms[0].coefficient)
+                : (alg.numeratorTerms[0].coefficient, alg.numeratorTerms[1].coefficient);
 
+            return new Complex(real, imag);
+        }
+
+        return alg;
     }
 
     public override readonly string ToString() => $"({string.Join("+", numeratorTerms)})/{denominator}";
