@@ -130,6 +130,8 @@ public struct Number(int value) : IAlgebraicAtomic
     }
 
     public static Number operator -(Number rhs) => new(-rhs.value);
+
+    public readonly Number Squared() => (Number)(value * value);
 }
 
 public struct Imaginary(int coef) : IAlgebraicAtomic
@@ -231,6 +233,8 @@ public struct Imaginary(int coef) : IAlgebraicAtomic
     }
 
     public static Imaginary operator -(Imaginary rhs) => new(-rhs.coef);
+
+    public readonly Number Squared() => new(coef * -coef);
 }
 
 // todo

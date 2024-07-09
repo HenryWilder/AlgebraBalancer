@@ -33,21 +33,21 @@ public struct Radical : IAlgebraicExpression
     {
         // Radicand is not negative if it is 1 or 0
         // It is also not negative if it is multiplied by 0
-        if (coefficient == 0 || radicand == 0) return "0";
-        else if (radicand == 1) return coefficient.ToString();
+        if (IsZero()) return "0";
+        else if (IsInteger()) return coefficient.ToString();
 
         // Negative radicand represents an imaginary coefficient
-        IAlgebraicNotation coef = radicand < 0
+        IAlgebraicNotation coef = IsImaginary()
             // Saves having to copy-paste the imaginary number notation code here
             ? new Imaginary(coefficient)
             : new Number(coefficient);
 
         // Special case where radicand is not shown even though it is neither 1 nor 0
         // Simultaneously covers the case where the coefficient is shown despite being 1
-        if (radicand == -1) return coef.ToString();
+        if (IsImaginary() && IsRational()) return coef.ToString();
 
         // Coefficient is not shown when it is 1 (1*i != 1)
-        string coefStr = coef is Number num && num == 1 ? "" : coef.ToString();
+        string coefStr = (IsReal() && IsPureRadical()) ? "" : coef.ToString();
 
         // By reaching this point, the radicand is not 1 and so must need a radical
         // Coefficient may be an empty string
@@ -176,6 +176,27 @@ public struct Radical : IAlgebraicExpression
     public readonly IAlgebraicNotation Neg() => new Radical(-coefficient, radicand);
     public readonly IAlgebraicNotation Reciprocal() => new RadicalFraction(1, this);
 
+    public static Radical operator *(Radical lhs, int rhs) => new(lhs.coefficient * rhs, lhs.radicand);
+    public static Radical operator *(int lhs, Radical rhs) => new(lhs * rhs.coefficient, rhs.radicand);
     public static Radical operator *(Radical lhs, Radical rhs) => new(lhs.coefficient * rhs.coefficient, lhs.radicand * rhs.radicand);
     public static Radical operator -(Radical rhs) => new(-rhs.coefficient, rhs.radicand);
+    public static RadicalFraction operator /(Radical lhs, int rhs) => new(lhs, rhs);
+    public static RadicalFraction operator /(int lhs, Radical rhs) => new(lhs, rhs);
+    public static Algebraic.SumOfRadicals operator +(Radical lhs, Radical rhs) => new([lhs, rhs]);
+    public static Algebraic.SumOfRadicals operator +(Radical lhs, int rhs) => new([lhs, new(rhs, 1)]);
+    public static Algebraic.SumOfRadicals operator +(int lhs, Radical rhs) => new([new(lhs, 1), rhs]);
+
+
+    /// <summary>Simplifies to int or imaginary</summary>
+    public readonly bool IsRational() => radicand is 1 or -1;
+    /// <summary>Simplifies to int</summary>
+    public readonly bool IsInteger() => radicand == 1;
+    /// <summary>Coefficient of 1</summary>
+    public readonly bool IsPureRadical() => coefficient == 1;
+    /// <summary>Equal to zero</summary>
+    public readonly bool IsZero() => coefficient == 0 || radicand == 0;
+    /// <summary>Square root of negative</summary>
+    public readonly bool IsImaginary() => radicand < 0;
+    /// <summary>Square root of positive</summary>
+    public readonly bool IsReal() => radicand >= 0;
 }

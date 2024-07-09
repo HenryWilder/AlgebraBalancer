@@ -14,6 +14,15 @@ public struct Algebraic : IAlgebraicExpression
         public static SumOfRadicals operator *(SumOfRadicals lhs, int rhs) =>
             new([..lhs.terms.Select(term => new Radical(term.coefficient * rhs, term.radicand))]);
 
+        public static Algebraic operator /(SumOfRadicals lhs, int rhs) =>
+            new(lhs, rhs);
+
+        public static Algebraic operator /(SumOfRadicals lhs, SumOfRadicals rhs) =>
+            new Algebraic(lhs) / new Algebraic(rhs);
+
+        public static Algebraic operator /(int lhs, SumOfRadicals rhs) =>
+            lhs / new Algebraic(rhs);
+
         public static SumOfRadicals operator *(SumOfRadicals lhs, SumOfRadicals rhs) =>
             new([..lhs.terms.SelectMany(lterm => rhs.terms.Select(rterm => lterm * rterm))]);
 
@@ -31,6 +40,18 @@ public struct Algebraic : IAlgebraicExpression
 
         public static SumOfRadicals operator -(SumOfRadicals lhs, SumOfRadicals rhs) =>
             new([..lhs.terms.Concat(rhs.terms.Select(term => -term))]);
+
+        public readonly SumOfRadicals Squared() =>
+            this * this;
+
+        //tex:$$\overline{\sqrt{2} + \sqrt{3}} = \sqrt{2} - \sqrt{3}$$
+        public readonly SumOfRadicals Conjugate() =>
+            terms.Length switch
+            {
+                <0 => throw new IndexOutOfRangeException(),
+                0 or 1 => this,
+                > 1 => new SumOfRadicals([..terms.Take(terms.Length - 1)]) - terms.Last(),
+            };
 
         public readonly SumOfRadicals TermsSimplified()
         {
@@ -60,16 +81,15 @@ public struct Algebraic : IAlgebraicExpression
                     //tex:
                     //Let $F_s = \mathtt{simplifyableFactors}$ be $$
                     //\left\{
-                    //  \left(p,2\left\lfloor{\frac{e}{2}}\right\rfloor\right)
+                    //  \left(p,e-e\bmod2\right)
                     //  \mid
-                    //  (p,e) \in F_p,
+                    //  p^e \in F_p,
                     //  e \ge 2
                     //\right\}
                     //$$
-                    (int prime, int exponent)[] simplifyableFactors = primeFactors
+                    (int prime, uint exponentRoot)[] simplifyableFactors = [..primeFactors
                         .Where(x => x.exponent >= 2)
-                        .Select(x => (x.prime, x.exponent - x.exponent % 2))
-                        .ToArray();
+                        .Select(x => (x.prime, (uint)(x.exponent / 2)))]; // Prime factors cannot have negative powers
 
                     //tex:$$
                     //\nexists e \in F_p \mid e \ge 2
@@ -79,16 +99,17 @@ public struct Algebraic : IAlgebraicExpression
                     //\text{radical index = 2}
                     //$$
                     if (simplifyableFactors.Length == 0) return term;
+                    
+                    //tex:$$x := \prod_{p^e \in F_s}\left(\sqrt{p^e} = p^{\frac{e}{2}}\right)$$
+                    int root = simplifyableFactors
+                        .Select(x => ExactMath.UncheckedUIntPower(x.prime, x.exponentRoot))
+                        .Aggregate(1, (a, b) => a * b);
+                    
+                    //tex:$$c' := cx$$
+                    int newCoefficient = term.coefficient * root;
 
-                    //tex:$$c' := c\prod_{p^e \in F_s}\sqrt{p^e}$$
-                    int newCoefficient = term.coefficient * simplifyableFactors
-                        .Select(x => ExactMath.UncheckedUIntPower(x.prime, (uint)x.exponent / 2))
-                        .Aggregate((a, b) => a * b);
-
-                    //tex:$$r' := \frac{r}{\displaystyle\prod_{p^e \in F_s}p^e}$$
-                    int newRadicand = term.radicand / simplifyableFactors
-                        .Select(x => ExactMath.UncheckedUIntPower(x.prime, (uint)x.exponent))
-                        .Aggregate((a, b) => a * b);
+                    //tex:$$r' := \frac{r}{x^2}$$
+                    int newRadicand = term.radicand / (root * root);
 
                     //tex:$$c'\sqrt{r'}$$
                     return new Radical(newCoefficient, newRadicand);
@@ -141,25 +162,21 @@ public struct Algebraic : IAlgebraicExpression
             //tex:$$c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_n\sqrt{r_n}$$
 
             //tex:$$(c_0, [c_1', c_2', \dots, c_n']) = \text{CommonFactors}(c_1, c_2, \dots, c_n)$$
-            (int gcf, int[] associatedFactors) =
-                ExactMath.CommonFactors([.. terms.Select(x => x.coefficient)])
-                .Last();
+            (int gcf, int[] associatedFactors) = ExactMath.CommonFactors([..terms.Select(x => x.coefficient)]).Last();
 
             //tex:
             //$$
             //c_0(c_1'\sqrt{r_1} + c_2'\sqrt{r_2} + \dots + c_n'\sqrt{r_n})
             //$$
-            return (gcf, new([.. terms.Zip(associatedFactors, (term, factor) => new Radical(factor, term.radicand))]));
+            return (gcf, new([..terms.Zip(associatedFactors, (term, factor) => new Radical(factor, term.radicand))]));
         }
 
         public readonly SumOfRadicals LikeTermsCombined()
         {
             //tex:
             //For each unique radicand, find the sum of all coefficients to radicals sharing that radicand.
-            //Let each such sum be an element $c''$.
-            //Let the resulting set be $C$.
             //$$
-            //C := \left\{
+            //\left\{
             //  \left(c'' := \sum_{t_c\sqrt{t_r} \in N} t_c \mid t_r = r\right) \sqrt{r}
             //  \;\middle|\;
             //  c'\sqrt{!\exists r} \in N,
@@ -170,56 +187,28 @@ public struct Algebraic : IAlgebraicExpression
             //  c_1''\sqrt{r_1}, c_2''\sqrt{r_2}, \dots, c_n''\sqrt{r_n}
             //\right\}}_{1 \dots n \text{ does not refer to the original index}}
             //\\
-            //0 \notin C
             //$$
-            
-            var terms = this.terms;
+
             return new([..terms
-                .Select(x => x.radicand)
-                .Distinct()
-                .Select(uniqueRadicand =>
-                    new Radical(
-                        terms
-                            .Where(x => x.radicand == uniqueRadicand)
-                            .Sum(x => x.coefficient),
-                        uniqueRadicand
-                    )
-                )
-                .Where(x =>
-                    x.coefficient != 0 &&
-                    x.radicand != 0
-                )
-            ]);
+                .GroupBy(term => term.radicand)
+                .Select(group => new Radical(
+                    group.Sum(term => term.coefficient),
+                    group.Key))
+                .Where(term => !term.IsZero())]);
         }
 
         public readonly bool TryMonomial(out Radical term)
         {
-            if (terms.Length == 1)
-            {
-                term = terms[0];
-                return true;
-            }
-            else
-            {
-                term = default;
-                return false;
-            }
+            bool isMonomial = terms.Length == 1;
+            term = isMonomial ? terms[0] : default;
+            return isMonomial;
         }
 
         public readonly bool TryBinomial(out Radical term1, out Radical term2)
         {
-            if (terms.Length == 2)
-            {
-                term1 = terms[0];
-                term2 = terms[1];
-                return true;
-            }
-            else
-            {
-                term1 = default;
-                term2 = default;
-                return false;
-            }
+            bool isBinomial = terms.Length == 2;
+            (term1, term2) = isBinomial ? (terms[0], terms[1]) : (default, default);
+            return isBinomial;
         }
     }
 
@@ -278,6 +267,12 @@ public struct Algebraic : IAlgebraicExpression
             Math.Abs(denominator)
         );
 
+    public Algebraic(SumOfRadicals numerator) =>
+        this.numerator = numerator;
+
+    public static implicit operator Algebraic(SumOfRadicals numerator) =>
+        new(numerator);
+
     public Algebraic(Radical[] numeratorTerms, int denominator) =>
         new Algebraic(new SumOfRadicals(numeratorTerms), denominator);
 
@@ -309,15 +304,15 @@ public struct Algebraic : IAlgebraicExpression
         //Factor out
         //$$\frac{c_0(c_1'\sqrt{r_1}+c_2'\sqrt{r_2}+\dots+c_n'\sqrt{r_n})}{d}$$
 
-        var (gcf, factoredNumerator) = simplifiedNumerator.Factored();
+        var (numeratorGCF, factoredNumerator) = simplifiedNumerator.Factored();
 
         //tex:$$
         //\frac{c_0}{d} = \frac{m\frac{c_0}{m}}{m\frac{d}{m}} \mid m \in \mathbb{Z} \qquad (m \text{ may be } 1)
         //$$
-        int coefGCF = ExactMath.GCF(gcf, denominator);
+        int coefGCF = ExactMath.GCF(numeratorGCF, denominator);
 
         //tex:$$c_0' := \frac{c_0}{m}$$
-        int numeratorCoef = gcf / coefGCF;
+        int numeratorCoef = numeratorGCF / coefGCF;
 
         //tex:$$d' := \frac{d}{m}$$
         int denominatorCoef = denominator / coefGCF;
@@ -477,53 +472,36 @@ public struct Algebraic : IAlgebraicExpression
         return new(lhs.numerator * rhs.numerator, lhs.denominator * rhs.denominator);
     }
 
-    //tex:$$\begin{gathered}
-    //\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{b}
-    //\div
-    //\frac{\sqrt{c_1}+\sqrt{c_2}+\dots+\sqrt{c_m}}{d}\\
-    // =\\
-    //\frac{
-    //  d\sqrt{a_1}+d\sqrt{a_2}+\dots+d\sqrt{a_n}
-    //}{
-    //  b\sqrt{c_1}+b\sqrt{c_2}+\dots+b\sqrt{c_m}
-    //}\\
-    // =\\
-    // ?
-    //\end{gathered}$$
     public static Algebraic operator /(Algebraic lhs, Algebraic rhs)
     {
-        //tex:$$\begin{gathered}
-        //\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{b}
-        //\div
-        //\frac{c_0\sqrt{c_1}}{d}\\
-        // =\\
-        //\frac{d\sqrt{a_1}+d\sqrt{a_2}+\dots+d\sqrt{a_n}}{bc_0\sqrt{c_1}}\\
-        // =\\
-        //\frac{d\sqrt{a_1}\sqrt{c_1}+d\sqrt{a_2}\sqrt{c_1}+\dots+d\sqrt{a_n}\sqrt{c_1}}{bc_0\sqrt{c_1}\sqrt{c_1}}\\
-        // =\\
-        //\frac{d\sqrt{a_1c_1}+d\sqrt{a_2c_1}+\dots+d\sqrt{a_nc_1}}{bc_0c_1}
-        //\end{gathered}$$
-        if (rhs.numerator.TryMonomial(out var rhsNumerator))
+        var numerator = lhs.numerator * rhs.denominator;
+        var denominator = rhs.numerator * lhs.denominator;
+
+        // Rationalize denominator
+        while (denominator.terms.Any(term => !term.IsInteger()))
         {
-            SumOfRadicals newNumeratorTerms = new([
-                ..lhs.numerator.terms.Select(
-                    x => new Radical(
-                        x.coefficient * rhs.denominator, 
-                        x.radicand * rhsNumerator.radicand
-                    )
-                )
-            ]);
-            return new(
-                newNumeratorTerms,
-                lhs.denominator * rhsNumerator.coefficient * rhsNumerator.radicand
-            );
+            var conj = denominator.Conjugate();
+            numerator   *= conj;
+            denominator *= conj;
+            denominator = denominator.TermsSimplified().LikeTermsCombined();
         }
-        else
-        {
-            throw new NotImplementedException();
-        }
+
+        // If all terms are rationalized and like terms combined, there will only be one term.
+
+        return (denominator.TryMonomial(out var term) && term.IsInteger())
+            ? new Algebraic(numerator, term.coefficient)
+            : throw new Exception("Assumption failed");
     }
 
+    public override readonly bool Equals(object obj) =>
+        obj is Algebraic alg &&
+        denominator == alg.denominator &&
+        numerator.terms.Length == alg.numerator.terms.Length &&
+        numerator.terms.Zip(alg.numerator.terms, Tuple.Create)
+        .All(pair => 
+            pair.Item1.coefficient == pair.Item2.coefficient &&
+            pair.Item1.radicand == pair.Item2.radicand
+        );
 
     public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs)
     {

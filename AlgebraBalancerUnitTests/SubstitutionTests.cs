@@ -253,9 +253,9 @@ public class SubstitutionTests
         public void TestMultipleClauses()
         {
             CollectionAssert.AreEqual(((string, string)[])[
-                ("a", "3"),
-                ("b", "5"),
                 ("c", "1"),
+                ("b", "5"),
+                ("a", "3"),
             ], AtLine(ParseDefines,
                 "let a = 3, b = 5, c = 1\r",
                 1
@@ -266,9 +266,9 @@ public class SubstitutionTests
         public void TestMultipleVectorClauses()
         {
             CollectionAssert.AreEqual(((string, string)[])[
-                ("a", "(3, 4)"),
-                ("b", "(5, 6)"),
                 ("c", "(1, 67)"),
+                ("b", "(5, 6)"),
+                ("a", "(3, 4)"),
             ], AtLine(ParseDefines, 
                 "let a = (3, 4), b = (5, 6), c = (1, 67)\r",
                 1

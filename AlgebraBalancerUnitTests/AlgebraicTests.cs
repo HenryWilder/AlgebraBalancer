@@ -10,8 +10,8 @@ public class AlgebraicTests
     [TestMethod]
     public void Test1Add2()
     {
-        var a = new Algebraic(1);
-        var b = new Algebraic(2);
+        Algebraic a = 1;
+        Algebraic b = 2;
         var comb = a + b;
         var test = comb.Simplified();
         Assert.AreEqual(new Number(3), test);
@@ -20,7 +20,7 @@ public class AlgebraicTests
     [TestMethod]
     public void Test2Mul2()
     {
-        var a = new Algebraic(2);
+        Algebraic a = 2;
         var comb = a * a;
         var test = comb.Simplified();
         Assert.AreEqual(new Number(4), test);
@@ -29,8 +29,8 @@ public class AlgebraicTests
     [TestMethod]
     public void Test1Div2()
     {
-        var a = new Algebraic(1);
-        var b = new Algebraic(2);
+        Algebraic a = 1;
+        Algebraic b = 2;
         var comb = a / b;
         var test = comb.Simplified();
         Assert.AreEqual(new Fraction(1, 2), test);
@@ -39,8 +39,8 @@ public class AlgebraicTests
     [TestMethod]
     public void Test4Div2()
     {
-        var a = new Algebraic(4);
-        var b = new Algebraic(2);
+        Algebraic a = 4;
+        Algebraic b = 2;
         var comb = a / b;
         var test = comb.Simplified();
         Assert.AreEqual(new Number(2), test);
@@ -49,8 +49,8 @@ public class AlgebraicTests
     [TestMethod]
     public void TestSqrt2Over2()
     {
-        var a = new Algebraic(new Radical(2));
-        var b = new Algebraic(2);
+        Algebraic a = new Radical(2);
+        Algebraic b = 2;
         var comb = a / b;
         var test = comb.Simplified();
         Assert.AreEqual(new RadicalFraction(new Radical(2), 2), test);
@@ -59,8 +59,8 @@ public class AlgebraicTests
     [TestMethod]
     public void Test2Sqrt2Over4()
     {
-        var a = new Algebraic(new Radical(2, 2));
-        var b = new Algebraic(4);
+        Algebraic a = new Radical(2, 2);
+        Algebraic b = 4;
         var comb = a / b;
         var test = comb.Simplified();
         Assert.AreEqual(new RadicalFraction(new Radical(2), 2), test);
@@ -68,8 +68,8 @@ public class AlgebraicTests
 
     private static (IAlgebraicNotation, IAlgebraicNotation) QuadraticHelper(int a, int b, int c)
     {
-        var lhs = new Algebraic(new Fraction(-b, 2 * a));
-        var rhs = new Algebraic([new Radical(b * b - 4 * a * c)], 2 * a);
+        Algebraic lhs = new Fraction(-b, 2 * a);
+        Algebraic rhs = new Radical(b * b - 4 * a * c) / (2 * a);
         var solution1 = (lhs + rhs).Simplified();
         var solution2 = (lhs - rhs).Simplified();
         return (solution1, solution2);
@@ -87,7 +87,20 @@ public class AlgebraicTests
     public void TestQuadratic2()
     {
         var (solution1, solution2) = QuadraticHelper(3, 2, 5);
-        Assert.AreEqual(new Algebraic([new Radical(-1, 1), new Radical(-14)], 3), solution1);
-        Assert.AreEqual(new Algebraic([new Radical(-1, 1), new Radical(-1, -14)], 3), solution2);
+
+        var expect1 = (new Radical(-1, 1) + new Radical(-14)) / 3;
+        Assert.AreEqual(expect1, solution1);
+
+        var expect2 = (new Radical(-1, 1) + new Radical(-1, -14)) / 3;
+        Assert.AreEqual(expect2, solution2);
+    }
+
+    [TestMethod]
+    public void TestDenominatorRationalization()
+    {
+        Assert.AreEqual(
+            (new Radical(2, 3) + new Radical(3, 2) + new Radical(30)) / 12,
+            (1 / (new Radical(2) + new Radical(3) - new Radical(5))).Simplified()
+        );
     }
 }

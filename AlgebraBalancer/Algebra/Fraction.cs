@@ -110,6 +110,7 @@ public struct Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpre
         return new Fraction(-numerator, denominator);
     }
     public readonly IAlgebraicNotation Reciprocal() => new Fraction(denominator, numerator);
+    public readonly IAlgebraicNotation Squared() => new Fraction(denominator * denominator, numerator * numerator);
 
     public static Fraction operator -(Fraction rhs) => new(-rhs.numerator, rhs.denominator);
 }

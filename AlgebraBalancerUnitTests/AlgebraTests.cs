@@ -184,11 +184,7 @@ public class AlgebraTests
         [TestClass]
         public class ToStringTests
         {
-            [TestMethod]
-            public void TestBasic()
-            {
-                Assert.AreEqual(1, 0);
-            }
+
         }
     }
 

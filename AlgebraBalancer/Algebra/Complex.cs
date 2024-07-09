@@ -133,4 +133,5 @@ public struct Complex : IAlgebraicExpression
     }
 
     public static Complex operator -(Complex rhs) => new(-rhs.real, -rhs.imag);
+    public readonly Complex Conjugate() => new(real, -imag);
 }
