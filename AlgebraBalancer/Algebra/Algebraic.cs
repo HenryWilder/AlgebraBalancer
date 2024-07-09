@@ -151,33 +151,51 @@ internal struct Algebraic : IAlgebraicExpression
             denominatorCoef
         );
 
-        if (alg.numeratorTerms.Length == 1)
+        //tex:$$\frac{c_1\sqrt{r_1}+c_2\sqrt{r_2}+\dots+c_n\sqrt{r_n}}{0} = \frac{1}{0}$$
+        if (alg.denominator == 0)
+        {
+            return Bald.UNDEFINED;
+        }
+        //tex:$$\frac{c\sqrt{r}}{d}$$
+        else if (alg.numeratorTerms.Length == 1)
         {
             var numerator = alg.numeratorTerms[0];
+            //tex:$$\frac{c\sqrt{r}}{1}$$
             if (alg.denominator is 1 or -1)
             {
+                //tex:$$\frac{c\sqrt{0}}{1} = 0$$
                 if (numerator.radicand == 0)
                 {
                     return new Number(0);
                 }
-                if (numerator.radicand == 1)
+                //tex:$$\frac{c\sqrt{1}}{1} = c$$
+                else if (numerator.radicand == 1)
                 {
                     return new Number(numerator.coefficient);
                 }
+                //tex:$$\frac{c\sqrt{-1}}{1} = ci$$
                 else if (numerator.radicand == -1)
                 {
                     return new Imaginary(numerator.coefficient);
                 }
+                //tex:$$\frac{c\sqrt{r}}{1} = c\sqrt{r}$$
                 else
                 {
                     return numerator;
                 }
             }
+            //tex:$$\frac{c\sqrt{1}}{d} = \frac{c}{d}$$
             else if (numerator.radicand == 1)
             {
                 return new Fraction(numerator.coefficient, denominator);
             }
+            //tex:$$\frac{c\sqrt{r}}{d}$$
+            else
+            {
+                return new RadicalFraction(numerator, denominator);
+            }
         }
+        //tex:$$\frac{c_1\sqrt{\pm 1}+c_2\sqrt{\mp 1}}{1} = \begin{gathered}c_1+c_2i\\\text{or}\\c_2+c_1i\end{gathered} = a+bi$$
         else if (
             alg.denominator == 1 &&
             alg.numeratorTerms.Length == 2 &&
