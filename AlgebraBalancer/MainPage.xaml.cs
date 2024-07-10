@@ -11,6 +11,7 @@ using Windows.System;
 using System.Collections.ObjectModel;
 using AlgebraBalancer.Algebra.Balancer;
 using AlgebraBalancer.Substitute;
+using AlgebraBalancer.Algebra;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -308,24 +309,107 @@ public sealed partial class MainPage : Page
         selectionStartFinal = selectionStart + cursorOffset;
     }
 
+    private static readonly Regex rxRadical =
+        new(@"(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d*)(?'imag'i|𝑖|ⅈ)?√(?'radi'\-?\d+)|(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d+)(?'imag'i|𝑖|ⅈ)?|(?'imag'i|𝑖|ⅈ)",
+            RegexOptions.Compiled);
+
+    enum AlgOp
+    {
+        Add,
+        Sub,
+        Mul,
+        Div,
+    }
+    public static Algebraic SolveAlgebraic(string expr)
+    {
+        static Algebraic EvaluateAlgOp(Algebraic lhs, AlgOp op, Algebraic rhs)
+        {
+            return op switch
+            {
+                AlgOp.Add => lhs + rhs,
+                AlgOp.Sub => lhs - rhs,
+                AlgOp.Mul => lhs * rhs,
+                AlgOp.Div => lhs / rhs,
+                _ => throw new NotImplementedException()
+            };
+        }
+
+        expr = rxImpliedMul.Replace(expr, "*")
+            .Replace("×", "*")
+            .Replace(" ", "");
+
+        var items = rxRadical.Matches(expr)
+            .Select(match =>
+            {
+                var coef = match.Groups["coef"];
+                var imag = match.Groups["imag"];
+                var radi = match.Groups["radi"];
+                int coefficient = coef.Success ? int.Parse(coef.Value) : 1;
+                int radicand = (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
+                Radical radical = new(coefficient, radicand);
+                return (match, radical);
+            })
+            .ToList();
+
+        Stack<Algebraic> group = [];
+        Stack<AlgOp> upcomingOperation = [];
+        void ApplyOperation(Algebraic rhs)
+        {
+            if (upcomingOperation.Count < group.Count) group.Push(rhs);
+            else group.Push(EvaluateAlgOp(group.Pop(), upcomingOperation.Pop(), rhs));
+        }
+
+        for (int i = 0; i < expr.Length; ++i)
+        {
+            int matchIndex = items.FindIndex(item => item.match.Index == i);
+            if (matchIndex != -1)
+            {
+                var (match, radical) = items[matchIndex];
+                i += match.Length;
+                ApplyOperation(radical);
+                if (i == expr.Length) break;
+            }
+
+            char ch = expr[i];
+            if (ch == '(')
+            {
+                group.Push(new());
+            }
+            else if (ch == ')')
+            {
+                ApplyOperation(group.Pop());
+            }
+            else
+            {
+                upcomingOperation.Push(ch switch
+                {
+                    '+' => AlgOp.Add,
+                    '-' => AlgOp.Sub,
+                    '*' => AlgOp.Mul,
+                    '/' => AlgOp.Div,
+                    _ => throw new NotImplementedException()
+                });
+            }
+        }
+
+        return group.Pop();
+    }
+
     public static void CalculateInline(
         string expr,
         int selectionStart,
         int selectionLength,
         in string notesText,
+        bool isAlgebraic,
         out int selectionStartFinal,
         out string notesTextFinal
     )
     {
         string addText;
-        if (Solver.TrySolveDouble(expr, out string result))
-        {
-            addText = $" = {result}";
-        }
-        else
-        {
-            addText = $" = <{result}>";
-        }
+        addText = " = " + (isAlgebraic
+            ? SolveAlgebraic(expr)
+            : Solver.TrySolveDouble(expr, out string result) ? result : $"<{result}>"
+        );
         int insertAt = selectionStart + selectionLength;
         int insertEnd = insertAt + addText.Length;
         notesTextFinal = notesText.Insert(insertAt, addText);
@@ -469,6 +553,7 @@ public sealed partial class MainPage : Page
                     Notes.SelectionStart,
                     Notes.SelectionLength,
                     Notes.Text,
+                    new Regex(@"i|𝑖|ⅈ|√").IsMatch(Notes.SelectedText),
                     out newSelectionStart,
                     out newNotesText
                 );

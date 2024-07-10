@@ -44,11 +44,15 @@ public struct Algebraic : IAlgebraicExpression
         public readonly SumOfRadicals Squared() =>
             this * this;
 
-        //tex:$$\overline{\sqrt{2} + \sqrt{3}} = \sqrt{2} - \sqrt{3}$$
+        //tex:$$
+        //\overline{\sqrt{2} + \sqrt{3}} = \sqrt{2} - \sqrt{3}\\
+        //\overline{\sqrt{2} + \sqrt{3} + \sqrt{5}} = \sqrt{2} + \sqrt{3} - \sqrt{5}\\
+        //\vdots
+        //$$
         public readonly SumOfRadicals Conjugate() =>
             terms.Length switch
             {
-                <0 => throw new IndexOutOfRangeException(),
+                < 0 => throw new IndexOutOfRangeException(),
                 0 or 1 => this,
                 > 1 => new SumOfRadicals([..terms.Take(terms.Length - 1)]) - terms.Last(),
             };

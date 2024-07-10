@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AlgebraBalancer.Notation;
 using AlgebraBalancer.Algebra;
+using AlgebraBalancer;
+using static AlgebraBalancer.MainPage;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -102,5 +104,89 @@ public class AlgebraicTests
             (new Radical(2, 3) + new Radical(3, 2) + new Radical(30)) / 12,
             (1 / (new Radical(2) + new Radical(3) - new Radical(5))).Simplified()
         );
+    }
+
+    [TestClass]
+    public class SolveAlgebraicTests()
+    {
+        [TestMethod, TestCategory("Basic input")]
+        public void TestInteger()
+        {
+            Assert.AreEqual(
+                new Algebraic(5),
+                SolveAlgebraic("5"));
+        }
+
+        [TestMethod, TestCategory("Basic input")]
+        public void TestRadical()
+        {
+            Assert.AreEqual(
+                new Algebraic(new Radical(2, 2)),
+                SolveAlgebraic("2√2"));
+        }
+
+        [TestMethod, TestCategory("Basic input")]
+        public void TestImaginary()
+        {
+            Assert.AreEqual(
+                new Algebraic(new Imaginary(7)),
+                SolveAlgebraic("7i"));
+        }
+
+        [TestMethod, TestCategory("Basic input")]
+        public void TestImaginaryRadical()
+        {
+            Assert.AreEqual(
+                new Algebraic(new Radical(7, -2)),
+                SolveAlgebraic("7i√2"));
+        }
+
+        [TestMethod, TestCategory("Basic input")]
+        public void TestNegativeRadicand()
+        {
+            Assert.AreEqual(
+                new Algebraic(new Radical(7, -2)),
+                SolveAlgebraic("7√-2"));
+        }
+
+        [TestMethod, TestCategory("Basic operation")]
+        public void TestIntegerArithmetic()
+        {
+            Assert.AreEqual(
+                new Number(5),
+                SolveAlgebraic("2 + 3").Simplified());
+
+            Assert.AreEqual(
+                new Number(20),
+                SolveAlgebraic("5 * 4").Simplified());
+
+            Assert.AreEqual(
+                new Number(3),
+                SolveAlgebraic("12 / 4").Simplified());
+
+            Assert.AreEqual(
+                new Number(27),
+                SolveAlgebraic("35 - 8").Simplified());
+        }
+
+        [TestMethod]
+        public void TestParentheticGrouping()
+        {
+            Assert.AreEqual(
+                new Number(7),
+                SolveAlgebraic("(2 * 2) + 3").Simplified());
+
+            Assert.AreEqual(
+                new Number(10),
+                SolveAlgebraic("2 * (2 + 3)").Simplified());
+        }
+
+        [TestMethod]
+        public void TestNestedParentheticGrouping()
+        {
+            Assert.AreEqual(
+                new Number(10),
+                SolveAlgebraic("(2 * (5 + 2 - 1) / 2) + (3 * 4)").Simplified());
+        }
     }
 }
