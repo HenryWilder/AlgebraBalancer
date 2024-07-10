@@ -1889,6 +1889,12 @@ internal static class LatexUnicode
     private static readonly Regex superscriptPattern1 = new(@"\^([0-9\+\-=\(\)a-pr-z ])", RegexOptions.Compiled);
     public static string ToSuperscript(string str) => Remap(str, superscriptMapping);
 
+    private static readonly Regex superscriptNumberPattern = new(@"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+", RegexOptions.Compiled);
+    private const string SUPERSCRIPT_NUMBERS = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻";
+    public static string SuperscriptToNumber(string expr) =>
+        superscriptNumberPattern.Replace(expr, (match) =>
+            "^(" + string.Concat(match.Value.Select(ch => "0123456789-"[SUPERSCRIPT_NUMBERS.IndexOf(ch)]))) + ")";
+
     private static readonly Dictionary<char, string> subscriptMapping = new()
     {
         { '0', "₀" },

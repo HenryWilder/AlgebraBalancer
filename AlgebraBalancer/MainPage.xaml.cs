@@ -120,8 +120,6 @@ public sealed partial class MainPage : Page
     }
 
     private static readonly Regex rxWS = new(@"[ \t\n\r]+");
-
-    private readonly static Regex rxImpliedMul = new(@"(?<=\))\s*(?=[0-9\(])|(?<=[0-9\)])\s*(?=\()");
     private readonly static Regex rxSquare = new(@"(\d+\.?\d*)([²³⁴])");
 
     private static readonly string HELP_TEXT = @"
@@ -309,97 +307,6 @@ public sealed partial class MainPage : Page
         selectionStartFinal = selectionStart + cursorOffset;
     }
 
-    private static readonly Regex rxTerm =
-        new(@"
-            (?=\d|i|𝑖|ⅈ|√-?\d) # Prevent empty match
-            (?: # Must match between 1 and 3 of the following groups, in order, not repeating
-                (?'coef'
-                    \d+
-                )?
-                (?'imag'
-                    i|𝑖|ⅈ
-                )?
-                (?:
-                    √ # Don't need to capture radical, just the radicand
-                    (?'radi'
-                        -? # Dash here is always a sign because it is necessarily preceeded by the radical
-                        \d+
-                    )
-                )?
-            )",
-            RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
-
-    private static readonly Regex rxAlgebraicExpr =
-        new(@$"(?'numer'\((?'numerTerms'{rxTerm})(?:(?=[-+])\+?(?'numerTerms'{rxTerm}))*\)|(?'numerTerms'{rxTerm}))/(?'denom'-?\d+)",
-            RegexOptions.Compiled);
-
-    private static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
-
-    enum AlgOp
-    {
-        Add,
-        Sub,
-        Mul,
-        Div,
-    }
-    public static Algebraic SolveAlgebraic(string expr)
-    {
-        expr = rxImpliedMul.Replace(expr, "*")
-            .Replace("×", "*")
-            .Replace(" ", "");
-
-        var items = rxTerm.Matches(expr)
-            .Select(match =>
-            {
-                var coef = match.Groups["coef"];
-                var imag = match.Groups["imag"];
-                var radi = match.Groups["radi"];
-                int coefficient = coef.Success ? int.Parse(coef.Value) : 1;
-                int radicand = (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
-                Radical radical = new(coefficient, radicand);
-                return (match, radical);
-            })
-            .ToList();
-
-        Algebraic group = default;
-        AlgOp? upcomingOperation = null;
-
-        for (int i = 0; i < expr.Length; ++i)
-        {
-            int matchIndex = items.FindIndex(item => item.match.Index == i);
-            if (matchIndex != -1)
-            {
-                var (match, radical) = items[matchIndex];
-                i += match.Length;
-                group = upcomingOperation is null
-                    ? radical 
-                    : upcomingOperation switch
-                    {
-                        AlgOp.Add => group + radical,
-                        AlgOp.Sub => group - radical,
-                        AlgOp.Mul => group * radical,
-                        AlgOp.Div => group / radical,
-                        _ => throw new NotImplementedException()
-                    };
-                group.numerator = group.numerator.TermsSimplified().LikeTermsCombined();
-                upcomingOperation = null;
-                if (i == expr.Length) break;
-            }
-
-            char ch = expr[i];
-            upcomingOperation = ch switch
-            {
-                '+' => AlgOp.Add,
-                '-' => AlgOp.Sub,
-                '*' => AlgOp.Mul,
-                '/' => AlgOp.Div,
-                _ => throw new NotImplementedException()
-            };
-        }
-
-        return group;
-    }
-
     public static void CalculateInline(
         string expr,
         int selectionStart,
@@ -428,7 +335,7 @@ public sealed partial class MainPage : Page
             string resultAlgebraic;
             try
             {
-                resultAlgebraic = SolveAlgebraic(expr).Simplified().ToString();
+                resultAlgebraic = AlgSolver.SolveAlgebraic(expr).Simplified().ToString();
                 if (resultAlgebraic.Contains("𝑖"))
                 {
                     if (expr.Contains("ⅈ"))
@@ -592,7 +499,7 @@ public sealed partial class MainPage : Page
                     Notes.SelectionStart,
                     Notes.SelectionLength,
                     Notes.Text,
-                    rxNeedsAlgebraic.IsMatch(Notes.SelectedText),
+                    AlgSolver.rxNeedsAlgebraic.IsMatch(Notes.SelectedText),
                     out newSelectionStart,
                     out newNotesText
                 );

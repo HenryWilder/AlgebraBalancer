@@ -2,11 +2,12 @@
 using System.Data;
 using System.Text.RegularExpressions;
 
+using AlgebraBalancer.Algebra;
+
 namespace AlgebraBalancer;
 public static class Solver
 {
     private static readonly DataTable dt = new();
-    private static readonly Regex rxImpliedMul = new(@"(?<=\))\s*(?=[\d\(])|(?<=[\d\)])\s*(?=\()");
 
     public static bool TrySolveInteger(string expr, out string result)
     {
@@ -15,7 +16,7 @@ public static class Solver
 
         try
         {
-            object computed = dt.Compute(rxImpliedMul.Replace(expr, "*"), "");
+            object computed = dt.Compute(AlgSolver.CleanExpr(expr), "");
             if (computed is not null)
             {
                 double computedDouble = Convert.ToDouble(computed);
@@ -48,7 +49,7 @@ public static class Solver
     {
         try
         {
-            object computed = dt.Compute(rxImpliedMul.Replace(expr, "*"), "");
+            object computed = dt.Compute(AlgSolver.CleanExpr(expr), "");
             if (computed is not null)
             {
                 result = Convert.ToDouble(computed).ToString();

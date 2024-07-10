@@ -117,6 +117,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Algebra\Algebraic.cs" />
+    <Compile Include="Algebra\AlgSolver.cs" />
     <Compile Include="Algebra\Balancer.cs" />
     <Compile Include="Algebra\Complex.cs" />
     <Compile Include="Algebra\ExactMath.cs" />
