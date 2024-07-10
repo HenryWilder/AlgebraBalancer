@@ -405,18 +405,27 @@ public sealed partial class MainPage : Page
 
         if (isAlgebraic)
         {
-            string resultAlgebraic = SolveAlgebraic(expr).Simplified().ToString();
-            if (resultAlgebraic.Contains("𝑖"))
+            string resultAlgebraic;
+            try
             {
-                if (expr.Contains("ⅈ"))
+                resultAlgebraic = SolveAlgebraic(expr).Simplified().ToString();
+                if (resultAlgebraic.Contains("𝑖"))
                 {
-                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "ⅈ");
-                }
-                else if (!expr.Contains("𝑖"))
-                {
-                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "i");
+                    if (expr.Contains("ⅈ"))
+                    {
+                        resultAlgebraic = resultAlgebraic.Replace("𝑖", "ⅈ");
+                    }
+                    else if (!expr.Contains("𝑖"))
+                    {
+                        resultAlgebraic = resultAlgebraic.Replace("𝑖", "i");
+                    }
                 }
             }
+            catch (Exception err)
+            {
+                resultAlgebraic = $"<{err.Message}>";
+            }
+
             addText = " = " + resultAlgebraic + addText;
         }
 
