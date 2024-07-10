@@ -310,8 +310,10 @@ public sealed partial class MainPage : Page
     }
 
     private static readonly Regex rxRadical =
-        new(@"(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d*)(?'imag'i|𝑖|ⅈ)?√(?'radi'\-?\d+)|(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d+)(?'imag'i|𝑖|ⅈ)?|(?'imag'i|𝑖|ⅈ)",
+        new(@"(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d+)?(?'imag'i|𝑖|ⅈ)?(?:√(?'radi'\-?\d+))|(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d+)(?'imag'i|𝑖|ⅈ)?|(?'imag'i|𝑖|ⅈ)",
             RegexOptions.Compiled);
+
+    private static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
 
     enum AlgOp
     {
@@ -322,18 +324,6 @@ public sealed partial class MainPage : Page
     }
     public static Algebraic SolveAlgebraic(string expr)
     {
-        static Algebraic EvaluateAlgOp(Algebraic lhs, AlgOp op, Algebraic rhs)
-        {
-            return op switch
-            {
-                AlgOp.Add => lhs + rhs,
-                AlgOp.Sub => lhs - rhs,
-                AlgOp.Mul => lhs * rhs,
-                AlgOp.Div => lhs / rhs,
-                _ => throw new NotImplementedException()
-            };
-        }
-
         expr = rxImpliedMul.Replace(expr, "*")
             .Replace("×", "*")
             .Replace(" ", "");
@@ -351,13 +341,8 @@ public sealed partial class MainPage : Page
             })
             .ToList();
 
-        Stack<Algebraic> group = [];
-        Stack<AlgOp> upcomingOperation = [];
-        void ApplyOperation(Algebraic rhs)
-        {
-            if (upcomingOperation.Count < group.Count) group.Push(rhs);
-            else group.Push(EvaluateAlgOp(group.Pop(), upcomingOperation.Pop(), rhs));
-        }
+        Algebraic group = default;
+        AlgOp? upcomingOperation = null;
 
         for (int i = 0; i < expr.Length; ++i)
         {
@@ -366,33 +351,33 @@ public sealed partial class MainPage : Page
             {
                 var (match, radical) = items[matchIndex];
                 i += match.Length;
-                ApplyOperation(radical);
+                group = upcomingOperation is null
+                    ? radical 
+                    : upcomingOperation switch
+                    {
+                        AlgOp.Add => group + radical,
+                        AlgOp.Sub => group - radical,
+                        AlgOp.Mul => group * radical,
+                        AlgOp.Div => group / radical,
+                        _ => throw new NotImplementedException()
+                    };
+                group.numerator = group.numerator.TermsSimplified().LikeTermsCombined();
+                upcomingOperation = null;
                 if (i == expr.Length) break;
             }
 
             char ch = expr[i];
-            if (ch == '(')
+            upcomingOperation = ch switch
             {
-                group.Push(new());
-            }
-            else if (ch == ')')
-            {
-                ApplyOperation(group.Pop());
-            }
-            else
-            {
-                upcomingOperation.Push(ch switch
-                {
-                    '+' => AlgOp.Add,
-                    '-' => AlgOp.Sub,
-                    '*' => AlgOp.Mul,
-                    '/' => AlgOp.Div,
-                    _ => throw new NotImplementedException()
-                });
-            }
+                '+' => AlgOp.Add,
+                '-' => AlgOp.Sub,
+                '*' => AlgOp.Mul,
+                '/' => AlgOp.Div,
+                _ => throw new NotImplementedException()
+            };
         }
 
-        return group.Pop();
+        return group;
     }
 
     public static void CalculateInline(
@@ -406,10 +391,35 @@ public sealed partial class MainPage : Page
     )
     {
         string addText;
-        addText = " = " + (isAlgebraic
-            ? SolveAlgebraic(expr)
-            : Solver.TrySolveDouble(expr, out string result) ? result : $"<{result}>"
-        );
+
+        if (!isAlgebraic)
+        {
+            string resultDouble = Solver.TrySolveDouble(expr, out string result) ? result : $"<{result}>";
+            addText = " = " + resultDouble;
+            isAlgebraic = resultDouble.Contains(".");
+        }
+        else
+        {
+            addText = string.Empty;
+        }
+
+        if (isAlgebraic)
+        {
+            string resultAlgebraic = SolveAlgebraic(expr).Simplified().ToString();
+            if (resultAlgebraic.Contains("𝑖"))
+            {
+                if (expr.Contains("ⅈ"))
+                {
+                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "ⅈ");
+                }
+                else if (!expr.Contains("𝑖"))
+                {
+                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "i");
+                }
+            }
+            addText = " = " + resultAlgebraic + addText;
+        }
+
         int insertAt = selectionStart + selectionLength;
         int insertEnd = insertAt + addText.Length;
         notesTextFinal = notesText.Insert(insertAt, addText);
@@ -553,7 +563,7 @@ public sealed partial class MainPage : Page
                     Notes.SelectionStart,
                     Notes.SelectionLength,
                     Notes.Text,
-                    new Regex(@"i|𝑖|ⅈ|√").IsMatch(Notes.SelectedText),
+                    rxNeedsAlgebraic.IsMatch(Notes.SelectedText),
                     out newSelectionStart,
                     out newNotesText
                 );

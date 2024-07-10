@@ -409,7 +409,13 @@ public struct Algebraic : IAlgebraicExpression
         return alg;
     }
 
-    public override readonly string ToString() => $"({string.Join("+", numerator.terms)})/{denominator}";
+    public override readonly string ToString()
+    {
+        string numeratorStr = string.Join("+", numerator.terms);
+        return denominator == 1
+            ? numeratorStr
+            : $"({numeratorStr})/{denominator}";
+    }
 
     public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
 
