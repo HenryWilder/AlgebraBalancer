@@ -1819,6 +1819,7 @@ internal static class LatexUnicode
         { @"\f\", "𝑓" },
         { @"\g\", "𝑔" },
         { @"\i\", "𝑖" },
+        { @"\h\", "ℎ" },
         { @"\j\", "𝑗" },
         { @"\k\", "𝑘" },
         { @"\l\", "𝑙" },
@@ -1884,8 +1885,8 @@ internal static class LatexUnicode
         { 'y', "ʸ" },
         { 'z', "ᶻ" },
     };
-    private static readonly Regex superscriptPattern = new(@"\^\{([0-9\+\-=\(\)a-pr-z]+?)\}", RegexOptions.Compiled);
-    private static readonly Regex superscriptPattern1 = new(@"\^([0-9\+\-=\(\)a-pr-z])", RegexOptions.Compiled);
+    private static readonly Regex superscriptPattern = new(@"\^\{([0-9\+\-=\(\)a-pr-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex superscriptPattern1 = new(@"\^([0-9\+\-=\(\)a-pr-z ])", RegexOptions.Compiled);
     public static string ToSuperscript(string str) => Remap(str, superscriptMapping);
 
     private static readonly Dictionary<char, string> subscriptMapping = new()
@@ -1918,8 +1919,8 @@ internal static class LatexUnicode
         { 't', "ₜ" },
         { 'x', "ₓ" },
     };
-    private static readonly Regex subscriptPattern = new(@"_\{([0-9\+\-=\(\)aexhklmnopst]+?)\}", RegexOptions.Compiled);
-    private static readonly Regex subscriptPattern1 = new(@"_([0-9\+\-=\(\)aexhklmnopst])", RegexOptions.Compiled);
+    private static readonly Regex subscriptPattern = new(@"_\{([0-9\+\-=\(\)aexhklmnopst ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex subscriptPattern1 = new(@"_([0-9\+\-=\(\)aexhklmnopst ])", RegexOptions.Compiled);
     public static string ToSubscript(string str) => Remap(str, subscriptMapping);
 
     private static readonly Dictionary<char, string> ttMapping = new()
@@ -1987,7 +1988,7 @@ internal static class LatexUnicode
         { 'y', "𝚢" },
         { 'z', "𝚣" },
     };
-    private static readonly Regex ttPattern = new(@"\\tt\{([0-9A-Za-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex ttPattern = new(@"\\tt\{([0-9A-Za-z ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bfMapping = new()
     {
@@ -2114,7 +2115,7 @@ internal static class LatexUnicode
         { 'Ϝ', "𝟊" },
         { 'ϝ', "𝟋" },
     };
-    private static readonly Regex bfPattern = new(@"\\bf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bfPattern = new(@"\\bf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bbMapping = new()
     {
@@ -2186,7 +2187,7 @@ internal static class LatexUnicode
         { 'Π', "ℿ" },
         { 'Σ', "⅀" },
     };
-    private static readonly Regex bbPattern = new(@"\\bb\{([0-9A-Za-zπγΓΠΣ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bbPattern = new(@"\\bb\{([0-9A-Za-zπγΓΠΣ ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfMapping = new()
     {
@@ -2253,7 +2254,7 @@ internal static class LatexUnicode
         { 'y', "𝗒" },
         { 'z', "𝗓" },
     };
-    private static readonly Regex sfPattern = new(@"\\sf\{([0-9A-Za-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfPattern = new(@"\\sf\{([0-9A-Za-z ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> itMapping = new()
     {
@@ -2316,7 +2317,7 @@ internal static class LatexUnicode
         { 'ϱ', "𝜚" },
         { 'ϖ', "𝜛" },
     };
-    private static readonly Regex itPattern = new(@"\\it\{([ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex itPattern = new(@"\\it\{([ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> frakMapping = new()
     {
@@ -2372,7 +2373,7 @@ internal static class LatexUnicode
         { 'z', "𝔷" },
 
     };
-    private static readonly Regex frakPattern = new(@"\\frak\{([A-Za-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex frakPattern = new(@"\\frak\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> calMapping = new()
     {
@@ -2429,7 +2430,7 @@ internal static class LatexUnicode
         { 'y', "𝓎" },
         { 'z', "𝓏" },
     };
-    private static readonly Regex calPattern = new(@"\\cal\{([A-Za-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex calPattern = new(@"\\cal\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfbfMapping = new()
     {
@@ -2554,7 +2555,7 @@ internal static class LatexUnicode
         { '8', "𝟴" },
         { '9', "𝟵" },
     };
-    private static readonly Regex sfbfPattern = new(@"\\sfbf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfbfPattern = new(@"\\sfbf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfbfitMapping = new()
     {
@@ -2669,7 +2670,7 @@ internal static class LatexUnicode
         { 'ϱ', "𝟈" },
         { 'ϖ', "𝟉" },
     };
-    private static readonly Regex sfbfitPattern = new(@"\\sfbfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfbfitPattern = new(@"\\sfbfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bfitMapping = new()
     {
@@ -2784,7 +2785,7 @@ internal static class LatexUnicode
         { 'ϱ', "𝝔" },
         { 'ϖ', "𝝕" },
     };
-    private static readonly Regex bfitPattern = new(@"\\bfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bfitPattern = new(@"\\bfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bfscrMapping = new()
     {
@@ -2841,7 +2842,7 @@ internal static class LatexUnicode
         { 'y', "𝔂" },
         { 'z', "𝔃" },
     };
-    private static readonly Regex bfscrPattern = new(@"\\bfscr\{([A-Za-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bfscrPattern = new(@"\\bfscr\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> sfitMapping = new()
     {
@@ -2898,7 +2899,7 @@ internal static class LatexUnicode
         { 'y', "𝘺" },
         { 'z', "𝘻" },
     };
-    private static readonly Regex sfitPattern = new(@"\\sfit\{([A-Za-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfitPattern = new(@"\\sfit\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
 
     private static readonly Dictionary<char, string> bffrakMapping = new()
     {
@@ -2955,7 +2956,7 @@ internal static class LatexUnicode
         { 'y', "𝖞" },
         { 'z', "𝖟" },
     };
-    private static readonly Regex bffrakPattern = new(@"\\bffrak\{([A-Za-z]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bffrakPattern = new(@"\\bffrak\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
 
     private static string Remap(string str, Dictionary<char, string> mapping) =>
         string.Concat(str.Select((char ch) => mapping.TryGetValue(ch, out string replacement) ? replacement : ch.ToString()));

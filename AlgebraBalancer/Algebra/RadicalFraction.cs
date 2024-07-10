@@ -1,11 +1,8 @@
 ﻿using System;
-
 using AlgebraBalancer.Notation;
 
-using static AlgebraBalancer.Notation.IAlgebraicNotation;
-
 namespace AlgebraBalancer.Algebra;
-public struct RadicalFraction : IAlgebraicExpression
+public class RadicalFraction : IAlgebraicExpression
 {
     public RadicalFraction() { }
 
@@ -18,17 +15,17 @@ public struct RadicalFraction : IAlgebraicExpression
     public Radical numerator = default;
     public int denominator = 1;
 
-    public readonly NotationKind Kind => NotationKind.RadicalFraction;
+    public bool IsInoperable => false;
 
     // Does not simplify
-    public override readonly string ToString()
+    public override string ToString()
     {
         return $"({numerator})/{denominator}";
     }
 
-    public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
 
-    public readonly IAlgebraicNotation Simplified()
+    public IAlgebraicNotation Simplified()
     {
         //tex:$$d = 0 \implies \frac{n}{0} \therefore \nexists$$
         if (denominator == 0)
@@ -95,26 +92,6 @@ public struct RadicalFraction : IAlgebraicExpression
             throw new NotImplementedException();
         }
     }
-
-    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs)
-    {
-        throw new NotImplementedException();
-    }
-    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs)
-    {
-        throw new NotImplementedException();
-    }
-    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
-    {
-        throw new NotImplementedException();
-    }
-    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
-    {
-        throw new NotImplementedException();
-    }
-    public readonly IAlgebraicNotation Pow(int exponent) => throw new NotImplementedException();
-    public readonly IAlgebraicNotation Neg() => new RadicalFraction(-numerator, denominator);
-    public readonly IAlgebraicNotation Reciprocal() => new RadicalFraction(denominator, numerator);
 
     public static RadicalFraction operator -(RadicalFraction rhs) => new(-rhs.numerator, rhs.denominator);
 }

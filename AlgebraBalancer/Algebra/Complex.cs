@@ -1,11 +1,10 @@
-﻿using System;
-using AlgebraBalancer.Notation;
-
-using static AlgebraBalancer.Notation.IAlgebraicNotation;
+﻿using AlgebraBalancer.Notation;
 
 namespace AlgebraBalancer.Algebra;
-public struct Complex : IAlgebraicExpression
+public class Complex : IAlgebraicExpression
 {
+    public bool IsInoperable => false;
+
     public Complex(int real, int imag)
     {
         this.real = real;
@@ -30,71 +29,22 @@ public struct Complex : IAlgebraicExpression
     public Number real;
     public Imaginary imag;
 
-    public readonly NotationKind Kind => NotationKind.Complex;
-
-    public override readonly string ToString()
+    public override string ToString()
     {
         if (IsReal()) return real.ToString();
         if (IsImaginary()) return imag.ToString();
         else return $"{real}{imag:+#;-#;+0}";
     }
 
-    public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
 
-    public readonly bool IsReal() => imag.coef == 0;
-    public readonly bool IsImaginary() => real == 0;
-    public readonly IAlgebraicNotation Simplified()
+    public bool IsReal() => imag.coef == 0;
+    public bool IsImaginary() => real == 0;
+    public IAlgebraicNotation Simplified()
     {
         if (IsReal()) return real;
         if (IsImaginary()) return imag;
         else return this;
-    }
-
-    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs)
-    {
-        return rhs switch
-        {
-            Number num => this + num,
-            Complex cmplx => this + cmplx,
-            Imaginary imag => this + imag,
-            _ => throw new NotImplementedException(),
-        };
-    }
-    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs)
-    {
-        return Add(rhs.Neg());
-    }
-    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
-    {
-        return rhs switch
-        {
-            Number num => this * num,
-            Complex cmplx => this * cmplx,
-            Imaginary imag => this * imag,
-            _ => throw new NotImplementedException(),
-        };
-    }
-    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
-    {
-        return rhs switch
-        {
-            Number num => this * num,
-            Complex cmplx => this * cmplx,
-            Imaginary imag => this * imag,
-            _ => throw new NotImplementedException(),
-        };
-    }
-    public readonly IAlgebraicNotation Pow(int exponent)
-    {
-        throw new NotImplementedException();
-    }
-    public readonly IAlgebraicNotation Neg()
-    {
-        return this * -1;
-    }
-    public readonly IAlgebraicNotation Reciprocal()
-    {
-        throw new NotImplementedException();
     }
 
     public static Complex operator +(Complex a, Complex b)
@@ -133,5 +83,5 @@ public struct Complex : IAlgebraicExpression
     }
 
     public static Complex operator -(Complex rhs) => new(-rhs.real, -rhs.imag);
-    public readonly Complex Conjugate() => new(real, -imag);
+    public Complex Conjugate() => new(real, -imag);
 }

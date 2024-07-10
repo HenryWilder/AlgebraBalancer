@@ -152,26 +152,43 @@ internal class ExactCalculations
 
         // Quadratic
         {
-            var solutions = ExactMath.Quadratic(a, b, c);
+            string solutionStr;
+            try
+            {
+                var solutions = ExactMath.Quadratic(a, b, c);
+                solutionStr = solutions.ToString();
+            }
+            catch (Exception ex)
+            {
+                solutionStr = $"<{ex.Message}>";
+            }
 
             result.Add(
                 $"Quadratic:\n" +
                 $"  {a}𝑥² + {b}𝑥 + {c} = 0 =>\n" +
                 $"  𝑥 = (-({b})±√(({b})²-4({a})({c})))/2({a})\n" +
                 $"    = ({-b}±√({b*b}-{4*a*c}))/{2*a}\n" +
-                $"    = {solutions}");
+                $"    = {solutionStr}");
         }
 
         // Vertex form
         {
-            var vertexForm = ExactMath.CompleteSquare(a, b, c);
+            string vertexFormStr;
+            try
+            {
+                var vertexForms = ExactMath.CompleteSquare(a, b, c);
+                vertexFormStr = vertexForms.ToString();
+            }
+            catch (Exception ex)
+            {
+                vertexFormStr = $"<{ex.Message}>";
+            }
 
             result.Add(
                 $"Vertex form (complete square):\n" +
                 $"  𝑦 = ({a}𝑥² + {b}𝑥) + {c}\n" +
                 $"    = {a}(𝑥² + ({b}/{a})𝑥 + {b}/2({a})) + {c} - ({b})²/4({a})\n" +
-                $"    = {vertexForm}\n" +
-                $"  𝑣 = ({vertexForm.h}, {vertexForm.k})");
+                $"    = {vertexFormStr}\n");
         }
 
         return result;

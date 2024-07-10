@@ -2,13 +2,11 @@
 
 using AlgebraBalancer.Notation;
 
-using static AlgebraBalancer.Notation.IAlgebraicNotation;
-
 namespace AlgebraBalancer.Algebra;
 /// <summary>
 /// Imaginary radical is represented by a negative radicand
 /// </summary>
-public struct Radical : IAlgebraicExpression
+public class Radical : IAlgebraicExpression
 {
     public Radical() { }
 
@@ -24,12 +22,12 @@ public struct Radical : IAlgebraicExpression
     public int coefficient = 1;
     public int radicand = 1;
 
-    public readonly NotationKind Kind => NotationKind.Radical;
+    public bool IsInoperable => false;
 
-    public readonly int Squared() =>
+    public int Squared() =>
         coefficient * coefficient * radicand;
 
-    public override readonly string ToString()
+    public override string ToString()
     {
         // Radicand is not negative if it is 1 or 0
         // It is also not negative if it is multiplied by 0
@@ -54,9 +52,9 @@ public struct Radical : IAlgebraicExpression
         return $"{coefStr}√{Math.Abs(radicand)}";
     }
 
-    public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
 
-    public readonly IAlgebraicNotation Simplified()
+    public IAlgebraicNotation Simplified()
     {
         switch (radicand)
         {
@@ -93,110 +91,27 @@ public struct Radical : IAlgebraicExpression
         return new Radical(newCoefficient, newRadicand);
     }
 
-    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs) => throw new NotImplementedException();
-    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs) => throw new NotImplementedException();
-    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
-    {
-        if (rhs is Number num)
-        {
-            return new Radical(coefficient * num, radicand);
-        }
-        else if (rhs is Fraction frac)
-        {
-            return new RadicalFraction(new Radical(coefficient * frac.numerator, radicand), frac.denominator);
-        }
-        else if (rhs is Radical rad)
-        {
-            return new Radical(coefficient * rad.coefficient, radicand * rad.radicand);
-        }
-        else if (rhs is Imaginary imag)
-        {
-            return new Radical(coefficient * imag.coef, -radicand);
-        }
-        else
-        {
-            throw new NotImplementedException();
-        }
-    }
-    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
-    {
-        if (rhs is Number num)
-        {
-            return new RadicalFraction(this, num);
-        }
-        else if (rhs is Fraction frac)
-        {
-            return new RadicalFraction(new Radical(coefficient * frac.denominator, radicand), frac.numerator);
-        }
-        else
-        {
-            throw new NotImplementedException();
-        }
-    }
-    public readonly IAlgebraicNotation Pow(int exponent)
-    {
-        switch (exponent)
-        {
-            case 0: return (Number)1;
-            case 1: return this;
-        }
-
-        // Negative exponent
-        if (exponent < 0)
-        {
-            return Pow(-exponent).Reciprocal();
-        }
-        // Positive exponent
-        else
-        {
-            var powCoef = ExactMath.Power(coefficient, exponent);
-            if (powCoef is Number powCoefNum)
-            {
-                int rationalPart = exponent / 2;
-                var powRad = ExactMath.Power(radicand, rationalPart);
-                if (powRad is Number powRadNum)
-                {
-                    int irrationalPart = exponent % 2;
-                    int newCoef = powCoefNum * powRadNum;
-                    return irrationalPart == 0 
-                        ? (Number)newCoef
-                        : new Radical(newCoef);
-                }
-                else
-                {
-                    return powRad;
-                }
-            }
-            else
-            {
-                return powCoef;
-            }
-        }
-    }
-    public readonly IAlgebraicNotation Neg() => new Radical(-coefficient, radicand);
-    public readonly IAlgebraicNotation Reciprocal() => new RadicalFraction(1, this);
-
     public static Radical operator *(Radical lhs, int rhs) => new(lhs.coefficient * rhs, lhs.radicand);
     public static Radical operator *(int lhs, Radical rhs) => new(lhs * rhs.coefficient, rhs.radicand);
     public static Radical operator *(Radical lhs, Radical rhs) => new(lhs.coefficient * rhs.coefficient, lhs.radicand * rhs.radicand);
     public static Radical operator -(Radical rhs) => new(-rhs.coefficient, rhs.radicand);
     public static RadicalFraction operator /(Radical lhs, int rhs) => new(lhs, rhs);
     public static RadicalFraction operator /(int lhs, Radical rhs) => new(lhs, rhs);
-    public static Algebraic.SumOfRadicals operator +(Radical lhs, Radical rhs) => new([lhs, rhs]);
-    public static Algebraic.SumOfRadicals operator +(Radical lhs, int rhs) => new([lhs, new(rhs, 1)]);
-    public static Algebraic.SumOfRadicals operator +(int lhs, Radical rhs) => new([new(lhs, 1), rhs]);
+    public static SumOfRadicals operator +(Radical lhs, Radical rhs) => new([lhs, rhs]);
+    public static SumOfRadicals operator +(Radical lhs, int rhs) => new([lhs, new(rhs, 1)]);
+    public static SumOfRadicals operator +(int lhs, Radical rhs) => new([new(lhs, 1), rhs]);
 
 
     /// <summary>Simplifies to int or imaginary</summary>
-    public readonly bool IsRational() => radicand is 1 or -1;
+    public bool IsRational() => radicand is 1 or -1;
     /// <summary>Simplifies to int</summary>
-    public readonly bool IsInteger() => radicand == 1;
+    public bool IsInteger() => radicand == 1;
     /// <summary>Coefficient of 1</summary>
-    public readonly bool IsPureRadical() => coefficient == 1;
+    public bool IsPureRadical() => coefficient == 1;
     /// <summary>Equal to zero</summary>
-    public readonly bool IsZero() => coefficient == 0 || radicand == 0;
+    public bool IsZero() => coefficient == 0 || radicand == 0;
     /// <summary>Square root of negative</summary>
-    public readonly bool IsImaginary() => radicand < 0;
+    public bool IsImaginary() => radicand < 0;
     /// <summary>Square root of positive</summary>
-    public readonly bool IsReal() => radicand >= 0;
+    public bool IsReal() => radicand >= 0;
 }

@@ -674,22 +674,25 @@ public sealed partial class MainPage : Page
     {
         if (e.Key == VirtualKey.Enter)
         {
-            string search = UnicodeLookup.Text;
+            string searchStr = UnicodeLookup.Text;
+            UnicodeLookup.Text = "";
 
             UnicodeButtonSymbols.Clear();
-            if (!string.IsNullOrWhiteSpace(search))
+            if (!string.IsNullOrWhiteSpace(searchStr))
             {
+                Regex search = new(
+                    string.Join("(?:", searchStr.ToCharArray()) + string.Concat(searchStr.Skip(1).Select(_ => ")?")),
+                    RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
                 var filteredItems = LatexUnicode.unicodeReplacements
-                    .Where((kvp) => kvp.Key.Contains(search))
-                    .Select((kvp) => kvp.Value);
+                    .Select((kvp) => (kvp, search.Match(kvp.Key)))
+                    .OrderByDescending(x => x.Item2.Length)
+                    .Take(128)
+                    .Select((x) => x.kvp.Key/* + "\n" + x.kvp.Value*/);
 
                 if (filteredItems.Count() == 0)
                 {
                     UnicodeButtonSymbols.Add(NO_RESULTS_MSG);
-                }
-                else if (filteredItems.Count() > 64)
-                {
-                    UnicodeButtonSymbols.Add(TOO_MANY_RESULTS_MSG);
                 }
                 else
                 {
@@ -717,7 +720,7 @@ public sealed partial class MainPage : Page
         }
         else
         {
-            string insertion = symbol == ":P" ? "👬" : symbol;
+            string insertion = symbol == ":P" ? "👬" : symbol/*.Split('\n')[1]*/;
             int position = Notes.SelectionStart;
             Notes.Text = Notes.Text.Insert(position, insertion);
             _ = Notes.Focus(FocusState.Programmatic);

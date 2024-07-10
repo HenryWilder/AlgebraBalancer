@@ -3,22 +3,20 @@ using System.Linq;
 
 using AlgebraBalancer.Notation;
 
-using static AlgebraBalancer.Notation.IAlgebraicNotation;
-
 namespace AlgebraBalancer.Algebra;
-public struct Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpression
+public class Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpression
 {
     public int numerator = numerator;
     public int denominator = denominator;
 
-    public readonly NotationKind Kind => NotationKind.Fraction;
+    public bool IsInoperable => false;
 
-    public override readonly string ToString() =>
+    public override string ToString() =>
         $"{numerator}/{denominator}";
 
-    public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
 
-    public readonly IAlgebraicNotation Simplified()
+    public IAlgebraicNotation Simplified()
     {
         if (denominator == 0)
         {
@@ -46,71 +44,6 @@ public struct Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpre
                 : simplifiedNumerator,
             simplifiedDenominator);
     }
-
-    public readonly IAlgebraicNotation Add(IAlgebraicNotation rhs)
-    {
-        return rhs switch
-        {
-            Number num => new Fraction(
-                numerator + num * denominator,
-                denominator),
-            Fraction frac => new Fraction(
-                numerator * frac.denominator + frac.numerator * denominator,
-                denominator * frac.denominator),
-            _ => throw new NotImplementedException("Can't add radical fractions"),
-        };
-    }
-    public readonly IAlgebraicNotation Sub(IAlgebraicNotation rhs)
-    {
-        return rhs switch
-        {
-            Number num => new Fraction(
-                numerator + num * denominator,
-                denominator),
-            Fraction frac => new Fraction(
-                numerator * frac.denominator - frac.numerator * denominator,
-                denominator * frac.denominator),
-            _ => throw new NotImplementedException(),
-        };
-    }
-    public readonly IAlgebraicNotation Mul(IAlgebraicNotation rhs)
-    {
-        return rhs switch
-        {
-            Number num => new Fraction(
-                numerator * num,
-                denominator),
-            Fraction frac => new Fraction(
-                numerator * frac.numerator,
-                denominator * frac.denominator),
-            _ => throw new NotImplementedException(),
-        };
-    }
-    public readonly IAlgebraicNotation Div(IAlgebraicNotation rhs)
-    {
-        return rhs switch
-        {
-            Number num => new Fraction(
-                numerator * num,
-                denominator),
-            Fraction frac => new Fraction(
-                numerator * frac.denominator,
-                denominator * frac.numerator),
-            _ => throw new NotImplementedException(),
-        };
-    }
-    public readonly IAlgebraicNotation Pow(int exponent)
-    {
-        var newNumerator = ExactMath.Power(numerator, exponent);
-        var newDenominator = ExactMath.Power(denominator, exponent);
-        return newNumerator.Div(newDenominator);
-    }
-    public readonly IAlgebraicNotation Neg()
-    {
-        return new Fraction(-numerator, denominator);
-    }
-    public readonly IAlgebraicNotation Reciprocal() => new Fraction(denominator, numerator);
-    public readonly IAlgebraicNotation Squared() => new Fraction(denominator * denominator, numerator * numerator);
 
     public static Fraction operator -(Fraction rhs) => new(-rhs.numerator, rhs.denominator);
 }

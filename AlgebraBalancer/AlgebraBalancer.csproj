@@ -120,13 +120,18 @@
     <Compile Include="Algebra\Balancer.cs" />
     <Compile Include="Algebra\Complex.cs" />
     <Compile Include="Algebra\ExactMath.cs" />
+    <Compile Include="Algebra\Imaginary.cs" />
+    <Compile Include="Algebra\MultipleSolutions.cs" />
     <Compile Include="Algebra\Notation.cs" />
     <Compile Include="AlgebraInput.xaml.cs">
       <DependentUpon>AlgebraInput.xaml</DependentUpon>
     </Compile>
     <Compile Include="Algebra\Fraction.cs" />
+    <Compile Include="Algebra\Number.cs" />
+    <Compile Include="Algebra\Polynomial.cs" />
     <Compile Include="Algebra\Radical.cs" />
     <Compile Include="Algebra\RadicalFraction.cs" />
+    <Compile Include="Algebra\SumOfRadicals.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
