@@ -309,8 +309,28 @@ public sealed partial class MainPage : Page
         selectionStartFinal = selectionStart + cursorOffset;
     }
 
-    private static readonly Regex rxRadical =
-        new(@"(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d+)?(?'imag'i|𝑖|ⅈ)?(?:√(?'radi'\-?\d+))|(?'coef'(?:(?<!\d|i|𝑖|ⅈ)\-)?\d+)(?'imag'i|𝑖|ⅈ)?|(?'imag'i|𝑖|ⅈ)",
+    private static readonly Regex rxTerm =
+        new(@"
+            (?=\d|i|𝑖|ⅈ|√-?\d) # Prevent empty match
+            (?: # Must match between 1 and 3 of the following groups, in order, not repeating
+                (?'coef'
+                    \d+
+                )?
+                (?'imag'
+                    i|𝑖|ⅈ
+                )?
+                (?:
+                    √ # Don't need to capture radical, just the radicand
+                    (?'radi'
+                        -? # Dash here is always a sign because it is necessarily preceeded by the radical
+                        \d+
+                    )
+                )?
+            )",
+            RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
+
+    private static readonly Regex rxAlgebraicExpr =
+        new(@$"(?'numer'\((?'numerTerms'{rxTerm})(?:(?=[-+])\+?(?'numerTerms'{rxTerm}))*\)|(?'numerTerms'{rxTerm}))/(?'denom'-?\d+)",
             RegexOptions.Compiled);
 
     private static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
@@ -328,7 +348,7 @@ public sealed partial class MainPage : Page
             .Replace("×", "*")
             .Replace(" ", "");
 
-        var items = rxRadical.Matches(expr)
+        var items = rxTerm.Matches(expr)
             .Select(match =>
             {
                 var coef = match.Groups["coef"];
