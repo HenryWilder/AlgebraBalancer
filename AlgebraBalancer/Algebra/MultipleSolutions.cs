@@ -6,10 +6,11 @@ public class MultipleSolutions(params IAlgebraicNotation[] solutions) : IAlgebra
 {
     public IAlgebraicNotation[] solutions = solutions;
 
-    public string AsEquality(string lhs) =>
-        lhs + " = " + (solutions.Length == 2
-            ? $"{solutions[0]} or {solutions[1]}"
-            : string.Join<IAlgebraicNotation>(", ", solutions));
+    public override string ToString() => (solutions.Length == 2
+        ? $"{solutions[0]} or {solutions[1]}"
+        : string.Join<IAlgebraicNotation>(", ", solutions));
+
+    public string AsEquality(string lhs) => lhs + " = " + ToString();
 
     public bool IsInoperable => false;
 }

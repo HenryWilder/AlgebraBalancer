@@ -217,7 +217,7 @@ public class ExactMath
         public IAlgebraicNotation h = h;
         public IAlgebraicNotation k = k;
 
-        public override readonly string ToString() => $"{a}(𝑥-{h})²+{k}  ℎ:{h}, 𝑘:{k}";
+        public override readonly string ToString() => $"{a}(𝑥-{h})²+{k}";
     }
 
     public static VertexForm CompleteSquare(int a, int b, int c)

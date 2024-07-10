@@ -152,43 +152,46 @@ internal class ExactCalculations
 
         // Quadratic
         {
-            string solutionStr;
+            string stepsStr =
+                $"Quadratic:\n" +
+                $"  {a}𝑥²{b:+#;-#;+0}𝑥{c:+#;-#;+0} = 0 =>\n" +
+                $"  𝑥 = (-({b})±√(({b})²-4({a})({c})))/2({a})\n" +
+                $"    = ({-b}±√({b * b}{-(4 * a * c):+#;-#;+0}))/{2 * a}\n";
+
             try
             {
                 var solutions = ExactMath.Quadratic(a, b, c);
-                solutionStr = solutions.ToString();
+                stepsStr += $"    = {solutions}";
             }
             catch (Exception ex)
             {
-                solutionStr = $"<{ex.Message}>";
+                stepsStr += $"    <{ex.Message}>";
             }
 
-            result.Add(
-                $"Quadratic:\n" +
-                $"  {a}𝑥² + {b}𝑥 + {c} = 0 =>\n" +
-                $"  𝑥 = (-({b})±√(({b})²-4({a})({c})))/2({a})\n" +
-                $"    = ({-b}±√({b*b}-{4*a*c}))/{2*a}\n" +
-                $"    = {solutionStr}");
+            result.Add(stepsStr);
         }
 
         // Vertex form
         {
-            string vertexFormStr;
+            string stepsStr =
+                $"Vertex form (complete square):\n" +
+                $"  𝑦 = ({a}𝑥²{b:+#;-#;+0}𝑥){c:+#;-#;+0}\n" +
+                $"    = {a}(𝑥²+({b}/{a})𝑥{b:+#;-#;+0}/2({a})){c:+#;-#;+0}-({b})²/4({a})\n";
+
             try
             {
-                var vertexForms = ExactMath.CompleteSquare(a, b, c);
-                vertexFormStr = vertexForms.ToString();
+                var vertexForm = ExactMath.CompleteSquare(a, b, c);
+                stepsStr +=
+                    $"    = {vertexForm}\n" +
+                    $"  ℎ = {vertexForm.h}\n" +
+                    $"  𝑘 = {vertexForm.k}";
             }
             catch (Exception ex)
             {
-                vertexFormStr = $"<{ex.Message}>";
+                stepsStr += $"    <{ex.Message}>";
             }
 
-            result.Add(
-                $"Vertex form (complete square):\n" +
-                $"  𝑦 = ({a}𝑥² + {b}𝑥) + {c}\n" +
-                $"    = {a}(𝑥² + ({b}/{a})𝑥 + {b}/2({a})) + {c} - ({b})²/4({a})\n" +
-                $"    = {vertexFormStr}\n");
+            result.Add(stepsStr);
         }
 
         return result;
