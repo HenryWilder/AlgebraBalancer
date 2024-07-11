@@ -12,6 +12,8 @@ using System.Collections.ObjectModel;
 using AlgebraBalancer.Algebra.Balancer;
 using AlgebraBalancer.Substitute;
 using AlgebraBalancer.Algebra;
+using Windows.UI.Xaml.Documents;
+using Windows.UI.Text;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -52,10 +54,10 @@ public sealed partial class MainPage : Page
     private async void UpdateAsync()
     {
         CalcBtn.IsEnabled = false;
-        Output.Text = string.Empty;
+        Output.Blocks.Clear();
         (OutputProgress.IsActive, OutputProgress.Visibility) = (true, Visibility.Visible);
 
-        string calculations = string.Empty;
+        List<(string name, string value)> calculations = [];
 
         List<int> parameters;
         try
@@ -73,19 +75,28 @@ public sealed partial class MainPage : Page
 
         if (parameters is not null)
         {
-            var task = Task.Run(() => calculations = string.Join("\n", ExactCalculations.Calculations(parameters)));
+            var task = Task.Run(() => calculations = ExactCalculations.Calculations(parameters));
             if (await Task.WhenAny(task, Task.Delay(5000)) != task)
             {
-                calculations = "Calculation timed out";
+                calculations = [(null, "Calculation timed out")];
             }
         }
         else
         {
-            calculations = "...";
+            calculations = [(null, "...")];
         }
 
         (OutputProgress.IsActive, OutputProgress.Visibility) = (false, Visibility.Collapsed);
-        Output.Text = calculations;
+
+        foreach ((string name, string value) in calculations)
+        {
+            var para = new Paragraph();
+            if (!string.IsNullOrEmpty(name)) para.Inlines.Add(new Run { Text = name, FontWeight = FontWeights.Bold });
+            para.Inlines.Add(new Run { Text = value });
+            para.Margin = new Thickness(5);
+            Output.Blocks.Add(para);
+        }
+
         CalcBtn.IsEnabled = true;
     }
 

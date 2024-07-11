@@ -28,7 +28,7 @@
             x:Name="CalculationsPane"
             Grid.Row="1"
             PanePlacement="Right"
-            OpenPaneLength="400"
+            OpenPaneLength="512"
             DisplayMode="Overlay">
 
             <Grid>
@@ -107,11 +107,22 @@
                             Content="Solve"
                             HorizontalAlignment="Stretch"/>
 
-                        <TextBlock
-                            x:Name="Output"
-                            FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code"
-                            FontSize="14"
-                            Text="..."/>
+                        <ScrollViewer
+                            VerticalScrollBarVisibility="Visible"
+                            HorizontalScrollBarVisibility="Visible"
+                            Width="478"
+                            Height="400">
+                            <RichTextBlock
+                                x:Name="Output"
+                                FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code"
+                                FontSize="14"
+                                TextWrapping="NoWrap"
+                                Margin="14"
+                                IsTextSelectionEnabled="True">
+                                <Paragraph>...</Paragraph>
+                            </RichTextBlock>
+                        </ScrollViewer>
+                        
                         <ProgressRing
                             x:Name="OutputProgress"
                             Visibility="Collapsed"/>

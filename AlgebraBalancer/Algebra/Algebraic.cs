@@ -213,7 +213,7 @@ public class Algebraic : IAlgebraicExpression
 
     public override string ToString()
     {
-        string numeratorStr = string.Join<Radical>("+", numerator.terms);
+        string numeratorStr = string.Join<Radical>("+", numerator.terms).Replace("+-", "-");
         return denominator == 1
             ? numeratorStr
             : $"({numeratorStr})/{denominator}";
