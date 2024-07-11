@@ -284,6 +284,29 @@ public class Algebraic : IAlgebraicExpression
         return new(lhs.numerator * rhs.numerator, lhs.denominator * rhs.denominator);
     }
 
+    public static Algebraic operator ^(Algebraic lhs, Algebraic rhs)
+    {
+        var newRhs = rhs.Simplified();
+        if (newRhs is Number rhsInt)
+        {
+            if (rhsInt == 0) return new(1);
+            var result = lhs;
+            for (int i = 1; i < Math.Abs(rhsInt); ++i)
+            {
+                result *= lhs;
+            }
+            return (rhsInt < 0) ? 1 / result : result;
+        }
+        //else if (newRhs is Fraction rhsFraction)
+        //{
+        //    // Not sure how to generalize
+        //}
+        else
+        {
+            throw new NotImplementedException($"\"{lhs}^{{{rhs}}}\" not supported");
+        }
+    }
+
     public static Algebraic operator /(Algebraic lhs, Algebraic rhs)
     {
         //tex:$$\begin{gathered}

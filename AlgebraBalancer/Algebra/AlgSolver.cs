@@ -25,7 +25,12 @@ public static class AlgSolver
 
     public static string CleanExpr(string expr) =>
         rxImpliedMul.Replace(LatexUnicode.SuperscriptToNumber(expr), "*")
+            .Replace("÷", "/")
             .Replace("×", "*")
+            .Replace("+-", "-")
+            .Replace("-+", "-")
+            .Replace("--", "+")
+            .Replace("++", "+")
             .Replace(" ", "");
 
     public static readonly Regex rxTerm =
@@ -103,7 +108,7 @@ public static class AlgSolver
             (?-x)",
             RegexOptions.Compiled);
 
-    private static readonly char[][] operatorPrecedences = [['*', '/'], ['+', '-']];
+    private static readonly char[][] operatorPrecedences = [['^'], ['*', '/'], ['+', '-']];
 
     public static Algebraic SolveAlgebraic(string expr)
     {
@@ -200,6 +205,7 @@ public static class AlgSolver
 
                 var result = op switch
                 {
+                    '^' => lhs ^ rhs, // not xor
                     '+' => lhs + rhs,
                     '-' => lhs - rhs,
                     '*' => lhs * rhs,
