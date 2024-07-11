@@ -19,53 +19,61 @@ public static class AlgSolver
 
     public static readonly Regex rxTerm =
         new(@"(?x)
-            (?=-?\d|i|𝑖|ⅈ|√-?\d) # Deny empty match
-            # Must match between 1 and 3, in order, not repeating, of the following groups:
-            (?'coef' # coefficient
-                # Minus needs to be a sign and not an operator,
-                # so it must either be at the start of a(n) (sub)expression or following an operator.
+            (?'sign'
+                # Minus needs to be a sign and not an operator, so it must either be at the
+                # start of a(n) (sub)expression or following an operator.
                 # Whitespace is not a concern because it is already removed by the function.
-                (?: (?<=^|[-+/*(]) - )?
-                \d+
+                (?<=^|[-+/*(])
+                -
             )?
+
+            (?'coef' # coefficient
+                \d+
+            )? # Negative with no number represents coefficient of -1
+
             (?'imag' # imaginary
                 i|𝑖|ⅈ
             )?
-            (?:
-                √ # Don't need to capture radical it just marks where the radicand is
+
+            (?:√ # Don't need to capture the radical, it just marks where the radicand is
                 (?'radi' # radicand
                     -? # Minus here is always a sign because it is necessarily preceeded by the radical
                     \d+
                 )
             )?
+
+            # Deny any match that doesn't have a coefficient, imaginary, nor radical.
+            # A match is required to have AT LEAST ONE of these.
+            # Sign is optional.
+            (?(coef)|(?(imag)|(?(radi)|(?!))))
             (?-x)",
             RegexOptions.Compiled);
 
     // language=regex
     private const string RX_ALGEBRAIC =
         @"(?x)
-            (?: # numerator
-                (?'numerOpenParen'\()?
-                    (?'numerTerms'{rxTerm}) # First term doesn't need parentheses or operators
-                    (?(numerOpenParen) # Only allow multiple terms if there are parentheses
-                        (?:
-                            # Must have an addition/subtraction operator between terms
-                            # A negative term doesn't need an addition operator in front of it
-                            (?=[-+])[-+]?? # Lazy to avoid stealing the sign away from the term
-                            (?'numerTerms'{rxTerm})
-                        )*
-                    )
-                # Require a closing parenthes if there was an opening one, deny match if there wasn't one.
-                (?(numerOpenParen)\))
-            )
-            (?:
-                /
-                (?'denom' # denominator
-                    -? # Minus here is always a sign because it is necessarily preceeded by the division
-                    \d+ # If the denominator is not an integer, it is not a singular Algebraic.
-                        # This Regex is specifically for singular Algebraics, not expressions.
+        (?: # numerator
+            (?'numerOpenParen'\()?
+                (?'numerTerms'{rxTerm}) # First term doesn't need parentheses or operators
+                (?(numerOpenParen) # Only allow multiple terms if there are parentheses
+                    (?:
+                        # Must have an addition/subtraction operator between terms
+                        # A negative term doesn't need an addition operator in front of it
+                        (?=[-+])+?
+                        (?'numerTerms'{rxTerm})
+                    )*
                 )
-            )? # Doesn't need to be a fraction
+            # Require a closing parenthes if there was an opening one, deny match if there wasn't one.
+            (?(numerOpenParen)\))
+        )
+        (?:
+            /
+            (?'denom' # denominator
+                -? # Minus here is always a sign because it is necessarily preceeded by the division
+                \d+ # If the denominator is not an integer, it is not a singular Algebraic.
+                    # This Regex is specifically for singular Algebraics, not expressions.
+            )
+        )? # Doesn't need to be a fraction
         (?-x)";
 
     public static readonly Regex rxAlgebraic =
@@ -75,154 +83,116 @@ public static class AlgSolver
     // Expressions matching this Regex are incompatible with DataTable.
     public static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
 
-    private interface IOperationArgument
-    {
-        public Algebraic GetAlgebraic();
-    }
+    private static readonly Regex rxSubExpression =
+        new(@"(?x)
+            # A subexpression must be enclosed within parentheses
+            \(
+                (?'expr' # The subexpression itself
+                    # Any parentheses inside must be balanced
+                    (?:[^()]|(?'open'\()|(?'-open'\)))+(?(open)(?!))
+                )
+            \)
+            (?!/-?\d+) # Deny the match if it is a complete algebraic
+            (?-x)",
+            RegexOptions.Compiled);
 
-    private class ValueArg(Algebraic value) : IOperationArgument
-    {
-        public Algebraic value = value;
-        public Algebraic GetAlgebraic() => value;
-    }
-
-    private class SubExprArg : IOperationArgument
-    {
-        public SubExprArg() => subExpr = new();
-        public SubExprArg(OperationTreeNode subExpr) => this.subExpr = subExpr;
-        
-        public OperationTreeNode subExpr;
-        public Algebraic GetAlgebraic() => subExpr.EvaluateRecursively();
-    }
-
-    enum AlgOp
-    {
-        Add,
-        Sub,
-        Mul,
-        Div,
-    }
-
-    private class OperationTreeNode
-    {
-        public List<AlgOp> ops = []; // Should be 1 smaller than args
-        public IOperationArgument args;
-
-        public Algebraic EvaluateRecursively()
-        {
-            Algebraic acc;
-
-
-            var lhs = this.lhs.GetAlgebraic();
-            var rhs = this.rhs.GetAlgebraic();
-            return op switch
-            {
-                AlgOp.Add => lhs + rhs,
-                AlgOp.Sub => lhs - rhs,
-                AlgOp.Mul => lhs * rhs,
-                AlgOp.Div => lhs / rhs,
-                _ => throw new NotImplementedException(),
-            };
-        }
-    }
+    private static readonly char[][] operatorPrecedences = [['*', '/'], ['+', '-']];
 
     public static Algebraic SolveAlgebraic(string expr)
     {
         expr = CleanExpr(expr);
+        // Replace subexpressions with their solutions first
+        expr = rxSubExpression.Replace(expr, match => SolveAlgebraic(match.Value).Simplified().ToString());
 
-        var algebraicMatches = rxAlgebraic.Matches(expr);
-
-        var algebraics = algebraicMatches.Select(match =>
+        var algebraics = rxAlgebraic.Matches(expr).Select(match =>
         {
             Radical[] numerTerms = [..
                 match.Groups["numerTerms"].Captures.Select(capture =>
                 {
+                    // TODO: This doesn't handle subtracting negatives
+
                     // I know it's inefficient to match *again*, but I can't get subgroups from captures :c
                     var term = rxTerm.Match(capture.Value);
                     if (!term.Success) throw new Exception("Should be match if within capture");
+
+                    var sign = term.Groups["sign"];
                     var coef = term.Groups["coef"];
                     var imag = term.Groups["imag"];
                     var radi = term.Groups["radi"];
-                    int coefficient = coef.Success ? int.Parse(coef.Value) : 1;
-                    int radicand = (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
+
+                    int coefficient =
+                        (sign.Success ? -1 : 1) * (coef.Success ? int.Parse(coef.Value) : 1);
+
+                    int radicand =
+                        (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
+
                     return new Radical(coefficient, radicand);
                 })
             ];
             var denom = match.Groups["denom"];
             int denominator = denom.Success ? int.Parse(denom.Value) : 1;
-            var alg = new Algebraic(numerTerms, denominator);
-            return (match, alg);
+            return new Algebraic(numerTerms, denominator);
         }).ToList();
 
-        var root = new OperationTreeNode();
+        // I know. Performing the same regex to the same string AGAIN. SUPER inefficient.
+        // I'll fix it later.
+        string operations = rxAlgebraic.Replace(expr, "");
 
-        Stack<bool> currentPath = [];
-        currentPath.Push(false);
-        void IncrementPath()
+
+        // By this point in the function, our string should contain no subexpressions.
+        // The index of an operator that is not part of an algebraic should itself be
+        // the index (into the algebraics list) of its left hand argument.
+
+        // By replacing the left & right arguments inside the list with their solution,
+        // we should be able to keep this assumption true.
+
+        // This function has relatively detailed exceptions because the user sees them.
+
+        foreach (char[] precedence in operatorPrecedences)
         {
-            while (currentPath.Count > 0 && currentPath.Pop()) { }
-            if (currentPath.Count == 0)
+            while (operations.IndexOfAny(precedence) is int nextOpIndex and not -1)
             {
-                root = new() { lhs = new SubExprArg(root) };
-                currentPath.Push(true);
-            }
-            else
-            {
-                currentPath.Push(true);
+                if (algebraics.Count == 0)
+                {
+                    throw new Exception($"Expression \"{expr}\": No values to operate on.");
+                }
+
+                char op = operations[nextOpIndex];
+                if (nextOpIndex >= algebraics.Count)
+                {
+                    var prevValue = algebraics[Math.Min(nextOpIndex, algebraics.Count - 1)];
+                    throw new Exception($"Expression \"{expr}\": At operation '{op}' following {prevValue}: Not enough values.");
+                }
+
+                var lhs = algebraics[nextOpIndex];
+                var rhs = algebraics[nextOpIndex + 1];
+
+                var result = op switch
+                {
+                    '+' => lhs + rhs,
+                    '-' => lhs - rhs,
+                    '*' => lhs * rhs,
+                    '/' => lhs / rhs,
+                    _ => throw new Exception($"Missing definition for '{op}' operator"),
+                };
+                algebraics.Remove(, 2);
             }
         }
 
-        var algIndexes = algebraics.Select(x => x.match.Index).ToList();
-        for (int i = 0; i < expr.Length;)
+        if (operations.Length != 0)
         {
-            int algHere = algIndexes.IndexOf(i);
-            if (algHere != -1) // An element exists
-            {
-                var (match, alg) = algebraics[algHere];
-
-                root[[.. currentPath]] = new ValueArg(alg);
-                IncrementPath();
-
-                i += match.Length; // Skip to next item
-            }
-            else
-            {
-                char ch = expr[i];
-
-                bool[] pathTemp = [.. currentPath];
-                var currentNode = root[pathTemp];
-                if (currentNode is SubExprArg subExpr)
-                {
-                    if (ch == '(')
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else if (ch == ')')
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else
-                    {
-                        subExpr.subExpr.op = ch switch
-                        {
-                            '+' => AlgOp.Add,
-                            '-' => AlgOp.Sub,
-                            '*' => AlgOp.Mul,
-                            '/' => AlgOp.Div,
-                            _ => throw new NotImplementedException(),
-                        };
-                    }
-                }
-                else
-                {
-                    throw new Exception("oops");
-                }
-                root[pathTemp] = currentNode;
-
-                ++i;
-            }
+            throw new Exception($"Expression \"{expr}\": Unrecognized operations: {string.Join(", ", operations.Select(x => $"'{x}'"))}");
         }
 
-        return root.EvaluateRecursively();
+        if (algebraics.Count > 1)
+        {
+            throw new Exception($"Expression \"{expr}\": More values than operations. Values: {string.Join("; ", algebraics)}");
+        }
+        else if (algebraics.Count == 0)
+        {
+            throw new Exception($"Expression \"{expr}\": No values in result.");
+        }
+
+        return algebraics.First();
     }
 }
