@@ -321,9 +321,17 @@ public sealed partial class MainPage : Page
 
         if (!isAlgebraic)
         {
-            string resultDouble = Solver.TrySolveDouble(expr, out string result) ? result : $"<{result}>";
-            addText = " = " + resultDouble;
-            isAlgebraic = resultDouble.Contains(".");
+            try
+            {
+                string resultDouble = Solver.TrySolveDouble(expr, out string result) ? result : $"<{result}>";
+                addText = " = " + resultDouble;
+                isAlgebraic = resultDouble.Contains(".");
+            }
+            catch (Exception err)
+            {
+                addText = $" = <{err.Message}>";
+                isAlgebraic = true;
+            }
         }
         else
         {

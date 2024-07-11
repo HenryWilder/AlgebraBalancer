@@ -113,7 +113,7 @@ public static class AlgSolver
     {
         expr = CleanExpr(expr);
         // Replace subexpressions with their solutions first
-        expr = rxSubExpression.Replace(expr, match => SolveAlgebraic(match.Value).Simplified().ToString());
+        expr = rxSubExpression.Replace(expr, match => SolveAlgebraic(match.Groups["expr"].Value).Simplified().ToString());
 
         var algebraics = rxAlgebraic.Matches(expr).Select(match =>
         {
