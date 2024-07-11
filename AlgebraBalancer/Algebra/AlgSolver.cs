@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -42,7 +44,7 @@ public static class AlgSolver
     // language=regex
     private const string RX_ALGEBRAIC =
         @"(?x)
-            (?'numer' # numerator
+            (?: # numerator
                 (?'numerOpenParen'\()?
                     (?'numerTerms'{rxTerm}) # First term doesn't need parentheses or operators
                     (?(numerOpenParen) # Only allow multiple terms if there are parentheses
@@ -73,6 +75,26 @@ public static class AlgSolver
     // Expressions matching this Regex are incompatible with DataTable.
     public static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
 
+    private interface IOperationArgument
+    {
+        public Algebraic GetAlgebraic();
+    }
+
+    private class ValueArg(Algebraic value) : IOperationArgument
+    {
+        public Algebraic value = value;
+        public Algebraic GetAlgebraic() => value;
+    }
+
+    private class SubExprArg : IOperationArgument
+    {
+        public SubExprArg() => subExpr = new();
+        public SubExprArg(OperationTreeNode subExpr) => this.subExpr = subExpr;
+        
+        public OperationTreeNode subExpr;
+        public Algebraic GetAlgebraic() => subExpr.EvaluateRecursively();
+    }
+
     enum AlgOp
     {
         Add,
@@ -80,59 +102,127 @@ public static class AlgSolver
         Mul,
         Div,
     }
+
+    private class OperationTreeNode
+    {
+        public List<AlgOp> ops = []; // Should be 1 smaller than args
+        public IOperationArgument args;
+
+        public Algebraic EvaluateRecursively()
+        {
+            Algebraic acc;
+
+
+            var lhs = this.lhs.GetAlgebraic();
+            var rhs = this.rhs.GetAlgebraic();
+            return op switch
+            {
+                AlgOp.Add => lhs + rhs,
+                AlgOp.Sub => lhs - rhs,
+                AlgOp.Mul => lhs * rhs,
+                AlgOp.Div => lhs / rhs,
+                _ => throw new NotImplementedException(),
+            };
+        }
+    }
+
     public static Algebraic SolveAlgebraic(string expr)
     {
         expr = CleanExpr(expr);
 
-        var items = rxTerm.Matches(expr)
-            .Select(match =>
-            {
-                var coef = match.Groups["coef"];
-                var imag = match.Groups["imag"];
-                var radi = match.Groups["radi"];
-                int coefficient = coef.Success ? int.Parse(coef.Value) : 1;
-                int radicand = (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
-                Radical radical = new(coefficient, radicand);
-                return (match, radical);
-            })
-            .ToList();
+        var algebraicMatches = rxAlgebraic.Matches(expr);
 
-        Algebraic group = default;
-        AlgOp? upcomingOperation = null;
-
-        for (int i = 0; i < expr.Length; ++i)
+        var algebraics = algebraicMatches.Select(match =>
         {
-            int matchIndex = items.FindIndex(item => item.match.Index == i);
-            if (matchIndex != -1)
-            {
-                var (match, radical) = items[matchIndex];
-                i += match.Length;
-                group = upcomingOperation is null
-                    ? radical
-                    : upcomingOperation switch
-                    {
-                        AlgOp.Add => group + radical,
-                        AlgOp.Sub => group - radical,
-                        AlgOp.Mul => group * radical,
-                        AlgOp.Div => group / radical,
-                        _ => throw new NotImplementedException()
-                    };
-                group.numerator = group.numerator.TermsSimplified().LikeTermsCombined();
-                upcomingOperation = null;
-                if (i == expr.Length) break;
-            }
+            Radical[] numerTerms = [..
+                match.Groups["numerTerms"].Captures.Select(capture =>
+                {
+                    // I know it's inefficient to match *again*, but I can't get subgroups from captures :c
+                    var term = rxTerm.Match(capture.Value);
+                    if (!term.Success) throw new Exception("Should be match if within capture");
+                    var coef = term.Groups["coef"];
+                    var imag = term.Groups["imag"];
+                    var radi = term.Groups["radi"];
+                    int coefficient = coef.Success ? int.Parse(coef.Value) : 1;
+                    int radicand = (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
+                    return new Radical(coefficient, radicand);
+                })
+            ];
+            var denom = match.Groups["denom"];
+            int denominator = denom.Success ? int.Parse(denom.Value) : 1;
+            var alg = new Algebraic(numerTerms, denominator);
+            return (match, alg);
+        }).ToList();
 
-            char ch = expr[i];
-            upcomingOperation = ch switch
+        var root = new OperationTreeNode();
+
+        Stack<bool> currentPath = [];
+        currentPath.Push(false);
+        void IncrementPath()
+        {
+            while (currentPath.Count > 0 && currentPath.Pop()) { }
+            if (currentPath.Count == 0)
             {
-                '+' => AlgOp.Add,
-                '-' => AlgOp.Sub,
-                '*' => AlgOp.Mul,
-                '/' => AlgOp.Div,
-                _ => throw new NotImplementedException()
-            };
+                root = new() { lhs = new SubExprArg(root) };
+                currentPath.Push(true);
+            }
+            else
+            {
+                currentPath.Push(true);
+            }
         }
 
-        return group;
+        var algIndexes = algebraics.Select(x => x.match.Index).ToList();
+        for (int i = 0; i < expr.Length;)
+        {
+            int algHere = algIndexes.IndexOf(i);
+            if (algHere != -1) // An element exists
+            {
+                var (match, alg) = algebraics[algHere];
+
+                root[[.. currentPath]] = new ValueArg(alg);
+                IncrementPath();
+
+                i += match.Length; // Skip to next item
+            }
+            else
+            {
+                char ch = expr[i];
+
+                bool[] pathTemp = [.. currentPath];
+                var currentNode = root[pathTemp];
+                if (currentNode is SubExprArg subExpr)
+                {
+                    if (ch == '(')
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else if (ch == ')')
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        subExpr.subExpr.op = ch switch
+                        {
+                            '+' => AlgOp.Add,
+                            '-' => AlgOp.Sub,
+                            '*' => AlgOp.Mul,
+                            '/' => AlgOp.Div,
+                            _ => throw new NotImplementedException(),
+                        };
+                    }
+                }
+                else
+                {
+                    throw new Exception("oops");
+                }
+                root[pathTemp] = currentNode;
+
+                ++i;
+            }
+        }
+
+        return root.EvaluateRecursively();
     }
 }
