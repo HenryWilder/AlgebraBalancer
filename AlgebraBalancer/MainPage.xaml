@@ -86,32 +86,38 @@
             
             <SplitView.Pane>
                 <Grid Padding="9">
-                    <StackPanel
-                        VerticalAlignment="Top"
-                        Orientation="Vertical"
-                        Spacing="9">
-
+                    <ScrollViewer
+                        VerticalScrollBarVisibility="Visible"
+                        HorizontalScrollBarVisibility="Visible"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Width="478"
+                        Height="Auto">
                         <StackPanel
-                            x:Name="Inputs"
-                            Orientation="Horizontal"
-                            Spacing="9"
-                            HorizontalAlignment="Center">
-                            <!-- added programmatically -->
-                        </StackPanel>
+                            VerticalAlignment="Top"
+                            Orientation="Vertical"
+                            Spacing="9">
 
-                        <Button
-                            x:Name="CalcBtn"
-                            Click="UpdateCalculations"
-                            FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code"
-                            FontSize="16"
-                            Content="Solve"
-                            HorizontalAlignment="Stretch"/>
+                            <StackPanel
+                                x:Name="Inputs"
+                                Orientation="Horizontal"
+                                Spacing="9"
+                                HorizontalAlignment="Center">
+                                <!-- added programmatically -->
+                            </StackPanel>
 
-                        <ScrollViewer
-                            VerticalScrollBarVisibility="Visible"
-                            HorizontalScrollBarVisibility="Visible"
-                            Width="478"
-                            Height="400">
+                            <Button
+                                x:Name="CalcBtn"
+                                Click="UpdateCalculations"
+                                FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code"
+                                FontSize="16"
+                                Content="Solve"
+                                HorizontalAlignment="Stretch"/>
+
+                            <ProgressRing
+                                x:Name="OutputProgress"
+                                Visibility="Collapsed"/>
+
                             <RichTextBlock
                                 x:Name="Output"
                                 FontFamily="Assets/Fonts/FiraCode-Regular.ttf#Fira Code"
@@ -121,13 +127,9 @@
                                 IsTextSelectionEnabled="True">
                                 <Paragraph>...</Paragraph>
                             </RichTextBlock>
-                        </ScrollViewer>
-                        
-                        <ProgressRing
-                            x:Name="OutputProgress"
-                            Visibility="Collapsed"/>
 
-                    </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <ToggleButton
                         VerticalAlignment="Bottom"
