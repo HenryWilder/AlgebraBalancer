@@ -9,7 +9,18 @@ namespace AlgebraBalancer.Algebra;
 public static class AlgSolver
 {
     public readonly static Regex rxImpliedMul =
-        new(@"(?<=\))\s*(?=[0-9\(])|(?<=[0-9\)])\s*(?=\()",
+        new(@"(?x)
+            # Left side
+            (?<=(?'lparen'\))|\d)
+
+            # Optional whitespace between (can't be linebreaks)
+            [\s-[\n\r]]*
+
+            # Right side
+            # If the left side didn't have parentheses, this side MUST
+            # It can have parentheses either way, though
+            (?=(?(lparen)[\d(]|\())
+            (?-x)",
             RegexOptions.Compiled);
 
     public static string CleanExpr(string expr) =>
@@ -113,7 +124,7 @@ public static class AlgSolver
 
                     // I know it's inefficient to match *again*, but I can't get subgroups from captures :c
                     var term = rxTerm.Match(capture.Value);
-                    if (!term.Success) throw new Exception("Should be match if within capture");
+                    if (!term.Success) throw new Exception($"Capture \"{capture.Value}\": Should be match if within capture");
 
                     var sign = term.Groups["sign"];
                     var coef = term.Groups["coef"];
@@ -126,12 +137,16 @@ public static class AlgSolver
                     int radicand =
                         (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
 
-                    return new Radical(coefficient, radicand);
+                    var radical = new Radical(coefficient, radicand);
+                    return radical;
                 })
             ];
+            if (numerTerms.Length == 0) throw new Exception($"Match \"{match.Value}\": Numerator can't be empty");
             var denom = match.Groups["denom"];
             int denominator = denom.Success ? int.Parse(denom.Value) : 1;
-            return new Algebraic(numerTerms, denominator);
+            var numerator = new SumOfRadicals(numerTerms);
+            var algebraic = new Algebraic(numerator, denominator);
+            return algebraic;
         }).ToList();
 
         // I know. Performing the same regex to the same string AGAIN. SUPER inefficient.

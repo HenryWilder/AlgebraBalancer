@@ -67,6 +67,7 @@ public class Algebraic : IAlgebraicExpression
     public static implicit operator Algebraic(SumOfRadicals numerator) =>
         new(numerator);
 
+    // Something seems to be wrong with this. It's creating nulls numerators.
     public Algebraic(Radical[] numeratorTerms, int denominator) =>
         new Algebraic(new SumOfRadicals(numeratorTerms), denominator);
 
