@@ -11,7 +11,7 @@ public static class AlgSolver
     public static readonly Regex rxImpliedMul =
         new(@"(?x)
             # Left side
-            (?<=(?'lparen'[)i𝑖ⅈ])|\d)
+            (?<=(?'lparen'[)])|\d)
 
             # Optional whitespace between (can't be linebreaks)
             [\s-[\n\r]]*
@@ -19,7 +19,13 @@ public static class AlgSolver
             # Right side
             # If the left side didn't have parentheses, this side MUST
             # It can have parentheses either way, though
-            (?=(?(lparen)[\d(i𝑖ⅈ√]|[(i𝑖ⅈ√]))
+            (?=(?(lparen)[\d(]|[(]))
+
+            |
+
+            # Not every i is implied multiplication. It might be a coefficient.
+            # It's implied multiplication if the item on the immediate left isn't a number literal.
+            (?<=[i𝑖ⅈ)])(?=[i𝑖ⅈ])
             (?-x)",
             RegexOptions.Compiled);
 
@@ -27,19 +33,22 @@ public static class AlgSolver
         new(@"(?<=^|\()(?=[-+]\()",
             RegexOptions.Compiled);
 
+    private static readonly Regex rxSubtraction =
+        new(@"(?<!^|[-+/*(])\-",
+            RegexOptions.Compiled);
+
     public static string CleanExpr(string expr) =>
-        rxUnarySignOperator.Replace(
-            rxImpliedMul.Replace(
-                LatexUnicode.SuperscriptToNumber(expr)
-                .Replace(" ", ""),
-                "*"),
-            "0")
-            .Replace("÷", "/")
-            .Replace("×", "*")
-            .Replace("+-", "-")
-            .Replace("-+", "-")
-            .Replace("--", "+")
-            .Replace("++", "+");
+        rxSubtraction.Replace(
+            rxUnarySignOperator.Replace(
+                rxImpliedMul.Replace(
+                    LatexUnicode.SuperscriptToNumber(expr)
+                    .Replace(" ", ""),
+                    "*"),
+                "0")
+                .Replace("÷", "/")
+                .Replace("×", "*")
+                .Replace("--", "+"),
+        "+-");
 
     public static readonly Regex rxTerm =
         new(@"(?x)
@@ -83,7 +92,7 @@ public static class AlgSolver
                     (?:
                         # Must have an addition/subtraction operator between terms
                         # A negative term doesn't need an addition operator in front of it
-                        (?=[-+])[-+]?
+                        (?=[-+])[+]?
                         (?'numerTerms'{rxTerm})
                     )*
                 )
@@ -156,11 +165,11 @@ public static class AlgSolver
     {
         expr = CleanExpr(expr);
         // Replace subexpressions with their solutions first
-        expr = rxSubExpression.Replace(expr, match =>
+        expr = CleanExpr(rxSubExpression.Replace(expr, match =>
         {
             var algMatch = rxAlgebraic.Match(match.Value);
 
-            var solution = (algMatch.Success
+            var solution = (algMatch.Success && algMatch.Length == expr.Length
                 ? MatchToAlgebraic(algMatch)
                 : SolveAlgebraic(match.Groups["expr"].Value)
             ).Simplified();
@@ -177,13 +186,18 @@ public static class AlgSolver
 
             return solution.ToString();
         }
-        );
+        ));
 
         var algebraics = rxAlgebraic.Matches(expr).Select(MatchToAlgebraic).ToList();
 
         // I know. Performing the same regex to the same string AGAIN. SUPER inefficient.
         // I'll fix it later.
         string operations = rxAlgebraic.Replace(expr, "");
+
+        if (operations.Any(ch => ch is '(' or ')'))
+        {
+            throw new Exception($"Expression \"{expr}\" contains subexpression(s) when it shouldn't");
+        }
 
 
         // By this point in the function, our string should contain no subexpressions.

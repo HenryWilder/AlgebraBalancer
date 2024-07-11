@@ -45,7 +45,7 @@ public class Radical : IAlgebraicExpression
         if (IsImaginary() && IsRational()) return coef.ToString();
 
         // Coefficient is not shown when it is 1 (1*i != 1)
-        string coefStr = (IsReal() && IsPureRadical()) ? "" : coef.ToString();
+        string coefStr = (IsReal() && IsPureRadical()) ? "" : coefficient == -1 ? "-" : coef.ToString();
 
         // By reaching this point, the radicand is not 1 and so must need a radical
         // Coefficient may be an empty string
