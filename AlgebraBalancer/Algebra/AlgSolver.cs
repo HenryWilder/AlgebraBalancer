@@ -8,7 +8,7 @@ public static class AlgSolver
     // Expressions matching this Regex are incompatible with DataTable.
     public static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
 
-    public readonly static Regex rxImpliedMul =
+    public static readonly Regex rxImpliedMul =
         new(@"(?x)
             # Left side
             (?<=(?'lparen'[)i𝑖ⅈ])|\d)
@@ -23,15 +23,23 @@ public static class AlgSolver
             (?-x)",
             RegexOptions.Compiled);
 
+    private static readonly Regex rxUnarySignOperator =
+        new(@"(?<=^|\()(?=[-+]\()",
+            RegexOptions.Compiled);
+
     public static string CleanExpr(string expr) =>
-        rxImpliedMul.Replace(LatexUnicode.SuperscriptToNumber(expr), "*")
+        rxUnarySignOperator.Replace(
+            rxImpliedMul.Replace(
+                LatexUnicode.SuperscriptToNumber(expr)
+                .Replace(" ", ""),
+                "*"),
+            "0")
             .Replace("÷", "/")
             .Replace("×", "*")
             .Replace("+-", "-")
             .Replace("-+", "-")
             .Replace("--", "+")
-            .Replace("++", "+")
-            .Replace(" ", "");
+            .Replace("++", "+");
 
     public static readonly Regex rxTerm =
         new(@"(?x)
@@ -110,17 +118,52 @@ public static class AlgSolver
 
     private static readonly char[][] operatorPrecedences = [['^'], ['*', '/'], ['+', '-']];
 
+    private static Algebraic MatchToAlgebraic(Match match)
+    {
+        Radical[] numerTerms = [..
+            match.Groups["numerTerms"].Captures.Select(capture =>
+            {
+                // TODO: This doesn't handle subtracting negatives
+
+                // I know it's inefficient to match *again*, but I can't get subgroups from captures :c
+                var term = rxTerm.Match(capture.Value);
+                if (!term.Success) throw new Exception($"Capture \"{capture.Value}\": Should be match if within capture");
+
+                var sign = term.Groups["sign"];
+                var coef = term.Groups["coef"];
+                var imag = term.Groups["imag"];
+                var radi = term.Groups["radi"];
+
+                int coefficient =
+                    (sign.Success ? -1 : 1) * (coef.Success ? int.Parse(coef.Value) : 1);
+
+                int radicand =
+                    (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
+
+                var radical = new Radical(coefficient, radicand);
+                return radical;
+            })
+        ];
+        if (numerTerms.Length == 0) throw new Exception($"Match \"{match.Value}\": Numerator can't be empty");
+        var denom = match.Groups["denom"];
+        int denominator = denom.Success ? int.Parse(denom.Value) : 1;
+        var numerator = new SumOfRadicals(numerTerms);
+        var algebraic = new Algebraic(numerator, denominator);
+        return algebraic;
+    }
+
     public static Algebraic SolveAlgebraic(string expr)
     {
         expr = CleanExpr(expr);
         // Replace subexpressions with their solutions first
         expr = rxSubExpression.Replace(expr, match =>
         {
-            string matchStr = match.Value;
-            // Don't replace if the subexpression is a single algebraic on its own
-            if (rxAlgebraic.IsMatch(matchStr)) return matchStr;
+            var algMatch = rxAlgebraic.Match(match.Value);
 
-            var solution = SolveAlgebraic(match.Groups["expr"].Value).Simplified();
+            var solution = (algMatch.Success
+                ? MatchToAlgebraic(algMatch)
+                : SolveAlgebraic(match.Groups["expr"].Value)
+            ).Simplified();
             string solutionStr = solution.ToString();
 
             // Needs to be wrapped in parentheses
@@ -136,39 +179,7 @@ public static class AlgSolver
         }
         );
 
-        var algebraics = rxAlgebraic.Matches(expr).Select(match =>
-        {
-            Radical[] numerTerms = [..
-                match.Groups["numerTerms"].Captures.Select(capture =>
-                {
-                    // TODO: This doesn't handle subtracting negatives
-
-                    // I know it's inefficient to match *again*, but I can't get subgroups from captures :c
-                    var term = rxTerm.Match(capture.Value);
-                    if (!term.Success) throw new Exception($"Capture \"{capture.Value}\": Should be match if within capture");
-
-                    var sign = term.Groups["sign"];
-                    var coef = term.Groups["coef"];
-                    var imag = term.Groups["imag"];
-                    var radi = term.Groups["radi"];
-
-                    int coefficient =
-                        (sign.Success ? -1 : 1) * (coef.Success ? int.Parse(coef.Value) : 1);
-
-                    int radicand =
-                        (imag.Success ? -1 : 1) * (radi.Success ? int.Parse(radi.Value) : 1);
-
-                    var radical = new Radical(coefficient, radicand);
-                    return radical;
-                })
-            ];
-            if (numerTerms.Length == 0) throw new Exception($"Match \"{match.Value}\": Numerator can't be empty");
-            var denom = match.Groups["denom"];
-            int denominator = denom.Success ? int.Parse(denom.Value) : 1;
-            var numerator = new SumOfRadicals(numerTerms);
-            var algebraic = new Algebraic(numerator, denominator);
-            return algebraic;
-        }).ToList();
+        var algebraics = rxAlgebraic.Matches(expr).Select(MatchToAlgebraic).ToList();
 
         // I know. Performing the same regex to the same string AGAIN. SUPER inefficient.
         // I'll fix it later.
@@ -194,7 +205,7 @@ public static class AlgSolver
                 }
 
                 char op = operations[nextOpIndex];
-                if (nextOpIndex >= algebraics.Count)
+                if ((nextOpIndex + 1) >= algebraics.Count)
                 {
                     var prevValue = algebraics[Math.Min(nextOpIndex, algebraics.Count - 1)];
                     throw new Exception($"Expression \"{expr}\": At operation '{op}' following {prevValue}: Not enough values.");

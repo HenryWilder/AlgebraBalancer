@@ -1896,9 +1896,8 @@ internal static class LatexUnicode
     private const string SUPERSCRIPT_NUMBERS = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻";
     public static string SuperscriptToNumber(string expr) =>
         superscriptNumberPattern.Replace(expr, (match) =>
-            "^(" +
+            "^" +
             string.Concat(match.Value.Select(ch => "0123456789-"[SUPERSCRIPT_NUMBERS.IndexOf(ch)]))
-            + ")"
         );
 
     private static readonly Dictionary<char, string> subscriptMapping = new()
