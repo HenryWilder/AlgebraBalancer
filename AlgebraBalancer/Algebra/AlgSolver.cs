@@ -59,7 +59,7 @@ public static class AlgSolver
                     (?:
                         # Must have an addition/subtraction operator between terms
                         # A negative term doesn't need an addition operator in front of it
-                        (?=[-+])+?
+                        (?=[-+])[-+]?
                         (?'numerTerms'{rxTerm})
                     )*
                 )
@@ -92,7 +92,7 @@ public static class AlgSolver
                     (?:[^()]|(?'open'\()|(?'-open'\)))+(?(open)(?!))
                 )
             \)
-            (?!/-?\d+) # Deny the match if it is a complete algebraic
+            (?!/-?\d+) # Deny the match if it is a singular algebraic
             (?-x)",
             RegexOptions.Compiled);
 
@@ -175,7 +175,10 @@ public static class AlgSolver
                     '/' => lhs / rhs,
                     _ => throw new Exception($"Missing definition for '{op}' operator"),
                 };
-                algebraics.Remove(, 2);
+
+                algebraics[nextOpIndex] = result;
+                algebraics.RemoveAt(nextOpIndex + 1);
+                operations = operations.Remove(nextOpIndex);
             }
         }
 
