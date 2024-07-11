@@ -93,12 +93,13 @@ public class Radical : IAlgebraicExpression
 
     public static Radical operator *(Radical lhs, int rhs) => new(lhs.coefficient * rhs, lhs.radicand);
     public static Radical operator *(int lhs, Radical rhs) => new(lhs * rhs.coefficient, rhs.radicand);
-    public static Radical operator *(Radical lhs, Radical rhs) => new(
-        lhs.coefficient * rhs.coefficient,
-        lhs.radicand < 0 && rhs.radicand < 0
-            ? lhs.radicand * -rhs.radicand // Because i*i != 1
-            : lhs.radicand * rhs.radicand
-    );
+    public static Radical operator *(Radical lhs, Radical rhs)
+    {
+        int coefficientProduct = lhs.coefficient * rhs.coefficient;
+        if (lhs.radicand < 0 && rhs.radicand < 0) coefficientProduct = -coefficientProduct;
+        int radicandProduct = lhs.radicand * rhs.radicand;
+        return new(coefficientProduct, radicandProduct);
+    }
     public static Radical operator -(Radical rhs) => new(-rhs.coefficient, rhs.radicand);
     public static RadicalFraction operator /(Radical lhs, int rhs) => new(lhs, rhs);
     public static RadicalFraction operator /(int lhs, Radical rhs) => new(lhs, rhs);
