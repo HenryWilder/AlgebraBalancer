@@ -193,7 +193,7 @@ public static class AlgSolver
 
                 algebraics[nextOpIndex] = result;
                 algebraics.RemoveAt(nextOpIndex + 1);
-                operations = operations.Remove(nextOpIndex);
+                operations = operations.Remove(nextOpIndex, 1);
             }
         }
 
