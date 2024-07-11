@@ -177,18 +177,18 @@ public class Algebraic : IAlgebraicExpression
                 //tex:$$\frac{c\sqrt{r}}{1} = c\sqrt{r}$$
                 else
                 {
-                    return numeratorTerm;
+                    return numeratorTerm.Simplified();
                 }
             }
             //tex:$$\frac{c\sqrt{1}}{d} = \frac{c}{d}$$
             else if (numeratorTerm.radicand == 1)
             {
-                return new Fraction(numeratorTerm.coefficient, alg.denominator);
+                return new Fraction(numeratorTerm.coefficient, alg.denominator).Simplified();
             }
             //tex:$$\frac{c\sqrt{r}}{d}$$
             else
             {
-                return new RadicalFraction(numeratorTerm, alg.denominator);
+                return new RadicalFraction(numeratorTerm, alg.denominator).Simplified();
             }
         }
         //tex:$$\frac{c_1\sqrt{\pm 1}+c_2\sqrt{\mp 1}}{1} = \begin{gathered}c_1+c_2i\\\text{or}\\c_2+c_1i\end{gathered} = a+bi$$
