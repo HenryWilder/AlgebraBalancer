@@ -293,8 +293,8 @@ public class Algebraic : IAlgebraicExpression
         // =\\
         //\frac{d\sqrt{a_1} + d\sqrt{a_2} + \dots + d\sqrt{a_n}}{b\sqrt{c_1} + b\sqrt{c_2} + \dots + b\sqrt{c_m}}
         //\end{gathered}$$
-        var numerator   = lhs.numerator * rhs.denominator;
-        var denominator = rhs.numerator * lhs.denominator;
+        var numerator   = (lhs.numerator * rhs.denominator).TermsSimplified().LikeTermsCombined();
+        var denominator = (rhs.numerator * lhs.denominator).TermsSimplified().LikeTermsCombined();
 
         // Rationalize denominator
         while (denominator.terms.Any(term => !term.IsInteger()))
@@ -332,7 +332,7 @@ public class Algebraic : IAlgebraicExpression
         // If all terms are rationalized and like terms combined, there will only be one term.
         if (!(denominator.TryMonomial(out var term) && term.IsInteger()))
         {
-            throw new Exception("Assumption failed");
+            throw new Exception("Expected a rationalized denominator to be a monomial");
         }
 
         return new Algebraic(numerator, term.coefficient);

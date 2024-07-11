@@ -191,11 +191,11 @@ public class SumOfRadicals(params Radical[] terms)
         //$$
 
         return new([..terms
-                .GroupBy(term => term.radicand)
-                .Select(group => new Radical(
-                    group.Sum(term => term.coefficient),
-                    group.Key))
-                .Where(term => !term.IsZero())]);
+            .GroupBy(term => term.radicand)
+            .Select(group => new Radical(
+                group.Sum(term => term.coefficient),
+                group.Key))
+            .Where(term => !term.IsZero())]);
     }
 
     public bool TryMonomial(out Radical term)

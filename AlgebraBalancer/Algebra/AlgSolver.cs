@@ -103,7 +103,6 @@ public static class AlgSolver
                     (?:[^()]|(?'open'\()|(?'-open'\)))+(?(open)(?!))
                 )
             \)
-            (?!/-?\d+) # Deny the match if it is a singular algebraic
             (?-x)",
             RegexOptions.Compiled);
 
@@ -113,7 +112,27 @@ public static class AlgSolver
     {
         expr = CleanExpr(expr);
         // Replace subexpressions with their solutions first
-        expr = rxSubExpression.Replace(expr, match => SolveAlgebraic(match.Groups["expr"].Value).Simplified().ToString());
+        expr = rxSubExpression.Replace(expr, match =>
+        {
+            string matchStr = match.Value;
+            // Don't replace if the subexpression is a single algebraic on its own
+            if (rxAlgebraic.IsMatch(matchStr)) return matchStr;
+
+            var solution = SolveAlgebraic(match.Groups["expr"].Value).Simplified();
+            string solutionStr = solution.ToString();
+
+            // Needs to be wrapped in parentheses
+            if (
+                (solution is SumOfRadicals sum && sum.terms.Length > 1) ||
+                (solution is Algebraic alg && alg.numerator.terms.Length > 1 && alg.denominator == 1)
+            )
+            {
+                return $"({solutionStr})";
+            }
+
+            return solution.ToString();
+        }
+        );
 
         var algebraics = rxAlgebraic.Matches(expr).Select(match =>
         {
