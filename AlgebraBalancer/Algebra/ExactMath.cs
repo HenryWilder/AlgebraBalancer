@@ -217,14 +217,26 @@ public class ExactMath
         public IAlgebraicNotation h = h;
         public IAlgebraicNotation k = k;
 
-        public override readonly string ToString() => $"{a}(𝑥-{h})²+{k}";
+        public override readonly string ToString()
+        {
+            string aStr = a == 1
+                ? "" 
+                : a == -1
+                    ? "-"
+                    : a.ToString();
+
+            return $"{aStr}(𝑥-{h})²+{k}"
+                .Replace("+-", "-")
+                .Replace("--", "+");
+        }
     }
 
     public static VertexForm CompleteSquare(int a, int b, int c)
     {
-        var negB2ASquared = -new Algebraic(new Fraction(b, 2 * a)).Squared();
+        var h = new Fraction(-b, 2 * a).Simplified();
+        var k = new Algebraic(new Fraction(4 * a * c - b * b, 4 * a)).Simplified();
 
-        return new(a, negB2ASquared.Simplified(), (c + negB2ASquared).Simplified());
+        return new(a, h, k);
     }
 
     public static RadicalFraction ImaginaryFraction(Imaginary numerator, int denominator)
