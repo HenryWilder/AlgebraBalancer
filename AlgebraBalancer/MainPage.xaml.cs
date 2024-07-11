@@ -312,56 +312,61 @@ public sealed partial class MainPage : Page
         int selectionStart,
         int selectionLength,
         in string notesText,
-        bool isAlgebraic,
         out int selectionStartFinal,
         out string notesTextFinal
     )
     {
-        string addText;
-
-        if (!isAlgebraic)
+        bool isApproximationError;
+        string resultApproximate;
+        try
         {
-            try
+            isApproximationError = !Solver.TrySolveDouble(expr, out string result);
+            resultApproximate = isApproximationError ? $"<{result}>" : result;
+        }
+        catch (Exception err)
+        {
+            isApproximationError = true;
+            resultApproximate = $"<{err.Message}>";
+        }
+
+        bool isAlgebraicError;
+        string resultAlgebraic;
+        try
+        {
+            resultAlgebraic = AlgSolver.SolveAlgebraic(expr).Simplified().ToString();
+            if (resultAlgebraic.Contains("𝑖"))
             {
-                string resultDouble = Solver.TrySolveDouble(expr, out string result) ? result : $"<{result}>";
-                addText = " = " + resultDouble;
-                isAlgebraic = resultDouble.Contains(".");
+                if (expr.Contains("ⅈ"))
+                {
+                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "ⅈ");
+                }
+                else if (!expr.Contains("𝑖"))
+                {
+                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "i");
+                }
             }
-            catch (Exception err)
-            {
-                addText = $" = <{err.Message}>";
-                isAlgebraic = true;
-            }
+            isAlgebraicError = false;
+        }
+        catch (Exception err)
+        {
+            isAlgebraicError = true;
+            resultAlgebraic = $"<{err.Message}>";
+        }
+
+        string addText;
+        if (resultApproximate == resultAlgebraic)
+        {
+            addText = $" = {resultAlgebraic}";
+        }
+        else if (isApproximationError != isAlgebraicError)
+        {
+            addText = !isAlgebraicError
+                ? $" = {resultAlgebraic}"
+                : $" ≈ {resultApproximate}";
         }
         else
         {
-            addText = string.Empty;
-        }
-
-        if (isAlgebraic)
-        {
-            string resultAlgebraic;
-            try
-            {
-                resultAlgebraic = AlgSolver.SolveAlgebraic(expr).Simplified().ToString();
-                if (resultAlgebraic.Contains("𝑖"))
-                {
-                    if (expr.Contains("ⅈ"))
-                    {
-                        resultAlgebraic = resultAlgebraic.Replace("𝑖", "ⅈ");
-                    }
-                    else if (!expr.Contains("𝑖"))
-                    {
-                        resultAlgebraic = resultAlgebraic.Replace("𝑖", "i");
-                    }
-                }
-            }
-            catch (Exception err)
-            {
-                resultAlgebraic = $"<{err.Message}>";
-            }
-
-            addText = " = " + resultAlgebraic + addText;
+            addText = $" = {resultAlgebraic} ≈ {resultApproximate}";
         }
 
         int insertAt = selectionStart + selectionLength;
@@ -507,7 +512,6 @@ public sealed partial class MainPage : Page
                     Notes.SelectionStart,
                     Notes.SelectionLength,
                     Notes.Text,
-                    AlgSolver.rxNeedsAlgebraic.IsMatch(Notes.SelectedText),
                     out newSelectionStart,
                     out newNotesText
                 );

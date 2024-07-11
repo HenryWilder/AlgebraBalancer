@@ -874,7 +874,7 @@ public class MainPageTests
                 out int selectionStart,  out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            CalculateInline(expr, selectionStart, selectionLength, notesText, false, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -889,7 +889,7 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            CalculateInline(expr, selectionStart, selectionLength, notesText, false, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -904,7 +904,7 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            CalculateInline(expr, selectionStart, selectionLength, notesText, false, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -919,7 +919,7 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            CalculateInline(expr, selectionStart, selectionLength, notesText, false, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }
@@ -934,7 +934,7 @@ public class MainPageTests
                 out int selectionStart, out int expectStart,
                 out int selectionLength, out _);
             string expr = notesText.Substring(selectionStart, selectionLength);
-            CalculateInline(expr, selectionStart, selectionLength, notesText, false, out int newSelectionStart, out string newNotesText);
+            CalculateInline(expr, selectionStart, selectionLength, notesText, out int newSelectionStart, out string newNotesText);
             Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
             Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
         }

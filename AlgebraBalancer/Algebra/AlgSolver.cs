@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace AlgebraBalancer.Algebra;
 public static class AlgSolver
 {
+    // Expressions matching this Regex are incompatible with DataTable.
+    public static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
+
     public readonly static Regex rxImpliedMul =
         new(@"(?x)
             # Left side
-            (?<=(?'lparen'\))|\d)
+            (?<=(?'lparen'[)i𝑖ⅈ])|\d)
 
             # Optional whitespace between (can't be linebreaks)
             [\s-[\n\r]]*
@@ -19,7 +19,7 @@ public static class AlgSolver
             # Right side
             # If the left side didn't have parentheses, this side MUST
             # It can have parentheses either way, though
-            (?=(?(lparen)[\d(]|\())
+            (?=(?(lparen)[\d(i𝑖ⅈ√]|[(i𝑖ⅈ√]))
             (?-x)",
             RegexOptions.Compiled);
 
@@ -90,9 +90,6 @@ public static class AlgSolver
     public static readonly Regex rxAlgebraic =
         new(RX_ALGEBRAIC.Replace("{rxTerm}", $"(?:{rxTerm})"),
             RegexOptions.Compiled);
-
-    // Expressions matching this Regex are incompatible with DataTable.
-    public static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
 
     private static readonly Regex rxSubExpression =
         new(@"(?x)
