@@ -71,11 +71,58 @@ internal static class LatexUnicode
         (new Regex(@"@\\",          RegexOptions.Compiled), (match) => "⧵"),
         (new Regex(@"∫(?:∫(?:∫∫|∬)|∬∫|∭)|∬(?:∫∫|∬)|∭∫", RegexOptions.Compiled), (match) => "⨌"),
         (new Regex(@"@=",           RegexOptions.Compiled), (match) => "≡"),
+        (new Regex(@"@!=",          RegexOptions.Compiled), (match) => "≢"),
         (new Regex(@"@<",           RegexOptions.Compiled), (match) => "≤"),
         (new Regex(@"@>",           RegexOptions.Compiled), (match) => "≥"),
         (new Regex(@"@-",           RegexOptions.Compiled), (match) => "⋂"),
         (new Regex(@"@\+",          RegexOptions.Compiled), (match) => "⋃"),
         (new Regex(@"@\.",          RegexOptions.Compiled), (match) => "⋅"),
+        (new Regex(@"@\{\}",        RegexOptions.Compiled), (match) => "{𝑥∈?|𝑥?}"),
+
+        // Elementwise (because # represents a number)
+        (new Regex(@"#=",  RegexOptions.Compiled), (match) => "≡"),
+        (new Regex(@"!≡",  RegexOptions.Compiled), (match) => "≢"),
+        (new Regex(@"#<",  RegexOptions.Compiled), (match) => "∈"),
+        (new Regex(@"#>",  RegexOptions.Compiled), (match) => "∋"),
+        (new Regex(@"!∈",  RegexOptions.Compiled), (match) => "∉"),
+        (new Regex(@"!∋",  RegexOptions.Compiled), (match) => "∌"),
+        (new Regex(@"#\|", RegexOptions.Compiled), (match) => "∨"),
+        (new Regex(@"#&",  RegexOptions.Compiled), (match) => "∧"),
+
+        (new Regex(@"#\+", RegexOptions.Compiled), (match) => "∑"),
+        (new Regex(@"#\*", RegexOptions.Compiled), (match) => "∏"),
+
+        // Setwise (because $ for set names)
+        (new Regex(@"\$<",    RegexOptions.Compiled), (match) => "⊂"),
+        (new Regex(@"\$>",    RegexOptions.Compiled), (match) => "⊃"),
+        (new Regex(@"!⊂",     RegexOptions.Compiled), (match) => "⊄"),
+        (new Regex(@"!⊃",     RegexOptions.Compiled), (match) => "⊅"),
+        (new Regex(@"⊂=",     RegexOptions.Compiled), (match) => "⊆"),
+        (new Regex(@"⊃=",     RegexOptions.Compiled), (match) => "⊇"),
+        (new Regex(@"!⊆",     RegexOptions.Compiled), (match) => "⊈"),
+        (new Regex(@"!⊇",     RegexOptions.Compiled), (match) => "⊉"),
+        (new Regex(@"⊂!=",    RegexOptions.Compiled), (match) => "⊊"),
+        (new Regex(@"⊃!=",    RegexOptions.Compiled), (match) => "⊋"),
+        (new Regex(@"\$\|",   RegexOptions.Compiled), (match) => "∪"),
+        (new Regex(@"\$&",    RegexOptions.Compiled), (match) => "∩"),
+
+        (new Regex(@"\$-",    RegexOptions.Compiled), (match) => "⧵"),
+        (new Regex(@"\$\{\}", RegexOptions.Compiled), (match) => "Ø"),
+        (new Regex(@"\$'",    RegexOptions.Compiled), (match) => "′"),
+
+        // Ordered Setwise (% for no reason)
+        (new Regex(@"%<",     RegexOptions.Compiled), (match) => "⊏"),
+        (new Regex(@"%>",     RegexOptions.Compiled), (match) => "⊐"),
+        (new Regex(@"!⊏",     RegexOptions.Compiled), (match) => "⊄"),
+        (new Regex(@"!⊐",     RegexOptions.Compiled), (match) => "⊅"),
+        (new Regex(@"⊏=",     RegexOptions.Compiled), (match) => "⊑"),
+        (new Regex(@"⊐=",     RegexOptions.Compiled), (match) => "⊒"),
+        (new Regex(@"!⊑",     RegexOptions.Compiled), (match) => "⋢"),
+        (new Regex(@"!⊒",     RegexOptions.Compiled), (match) => "⋣"),
+        (new Regex(@"⊏!=",    RegexOptions.Compiled), (match) => "⋤"),
+        (new Regex(@"⊐!=",    RegexOptions.Compiled), (match) => "⋥"),
+        (new Regex(@"%\|",    RegexOptions.Compiled), (match) => "⊔"),
+        (new Regex(@"%&",     RegexOptions.Compiled), (match) => "⊓"),
 
         (new Regex(@"\\Algebraic\\",  RegexOptions.Compiled), (match) => "𝔸"),
         (new Regex(@"\\Boolean\\",    RegexOptions.Compiled), (match) => "𝔹"),
@@ -220,10 +267,17 @@ internal static class LatexUnicode
     public static readonly Dictionary<string, string> unicodeReplacements = new()
     {
         { @"\iexcl\", "¡" },
+        { @"\i!\", "¡" },
         { @"\cent\", "¢" },
+        { @"\$c\", "¢" },
+        { @"\𝕔\", "¢" },
         { @"\pounds\", "£" },
+        { @"\$P\", "£" },
+        { @"\ℙ\", "£" },
         { @"\currency\", "¤" },
         { @"\yen\", "¥" },
+        { @"\$Y\", "¥" },
+        { @"\𝕐\", "¥" },
         { @"\brvbar\", "¦" },
         { @"\sect\", "§" },
         { @"\spddot\", "¨" },
@@ -231,13 +285,15 @@ internal static class LatexUnicode
         { @"\circledR\", "®" },
         { @"\deg\", "°" },
         { @"\pm\", "±" },
+        { @"+/-", "±" },
         { @"\Micro\", "µ" },
         { @"\para\", "¶" },
         { @"\cdotp\", "·" },
-        { @"\frac14\", "¼" },
-        { @"\frac12\", "½" },
-        { @"\frac34\", "¾" },
+        { @"\frac14", "¼" },
+        { @"\frac12", "½" },
+        { @"\frac34", "¾" },
         { @"\iquest\", "¿" },
+        { @"\i?\", "¿" },
         { @"\times\", "×" },
         { @"\minus\", "−" },
         { @"\ndash\", "−" },
@@ -338,31 +394,45 @@ internal static class LatexUnicode
         { @"\backepsilon\", "϶" },
         { @"\Sha\", "Ш" },
         { @"\Vert\", "‖" },
+        { @"\\|\", "‖" },
+        { @"\||\", "‖" },
         { @"\twolowline\", "‗" },
         { @"\dagger\", "†" },
         { @"\ddagger\", "‡" },
         { @"\bullet\", "•" },
         { @"\enleadertwodots\", "‥" },
         { @"\ldots\", "…" },
+        { @"\...\", "…" },
         { @"\prime\", "′" },
+        { @"\'\", "′" },
         { @"\second\", "″" },
+        { @"\''\", "″" },
         { @"\third\", "‴" },
+        { @"\'''\", "‴" },
         { @"\backprime\", "‵" },
+        { @"\`\", "‵" },
         { @"\backdprime\", "‶" },
+        { @"\``\", "‶" },
         { @"\backtrprime\", "‷" },
+        { @"\```\", "‷" },
         { @"\caretinsert\", "‸" },
+        { @"\^\", "‸" },
         { @"\KomeJirushi\", "※" },
         { @"\Exclam\", "‼" },
+        { @"\!!\", "‼" },
         { @"\cat\", "⁀" },
         { @"\hyphenbullet\", "⁃" },
         { @"\fracslash\", "⁄" },
         { @"\Question\", "⁇" },
+        { @"\??\", "⁇" },
         { @"\bsemi\", "⁏" },
         { @"\closure\", "⁐" },
         { @"\Ast\", "⁑" },
         { @"./.", "⁒" },
         { @"\fourth\", "⁗" },
         { @"\euro\", "€" },
+        { @"\$E\", "€" },
+        { @"\𝔼\", "€" },
         { @"\enclosecircle\", "x⃝" },
         { @"\asteraccent\", "x⃰" },
         { @"\Euler\", "ℇ" },
@@ -394,18 +464,25 @@ internal static class LatexUnicode
         { @"\invamp\", "⅋" },
         { @"\leftarrow\", "←" },
         { @"\gets\", "←" },
+        { @"\<-\", "←" },
         { @"\uparrow\", "↑" },
         { @"\rightarrow\", "→" },
         { @"\to\", "→" },
+        { @"\->\", "→" },
         { @"\downarrow\", "↓" },
         { @"\leftrightarrow\", "↔" },
+        { @"\<->\", "↔" },
         { @"\updownarrow\", "↕" },
         { @"\nwarrow\", "↖" },
         { @"\nearrow\", "↗" },
         { @"\searrow\", "↘" },
         { @"\swarrow\", "↙" },
         { @"\nleftarrow\", "↚" },
+        { @"\<-/-\", "↚" },
+        { @"\<!-\", "↚" },
         { @"\nrightarrow\", "↛" },
+        { @"\-/->\", "↛" },
+        { @"\!->\", "↛" },
         { @"\leftwavearrow\", "↜" },
         { @"\rightwavearrow\", "↝" },
         { @"\twoheadleftarrow\", "↞" },
@@ -415,8 +492,10 @@ internal static class LatexUnicode
         { @"\leftarrowtail\", "↢" },
         { @"\rightarrowtail\", "↣" },
         { @"\mapsfrom\", "↤" },
+        { @"\<-|\", "↤" },
         { @"\MapsUp\", "↥" },
         { @"\mapsto\", "↦" },
+        { @"\|->\", "↦" },
         { @"\MapsDown\", "↧" },
         { @"\updownarrowbar\", "↨" },
         { @"\hookleftarrow\", "↩" },
@@ -425,11 +504,17 @@ internal static class LatexUnicode
         { @"\looparrowright\", "↬" },
         { @"\leftrightsquigarrow\", "↭" },
         { @"\nleftrightarrow\", "↮" },
+        { @"\<-/->\", "↮" },
+        { @"\<!->\", "↮" },
         { @"\lightning\", "↯" },
         { @"\Lsh\", "↰" },
+        { @"\<-.\", "↰" },
         { @"\Rsh\", "↱" },
+        { @"\.->\", "↱" },
         { @"\dlsh\", "↲" },
+        { @"\<-'\", "↲" },
         { @"\drsh\", "↳" },
+        { @"\'->\", "↳" },
         { @"\linefeed\", "↴" },
         { @"\carriagereturn\", "↵" },
         { @"\curvearrowleft\", "↶" },
@@ -451,24 +536,34 @@ internal static class LatexUnicode
         { @"\leftrightarrows\", "⇆" },
         { @"\leftleftarrows\", "⇇" },
         { @"\upuparrows\", "⇈" },
+        { @"\^^\", "⇈" },
         { @"\rightrightarrows\", "⇉" },
         { @"\downdownarrows\", "⇊" },
         { @"\leftrightharpoons\", "⇋" },
         { @"\rightleftharpoons\", "⇌" },
         { @"\nLeftarrow\", "⇍" },
         { @"\notimpliedby\", "⇍" },
+        { @"\<=/=\", "⇍" },
+        { @"\<!=\", "⇍" },
         { @"\nLeftrightarrow\", "⇎" },
         { @"\notiff\", "⇎" },
+        { @"\<=/=>\", "⇎" },
+        { @"\<!=>\", "⇎" },
         { @"\nRightarrow\", "⇏" },
         { @"\notimplies\", "⇏" },
+        { @"\=/=>\", "⇏" },
+        { @"\!=>\", "⇏" },
         { @"\Leftarrow\", "⇐" },
         { @"\impliedby\", "⇐" },
+        { @"\<==\", "⇐" },
         { @"\Uparrow\", "⇑" },
         { @"\Rightarrow\", "⇒" },
         { @"\implies\", "⇒" },
+        { @"\=>\", "⇒" },
         { @"\Downarrow\", "⇓" },
         { @"\Leftrightarrow\", "⇔" },
         { @"\iff\", "⇔" },
+        { @"\<=>\", "⇔" },
         { @"\Updownarrow\", "⇕" },
         { @"\Nwarrow\", "⇖" },
         { @"\Nearrow\", "⇗" },
@@ -501,14 +596,21 @@ internal static class LatexUnicode
         { @"\searrowtocorner\", "⇲" },
         { @"\whiteupdownarrow\", "⇳" },
         { @"\circleonrightarrow\", "⇴" },
+        { @"\-o->\", "⇴" },
         { @"\downuparrows\", "⇵" },
         { @"\rightthreearrows\", "⇶" },
         { @"\nvleftarrow\", "⇷" },
+        { @"\<-|-\", "⇷" },
         { @"\pfun\", "⇸" },
+        { @"\-|->\", "⇸" },
         { @"\nvleftrightarrow\", "⇹" },
+        { @"\<-|->\", "⇹" },
         { @"\nVleftarrow\", "⇺" },
+        { @"\<-||-\", "⇺" },
         { @"\ffun\", "⇻" },
+        { @"\-||->\", "⇻" },
         { @"\nVleftrightarrow\", "⇼" },
+        { @"\<-||->\", "⇼" },
         { @"\leftarrowtriangle\", "⇽" },
         { @"\rightarrowtriangle\", "⇾" },
         { @"\leftrightarrowtriangle\", "⇿" },
@@ -531,6 +633,7 @@ internal static class LatexUnicode
         { @"\coprod\", "∐" },
         { @"\sum\", "∑" },
         { @"\mp\", "∓" },
+        { @"\-/+\", "∓" },
         { @"\dotplus\", "∔" },
         { @"\slash\", "∕" },
         { @"\smallsetminus\", "∖" },
@@ -567,18 +670,28 @@ internal static class LatexUnicode
         { @"\varointclockwise\", "∲" },
         { @"\ointctrclockwise\", "∳" },
         { @"\therefore\", "∴" },
+        { @"\so\", "∴" },
+        { @"\.'.\", "∴" },
         { @"\because\", "∵" },
+        { @"\cuz\", "∵" },
+        { @"\'.'\", "∵" },
         { @"\Proportion\", "∷" },
+        { @"\as\", "∷" },
+        { @"\::\", "∷" },
         { @"\dotminus\", "∸" },
         { @"\eqcolon\", "∹" },
+        { @"\-:\", "∹" },
         { @"\dotsminusdots\", "∺" },
+        { @"\:-:\", "∺" },
         { @"\kernelcontraction\", "∻" },
         { @"\sim\", "∼" },
+        { @"\~\", "∼" },
         { @"\backsim\", "∽" },
         { @"\invlazys\", "∾" },
         { @"\AC\", "∿" },
         { @"\wr\", "≀" },
         { @"\nsim\", "≁" },
+        { @"\!~\", "≁" },
         { @"\eqsim\", "≂" },
         { @"\simeq\", "≃" },
         { @"\nsimeq\", "≄" },
@@ -586,8 +699,11 @@ internal static class LatexUnicode
         { @"\simneqq\", "≆" },
         { @"\ncong\", "≇" },
         { @"\approx\", "≈" },
+        { @"\~=\", "≈" },
         { @"\napprox\", "≉" },
+        { @"\~!=\", "≉" },
         { @"\approxeq\", "≊" },
+        { @"\~==\", "≊" },
         { @"\approxident\", "≋" },
         { @"\backcong\", "≌" },
         { @"\asymp\", "≍" },
@@ -595,10 +711,15 @@ internal static class LatexUnicode
         { @"\bumpeq\", "≏" },
         { @"\doteq\", "≐" },
         { @"\Doteq\", "≑" },
+        { @"\=:=\", "≑" },
         { @"\fallingdotseq\", "≒" },
+        { @"\'=.\", "≒" },
         { @"\risingdotseq\", "≓" },
+        { @"\.='\", "≓" },
         { @"\coloneqq\", "≔" },
+        { @"\:=\", "≔" },
         { @"\eqqcolon\", "≕" },
+        { @"\=:\", "≕" },
         { @"\eqcirc\", "≖" },
         { @"\circeq\", "≗" },
         { @"\arceq\", "≘" },
@@ -610,13 +731,19 @@ internal static class LatexUnicode
         { @"\measeq\", "≞" },
         { @"\questeq\", "≟" },
         { @"\neq\", "≠" },
+        { @"\ne\", "≠" },
+        { @"\!=\", "≠" },
         { @"\equiv\", "≡" },
+        { @"\===\", "≡" },
         { @"\nequiv\", "≢" },
+        { @"\!==\", "≢" },
         { @"\Equiv\", "≣" },
         { @"\leq\", "≤" },
         { @"\le\", "≤" },
+        { @"\<=\", "≤" },
         { @"\geq\", "≥" },
         { @"\ge\", "≥" },
+        { @"\>=\", "≥" },
         { @"\leqq\", "≦" },
         { @"\geqq\", "≧" },
         { @"\lneqq\", "≨" },
@@ -678,19 +805,31 @@ internal static class LatexUnicode
         { @"\boxtimes\", "⊠" },
         { @"\boxdot\", "⊡" },
         { @"\vdash\", "⊢" },
+        { @"\|--\", "⊢" },
         { @"\dashv\", "⊣" },
+        { @"\--|\", "⊣" },
         { @"\top\", "⊤" },
         { @"\bot\", "⊥" },
         { @"\assert\", "⊦" },
+        { @"\|-\", "⊦" },
         { @"\models\", "⊧" },
+        { @"\|=\", "⊧" },
         { @"\vDash\", "⊨" },
+        { @"\|==\", "⊨" },
         { @"\Vdash\", "⊩" },
+        { @"\||-\", "⊩" },
         { @"\Vvdash\", "⊪" },
+        { @"\|||-\", "⊪" },
         { @"\VDash\", "⊫" },
+        { @"\||=\", "⊫" },
         { @"\nvdash\", "⊬" },
+        { @"\|!-\", "⊬" },
         { @"\nvDash\", "⊭" },
+        { @"\|!=\", "⊭" },
         { @"\nVdash\", "⊮" },
+        { @"\||!-\", "⊮" },
         { @"\nVDash\", "⊯" },
+        { @"\||!=\", "⊯" },
         { @"\prurel\", "⊰" },
         { @"\scurel\", "⊱" },
         { @"\vartriangleleft\", "⊲" },
@@ -732,7 +871,9 @@ internal static class LatexUnicode
         { @"\lessdot\", "⋖" },
         { @"\gtrdot\", "⋗" },
         { @"\lll\", "⋘" },
+        { @"\<<<\", "⋘" },
         { @"\ggg\", "⋙" },
+        { @"\>>>\", "⋙" },
         { @"\lesseqgtr\", "⋚" },
         { @"\gtreqless\", "⋛" },
         { @"\eqless\", "⋜" },
@@ -776,9 +917,13 @@ internal static class LatexUnicode
         { @"\varbarwedge\", "⌅" },
         { @"\vardoublebarwedge\", "⌆" },
         { @"\lceil\", "⌈" },
+        { @"\|'\", "⌈" },
         { @"\rceil\", "⌉" },
+        { @"\'|\", "⌉" },
         { @"\lfloor\", "⌊" },
+        { @"\|.\", "⌊" },
         { @"\rfloor\", "⌋" },
+        { @"\.|\", "⌋" },
         { @"\invneg\", "⌐" },
         { @"\wasylozenge\", "⌑" },
         { @"\profline\", "⌒" },
@@ -1058,6 +1203,7 @@ internal static class LatexUnicode
         { @"\pisces\", "♓" },
         { @"\spadesuit\", "♠" },
         { @"\heartsuit\", "♡" },
+        { @"\<3\", "♡" },
         { @"\diamondsuit\", "♢" },
         { @"\clubsuit\", "♣" },
         { @"\varspadesuit\", "♤" },
@@ -1086,6 +1232,7 @@ internal static class LatexUnicode
         { @"\anchor\", "⚓" },
         { @"\swords\", "⚔" },
         { @"\warning\", "⚠" },
+        { @"\!\", "⚠" },
         { @"\Hermaphrodite\", "⚥" },
         { @"\medcirc\", "⚪" },
         { @"\medbullet\", "⚫" },
@@ -1167,8 +1314,11 @@ internal static class LatexUnicode
         { @"\nvRightarrow\", "⤃" },
         { @"\nvLeftrightarrow\", "⤄" },
         { @"\twoheadmapsto\", "⤅" },
+        { @"\|->>\", "⤅" },
         { @"\Mapsfrom\", "⤆" },
+        { @"\<=|\", "⤆" },
         { @"\Mapsto\", "⤇" },
+        { @"\|=>\", "⤇" },
         { @"\downarrowbarred\", "⤈" },
         { @"\uparrowbarred\", "⤉" },
         { @"\Uuparrow\", "⤊" },
@@ -1187,9 +1337,13 @@ internal static class LatexUnicode
         { @"\nvtwoheadrightarrowtail\", "⤗" },
         { @"\nVtwoheadrightarrowtail\", "⤘" },
         { @"\lefttail\", "⤙" },
+        { @"\-<\", "⤙" },
         { @"\righttail\", "⤚" },
+        { @"\>-\", "⤚" },
         { @"\leftdbltail\", "⤛" },
+        { @"\-<<\", "⤛" },
         { @"\rightdbltail\", "⤜" },
+        { @"\>>-\", "⤜" },
         { @"\diamondleftarrow\", "⤝" },
         { @"\rightarrowdiamond\", "⤞" },
         { @"\diamondleftarrowbar\", "⤟" },
@@ -1213,6 +1367,7 @@ internal static class LatexUnicode
         { @"\neovnwarrow\", "⤱" },
         { @"\nwovnearrow\", "⤲" },
         { @"\leadsto\", "⤳" },
+        { @"\~>\", "⤳" },
         { @"\uprightcurvearrow\", "⤴" },
         { @"\downrightcurvedarrow\", "⤵" },
         { @"\leftdowncurvedarrow\", "⤶" },
@@ -1845,6 +2000,9 @@ internal static class LatexUnicode
         { @"\&", "＆" },
     };
 
+    private static Regex MappingPatternFromDict(string basePattern, Dictionary<char, string> dict) =>
+        new(basePattern.Replace("{keys}", string.Join("|", dict.Keys)), RegexOptions.Compiled);
+
     private static readonly Dictionary<char, string> superscriptMapping = new()
     {
         { '0', "⁰" },
@@ -1888,8 +2046,9 @@ internal static class LatexUnicode
         { 'y', "ʸ" },
         { 'z', "ᶻ" },
     };
-    private static readonly Regex superscriptPattern = new(@"\^\{([0-9\+\-=\(\)a-pr-z ]+?)\}", RegexOptions.Compiled);
-    private static readonly Regex superscriptPattern1 = new(@"\^([0-9\+\-=\(\)a-pr-z ])", RegexOptions.Compiled);
+    private static readonly Regex superscriptPattern = MappingPatternFromDict(
+        /* lang=regex */ @"\^\{(?'key'(?:{keys}|\s)+?)\}|\^(?'key'{keys}|\s)",
+        superscriptMapping);
     public static string ToSuperscript(string str) => Remap(str, superscriptMapping);
 
     private static readonly Regex superscriptNumberPattern = new(@"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+", RegexOptions.Compiled);
@@ -1930,8 +2089,9 @@ internal static class LatexUnicode
         { 't', "ₜ" },
         { 'x', "ₓ" },
     };
-    private static readonly Regex subscriptPattern = new(@"_\{([0-9\+\-=\(\)aexhklmnopst ]+?)\}", RegexOptions.Compiled);
-    private static readonly Regex subscriptPattern1 = new(@"_([0-9\+\-=\(\)aexhklmnopst ])", RegexOptions.Compiled);
+    private static readonly Regex subscriptPattern = MappingPatternFromDict(
+        /* language=regex */ @"_\{(?'key'(?:{keys}|\s)+?)\}|_(?'key'{keys}|\s)",
+        subscriptMapping);
     public static string ToSubscript(string str) => Remap(str, subscriptMapping);
 
     private static readonly Dictionary<char, string> ttMapping = new()
@@ -1999,7 +2159,9 @@ internal static class LatexUnicode
         { 'y', "𝚢" },
         { 'z', "𝚣" },
     };
-    private static readonly Regex ttPattern = new(@"\\tt\{([0-9A-Za-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex ttPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\tt\{(?'key'(?:{keys}|\s)+?)\}",
+        ttMapping);
 
     private static readonly Dictionary<char, string> bfMapping = new()
     {
@@ -2126,7 +2288,9 @@ internal static class LatexUnicode
         { 'Ϝ', "𝟊" },
         { 'ϝ', "𝟋" },
     };
-    private static readonly Regex bfPattern = new(@"\\bf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bfPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\bf\{(?'key'(?:{keys}|\s)+?)\}",
+        bfMapping);
 
     private static readonly Dictionary<char, string> bbMapping = new()
     {
@@ -2198,7 +2362,9 @@ internal static class LatexUnicode
         { 'Π', "ℿ" },
         { 'Σ', "⅀" },
     };
-    private static readonly Regex bbPattern = new(@"\\bb\{([0-9A-Za-zπγΓΠΣ ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bbPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\bb\{(?'key'(?:{keys}|\s)+?)\}",
+        bbMapping);
 
     private static readonly Dictionary<char, string> sfMapping = new()
     {
@@ -2265,10 +2431,64 @@ internal static class LatexUnicode
         { 'y', "𝗒" },
         { 'z', "𝗓" },
     };
-    private static readonly Regex sfPattern = new(@"\\sf\{([0-9A-Za-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\sf\{(?'key'(?:{keys}|\s)+?)\}",
+        sfMapping);
 
     private static readonly Dictionary<char, string> itMapping = new()
     {
+        { 'A', "𝐴" },
+        { 'B', "𝐵" },
+        { 'C', "𝐶" },
+        { 'D', "𝐷" },
+        { 'E', "𝐸" },
+        { 'F', "𝐹" },
+        { 'G', "𝐺" },
+        { 'H', "𝐻" },
+        { 'I', "𝐼" },
+        { 'J', "𝐽" },
+        { 'K', "𝐾" },
+        { 'L', "𝐿" },
+        { 'M', "𝑀" },
+        { 'N', "𝑁" },
+        { 'O', "𝑂" },
+        { 'P', "𝑃" },
+        { 'Q', "𝑄" },
+        { 'R', "𝑅" },
+        { 'S', "𝑆" },
+        { 'T', "𝑇" },
+        { 'U', "𝑈" },
+        { 'V', "𝑉" },
+        { 'W', "𝑊" },
+        { 'X', "𝑋" },
+        { 'Y', "𝑌" },
+        { 'Z', "𝑍" },
+        { 'a', "𝑎" },
+        { 'b', "𝑏" },
+        { 'c', "𝑐" },
+        { 'd', "𝑑" },
+        { 'e', "𝑒" },
+        { 'f', "𝑓" },
+        { 'g', "𝑔" },
+        { 'i', "𝑖" },
+        { 'h', "ℎ" },
+        { 'j', "𝑗" },
+        { 'k', "𝑘" },
+        { 'l', "𝑙" },
+        { 'm', "𝑚" },
+        { 'n', "𝑛" },
+        { 'o', "𝑜" },
+        { 'p', "𝑝" },
+        { 'q', "𝑞" },
+        { 'r', "𝑟" },
+        { 's', "𝑠" },
+        { 't', "𝑡" },
+        { 'u', "𝑢" },
+        { 'v', "𝑣" },
+        { 'w', "𝑤" },
+        { 'x', "𝑥" },
+        { 'y', "𝑦" },
+        { 'z', "𝑧" },
         { 'Α', "𝛢" },
         { 'Β', "𝛣" },
         { 'Γ', "𝛤" },
@@ -2328,7 +2548,9 @@ internal static class LatexUnicode
         { 'ϱ', "𝜚" },
         { 'ϖ', "𝜛" },
     };
-    private static readonly Regex itPattern = new(@"\\it\{([ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex itPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\it\{(?'key'(?:{keys}|\s)+?)\}",
+        itMapping);
 
     private static readonly Dictionary<char, string> frakMapping = new()
     {
@@ -2384,7 +2606,9 @@ internal static class LatexUnicode
         { 'z', "𝔷" },
 
     };
-    private static readonly Regex frakPattern = new(@"\\frak\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex frakPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\frak\{(?'key'(?:{keys}|\s)+?)\}",
+        frakMapping);
 
     private static readonly Dictionary<char, string> calMapping = new()
     {
@@ -2441,7 +2665,9 @@ internal static class LatexUnicode
         { 'y', "𝓎" },
         { 'z', "𝓏" },
     };
-    private static readonly Regex calPattern = new(@"\\cal\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex calPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\cal\{(?'key'(?:{keys}|\s)+?)\}",
+        calMapping);
 
     private static readonly Dictionary<char, string> sfbfMapping = new()
     {
@@ -2566,7 +2792,9 @@ internal static class LatexUnicode
         { '8', "𝟴" },
         { '9', "𝟵" },
     };
-    private static readonly Regex sfbfPattern = new(@"\\sfbf\{([0-9A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfbfPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\sfbf\{(?'key'(?:{keys}|\s)+?)\}",
+        sfbfMapping);
 
     private static readonly Dictionary<char, string> sfbfitMapping = new()
     {
@@ -2681,7 +2909,9 @@ internal static class LatexUnicode
         { 'ϱ', "𝟈" },
         { 'ϖ', "𝟉" },
     };
-    private static readonly Regex sfbfitPattern = new(@"\\sfbfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfbfitPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\sfbfit\{(?'key'(?:{keys}|\s)+?)\}",
+        sfbfitMapping);
 
     private static readonly Dictionary<char, string> bfitMapping = new()
     {
@@ -2796,7 +3026,9 @@ internal static class LatexUnicode
         { 'ϱ', "𝝔" },
         { 'ϖ', "𝝕" },
     };
-    private static readonly Regex bfitPattern = new(@"\\bfit\{([A-Za-zΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡϴΣΤΥΦΧΨΩ∇αβγδεζηθικλμνξοπρςστυφχψω∂ϵϑϰϕϱϖ ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bfitPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\bfit\{(?'key'(?:{keys}|\s)+?)\}",
+        bfitMapping);
 
     private static readonly Dictionary<char, string> bfscrMapping = new()
     {
@@ -2853,7 +3085,9 @@ internal static class LatexUnicode
         { 'y', "𝔂" },
         { 'z', "𝔃" },
     };
-    private static readonly Regex bfscrPattern = new(@"\\bfscr\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bfscrPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\bfscr\{(?'key'(?:{keys}|\s)+?)\}",
+        bfscrMapping);
 
     private static readonly Dictionary<char, string> sfitMapping = new()
     {
@@ -2910,7 +3144,9 @@ internal static class LatexUnicode
         { 'y', "𝘺" },
         { 'z', "𝘻" },
     };
-    private static readonly Regex sfitPattern = new(@"\\sfit\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex sfitPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\sfit\{(?'key'(?:{keys}|\s)+?)\}",
+        sfitMapping);
 
     private static readonly Dictionary<char, string> bffrakMapping = new()
     {
@@ -2967,22 +3203,22 @@ internal static class LatexUnicode
         { 'y', "𝖞" },
         { 'z', "𝖟" },
     };
-    private static readonly Regex bffrakPattern = new(@"\\bffrak\{([A-Za-z ]+?)\}", RegexOptions.Compiled);
+    private static readonly Regex bffrakPattern = MappingPatternFromDict(
+        /* language=regex */ @"\\bffrak\{(?'key'(?:{keys}|\s)+?)\}",
+        bffrakMapping);
 
     private static string Remap(string str, Dictionary<char, string> mapping) =>
         string.Concat(str.Select((char ch) => mapping.TryGetValue(ch, out string replacement) ? replacement : ch.ToString()));
 
     public static string RemapInPattern(string str, Regex pattern, Dictionary<char, string> mapping) =>
         pattern.Replace(str, (Match match) => Remap(
-            match.Groups[1].Value,
+            match.Groups["key"].Value,
             mapping)
         );
 
     private static readonly (Regex pattern, Dictionary<char, string> mapping)[] patternMaps = [
         (superscriptPattern,  superscriptMapping),
-        (superscriptPattern1, superscriptMapping),
         (subscriptPattern,    subscriptMapping),
-        (subscriptPattern1,   subscriptMapping),
         (ttPattern,           ttMapping),
         (bfPattern,           bfMapping),
         (bbPattern,           bbMapping),
