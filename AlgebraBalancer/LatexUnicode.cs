@@ -2000,8 +2000,15 @@ internal static class LatexUnicode
         { @"\&", "＆" },
     };
 
-    private static Regex MappingPatternFromDict(string basePattern, Dictionary<char, string> dict) =>
-        new(basePattern.Replace("{keys}", string.Join("|", dict.Keys)), RegexOptions.Compiled);
+    private static readonly Regex rxNeedsSanitization = new(@"[-+*(){}\[\]^$?\\.]");
+    private static Regex MappingPatternFromDict(string basePattern, Dictionary<char, string> dict)
+    {
+        string pattern = basePattern.Replace(
+            "{keys}",
+            rxNeedsSanitization.Replace(string.Join("|", dict.Keys), (x) => @"\" + x.Value)
+        );
+        return new(pattern, RegexOptions.Compiled);
+    }
 
     private static readonly Dictionary<char, string> superscriptMapping = new()
     {
