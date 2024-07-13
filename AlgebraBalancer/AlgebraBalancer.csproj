@@ -116,6 +116,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AlgebraV2\PrimeFac.cs" />
     <Compile Include="Algebra\Algebraic.cs" />
     <Compile Include="Algebra\AlgSolver.cs" />
     <Compile Include="Algebra\Balancer.cs" />

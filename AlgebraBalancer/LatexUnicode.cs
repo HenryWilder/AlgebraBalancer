@@ -2054,7 +2054,7 @@ internal static class LatexUnicode
         { 'z', "ᶻ" },
     };
     private static readonly Regex superscriptPattern = MappingPatternFromDict(
-        /* lang=regex */ @"\^\{(?'key'(?:{keys}|\s)+?)\}|\^(?'key'{keys}|\s)",
+        /* lang=regex */ @"\^\{(?'key'(?:{keys}|\s)+?)\}|\^(?'key'{keys})",
         superscriptMapping);
     public static string ToSuperscript(string str) => Remap(str, superscriptMapping);
 
@@ -2097,7 +2097,7 @@ internal static class LatexUnicode
         { 'x', "ₓ" },
     };
     private static readonly Regex subscriptPattern = MappingPatternFromDict(
-        /* language=regex */ @"_\{(?'key'(?:{keys}|\s)+?)\}|_(?'key'{keys}|\s)",
+        /* language=regex */ @"_\{(?'key'(?:{keys}|\s)+?)\}|_(?'key'{keys})",
         subscriptMapping);
     public static string ToSubscript(string str) => Remap(str, subscriptMapping);
 
