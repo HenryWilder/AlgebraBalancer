@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AlgebraBalancer.Algebra;
+using System;
 
 namespace AlgebraBalancerUnitTests;
 
@@ -64,30 +65,41 @@ public class PolynomialTests
     }
 
     [TestClass]
-    public class LongDivisionTests
+    public class DivisionTests
     {
+        private static readonly Polynomial numerA = Polynomial.Parse("3x^3 - 13x^2 + 28x - 12");
+        private static readonly Polynomial denomA = Polynomial.Parse("3x - 1");
+        private static readonly (Polynomial quotient, int remainder) expectA = (Polynomial.Parse("x^2 - 4x + 8"), -4);
+
         [TestMethod]
-        public void Test1()
+        public void TestLongDivisionA()
         {
-            var numer = Polynomial.Parse("3x^3 - 13x^2 + 28x - 12");
-            var denom = Polynomial.Parse("3x - 1");
-            var (actualQuotient, actualRemainder) = numer / denom;
-            actualQuotient = actualQuotient.SimplifiedToPolynomial();
-            var (expectQuotient, expectRemainder) = (Polynomial.Parse("x^2 - 4x + 8"), -4);
-            Assert.AreEqual(expectQuotient, actualQuotient);
-            Assert.AreEqual(expectRemainder, actualRemainder);
+            var (actualQuotient, actualRemainder) = Polynomial.LongDivision(numerA, denomA);
+            Assert.AreEqual(expectA, (actualQuotient.SimplifiedToPolynomial(), actualRemainder));
         }
 
         [TestMethod]
-        public void Test2()
+        public void TestSyntheticDivisionA()
         {
-            var numer = Polynomial.Parse("8x^2 + 23");
-            var denom = Polynomial.Parse("x + 2");
-            var (actualQuotient, actualRemainder) = numer / denom;
-            actualQuotient = actualQuotient.SimplifiedToPolynomial();
-            var (expectQuotient, expectRemainder) = (Polynomial.Parse("8x - 16"), 55);
-            Assert.AreEqual(expectQuotient, actualQuotient);
-            Assert.AreEqual(expectRemainder, actualRemainder);
+            _ = Assert.ThrowsException<ArgumentException>(() => _ = Polynomial.SyntheticDivision(numerA, denomA));
+        }
+
+        private static readonly Polynomial numerB = Polynomial.Parse("8x^2 + 23");
+        private static readonly Polynomial denomB = Polynomial.Parse("x + 2");
+        private static readonly (Polynomial quotient, int remainder) expectB = (Polynomial.Parse("8x - 16"), 55);
+
+        [TestMethod]
+        public void TestLongDivisionB()
+        {
+            var (actualQuotient, actualRemainder) = Polynomial.LongDivision(numerB, denomB);
+            Assert.AreEqual(expectB, (actualQuotient.SimplifiedToPolynomial(), actualRemainder));
+        }
+
+        [TestMethod]
+        public void TestSyntheticDivisionB()
+        {
+            var (actualQuotient, actualRemainder) = Polynomial.SyntheticDivision(numerB, denomB);
+            Assert.AreEqual(expectB, (actualQuotient.SimplifiedToPolynomial(), actualRemainder));
         }
     }
 }

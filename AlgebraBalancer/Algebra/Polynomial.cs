@@ -531,8 +531,41 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
     public static Polynomial operator *(int lhs, Polynomial rhs) =>
         rhs * lhs;
 
-    // Polynomial Long Division
-    public static (Polynomial quotient, int remainder) operator /(Polynomial numer, Polynomial denom)
+    public static (Polynomial quotient, int remainder) SyntheticDivision(Polynomial numer, Polynomial denom)
+    {
+        if (numer.terms.Length == 0 || denom.terms.Length == 0)
+            throw new ArgumentException("Polynomials must have at least one term each to divide");
+
+        if (denom.Degree() != 1)
+            throw new ArgumentException($"Cannot synthetic divide by {denom}; must have degree of 1");
+
+        if (denom.LeadingCoefficient() != 1)
+            throw new ArgumentException($"Cannot synthetic divide by {denom}; must have leading coefficient of 1");
+
+        if (numer.Variables().Length != 1)
+            throw new ArgumentException($"Cannot synthetic divide {numer}; cannot have multiple variables");
+
+        string variable = numer.Variables()[0];
+
+        int constDenom = -denom.ConstantTerm();
+        var numerCoefficients = numer.SimplifiedToPolynomial()
+            .terms.ToDictionary(term => term.Degree(), term => term.coefficient);
+
+        Polynomial quotient = new();
+
+        int remainder = 0;
+        for (int degree = numer.Degree(); degree > 0; --degree)
+        {
+            remainder += numerCoefficients.GetValueOrDefault(degree, 0);
+            quotient += new PolynomialTerm(remainder, new TermMultiplicand(variable, degree - 1));
+            remainder *= constDenom;
+        }
+        remainder += numerCoefficients.GetValueOrDefault(0, 0);
+
+        return (quotient, remainder);
+    }
+
+    public static (Polynomial quotient, int remainder) LongDivision(Polynomial numer, Polynomial denom)
     {
         if (numer.terms.Length == 0 || denom.terms.Length == 0)
             throw new ArgumentException("Polynomials must have at least one term each to divide");
@@ -568,15 +601,24 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
         );
 
         var remainder = (numer - denom * quotient).SimplifiedToPolynomial();
-        
+
         if (remainder.Degree() == 0)
         {
             return (quotient, remainder.ConstantTerm());
         }
         else
         {
-            var (subQuotient, subRemainder) = remainder / denom; // Recursive
+            var (subQuotient, subRemainder) = LongDivision(remainder, denom); // Recursive
             return (quotient + subQuotient, subRemainder);
         }
+    }
+
+    // Polynomial Long Division
+    public static (Polynomial quotient, int remainder) operator /(Polynomial numer, Polynomial denom)
+    {
+        var denomLeadingTerm = denom.LeadingTerm();
+        return (denomLeadingTerm.Degree() == 1 && denomLeadingTerm.coefficient == 1)
+            ? SyntheticDivision(numer, denom)
+            : LongDivision(numer, denom);
     }
 }
