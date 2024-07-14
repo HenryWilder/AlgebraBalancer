@@ -344,16 +344,23 @@ public sealed partial class MainPage : Page
         string resultAlgebraic;
         try
         {
-            resultAlgebraic = AlgSolver.SolveAlgebraic(expr).Simplified().ToString();
-            if (resultAlgebraic.Contains("𝑖"))
+            if (AlgSolver.TrySolvePolynomialDivision(expr, out var numer, out var denom, out var quotient, out int remainder))
             {
-                if (expr.Contains("ⅈ"))
+                resultAlgebraic = $"({denom})({quotient})+{remainder}";
+            }
+            else
+            {
+                resultAlgebraic = AlgSolver.SolveAlgebraic(expr).Simplified().ToString();
+                if (resultAlgebraic.Contains("𝑖"))
                 {
-                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "ⅈ");
-                }
-                else if (!expr.Contains("𝑖"))
-                {
-                    resultAlgebraic = resultAlgebraic.Replace("𝑖", "i");
+                    if (expr.Contains("ⅈ"))
+                    {
+                        resultAlgebraic = resultAlgebraic.Replace("𝑖", "ⅈ");
+                    }
+                    else if (!expr.Contains("𝑖"))
+                    {
+                        resultAlgebraic = resultAlgebraic.Replace("𝑖", "i");
+                    }
                 }
             }
             isAlgebraicError = false;

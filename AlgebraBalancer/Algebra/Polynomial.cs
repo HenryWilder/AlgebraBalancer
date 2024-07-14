@@ -49,7 +49,7 @@ public class PolynomialTerm
                     (varCap, degCap) =>
                         new TermMultiplicand(
                             varCap.Value,
-                            string.IsNullOrEmpty(degCap.Value) ? 1 : int.Parse(LatexUnicode.SuperscriptToNumber(degCap.Value))
+                            string.IsNullOrEmpty(degCap.Value) ? 1 : int.Parse(LatexUnicode.SuperscriptToNumber(degCap.Value).Replace("^", ""))
                         )
                 )
                 .Where(x => x.degree != 0)

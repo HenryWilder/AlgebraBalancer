@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using AlgebraBalancer.Notation;
+
 namespace AlgebraBalancer.Algebra;
 public static class AlgSolver
 {
@@ -159,6 +161,36 @@ public static class AlgSolver
         var numerator = new SumOfRadicals(numerTerms);
         var algebraic = new Algebraic(numerator, denominator);
         return algebraic;
+    }
+
+    private static readonly Regex rxPolynomialLongDivision =
+        new(@"\((?'numer'(?:[-+]?\d*(?:\p{L}[⁰¹²³⁴⁵⁶⁷⁸⁹]*)*)+)\)/\((?'denom'(?:[-+]?\d*(?:\p{L}[⁰¹²³⁴⁵⁶⁷⁸⁹]*)*)+)\)",
+            RegexOptions.Compiled);
+
+    public static bool TrySolvePolynomialDivision(
+        string expr,
+        out Polynomial numer,
+        out Polynomial denom,
+        out IAlgebraicNotation quotient,
+        out int remainder)
+    {
+        var div = rxPolynomialLongDivision.Match(expr.Replace(" ", ""));
+        if (div.Success)
+        {
+            numer = Polynomial.Parse(div.Groups["numer"].Value);
+            denom = Polynomial.Parse(div.Groups["denom"].Value);
+            (var q, remainder) = numer / denom;
+            quotient = q.Simplified();
+            return true;
+        }
+        else
+        {
+            numer = null;
+            denom = null;
+            quotient = null;
+            remainder = -1;
+            return false;
+        }
     }
 
     public static Algebraic SolveAlgebraic(string expr)
