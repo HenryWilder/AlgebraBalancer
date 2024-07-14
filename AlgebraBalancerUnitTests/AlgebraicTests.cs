@@ -114,7 +114,7 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Algebraic(5),
-                SolveAlgebraic("5"));
+                AlgSolver.SolveAlgebraic("5"));
         }
 
         [TestMethod, TestCategory("Basic input")]
@@ -122,7 +122,7 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Algebraic(new Radical(2, 2)),
-                SolveAlgebraic("2√2"));
+                AlgSolver.SolveAlgebraic("2√2"));
         }
 
         [TestMethod, TestCategory("Basic input")]
@@ -130,7 +130,7 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Algebraic(new Imaginary(7)),
-                SolveAlgebraic("7i"));
+                AlgSolver.SolveAlgebraic("7i"));
         }
 
         [TestMethod, TestCategory("Basic input")]
@@ -138,7 +138,7 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Algebraic(new Radical(7, -2)),
-                SolveAlgebraic("7i√2"));
+                AlgSolver.SolveAlgebraic("7i√2"));
         }
 
         [TestMethod, TestCategory("Basic input")]
@@ -146,7 +146,7 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Algebraic(new Radical(7, -2)),
-                SolveAlgebraic("7√-2"));
+                AlgSolver.SolveAlgebraic("7√-2"));
         }
 
         [TestMethod, TestCategory("Basic operation")]
@@ -154,19 +154,19 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Number(5),
-                SolveAlgebraic("2 + 3").Simplified());
+                AlgSolver.SolveAlgebraic("2 + 3").Simplified());
 
             Assert.AreEqual(
                 new Number(20),
-                SolveAlgebraic("5 * 4").Simplified());
+                AlgSolver.SolveAlgebraic("5 * 4").Simplified());
 
             Assert.AreEqual(
                 new Number(3),
-                SolveAlgebraic("12 / 4").Simplified());
+                AlgSolver.SolveAlgebraic("12 / 4").Simplified());
 
             Assert.AreEqual(
                 new Number(27),
-                SolveAlgebraic("35 - 8").Simplified());
+                AlgSolver.SolveAlgebraic("35 - 8").Simplified());
         }
 
         [TestMethod]
@@ -174,11 +174,11 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Number(7),
-                SolveAlgebraic("(2 * 2) + 3").Simplified());
+                AlgSolver.SolveAlgebraic("(2 * 2) + 3").Simplified());
 
             Assert.AreEqual(
                 new Number(10),
-                SolveAlgebraic("2 * (2 + 3)").Simplified());
+                AlgSolver.SolveAlgebraic("2 * (2 + 3)").Simplified());
         }
 
         [TestMethod]
@@ -186,7 +186,7 @@ public class AlgebraicTests
         {
             Assert.AreEqual(
                 new Number(10),
-                SolveAlgebraic("(2 * (5 + 2 - 1) / 2) + (3 * 4)").Simplified());
+                AlgSolver.SolveAlgebraic("(2 * (5 + 2 - 1) / 2) + (3 * 4)").Simplified());
         }
     }
 }

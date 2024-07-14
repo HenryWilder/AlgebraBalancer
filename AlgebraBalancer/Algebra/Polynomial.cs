@@ -1,23 +1,69 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 using AlgebraBalancer.Notation;
 
 namespace AlgebraBalancer.Algebra;
 
-public class TermMultiplicand(string variable, int degree)
+public class TermMultiplicand(string variable, int degree = 1)
 {
     public string variable = variable;
     public int degree = degree;
 
-    public override string ToString() => $"{variable}{LatexUnicode.ToSuperscript(degree.ToString())}";
+    public override string ToString() => variable + (degree == 1 ? "" : LatexUnicode.ToSuperscript(degree.ToString()));
+
+    public override bool Equals(object obj) =>
+        obj is TermMultiplicand other &&
+        variable == other.variable &&
+        degree == other.degree;
 
     public bool IsIdentity => degree == 0;
 }
 
-public class PolynomialTerm(int coefficient, params TermMultiplicand[] multiplicands)
+public class PolynomialTerm
 {
-    public int coefficient = coefficient;
-    public TermMultiplicand[] multiplicands = multiplicands;
+    public PolynomialTerm(int coefficient, params TermMultiplicand[] multiplicands) =>
+        (this.coefficient, this.multiplicands) = (coefficient, [.. multiplicands.Where(mult => mult.degree != 0)]);
+
+    public PolynomialTerm(params TermMultiplicand[] multiplicands) =>
+        new PolynomialTerm(1, multiplicands);
+
+    private static readonly Regex rxTerm =
+        new(@"(?'coef'[-+]?\d*)(?:(?'var'\p{L}[₀₁₂₃₄₅₆₇₈₉₌ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*)(?:\^(?'openbr'\{)?(?'deg'\d+)(?(openbr)\})|(?'deg'[⁰¹²³⁴⁵⁶⁷⁸⁹]*)))*",
+            RegexOptions.Compiled);
+    public static PolynomialTerm Parse(string str)
+    {
+        var match = rxTerm.Match(str.Replace(" ", ""));
+        if (match.Success)
+        {
+            string coefStr = match.Groups["coef"].Value;
+            int coef = coefStr == "" ? 1 : coefStr == "-" ? -1 : int.Parse(coefStr);
+            if (coef == 0) return null;
+            var varCaps = match.Groups["var"].Captures;
+            var degCaps = match.Groups["deg"].Captures;
+            TermMultiplicand[] mult = [..
+                varCaps.Zip(
+                    degCaps,
+                    (varCap, degCap) =>
+                        new TermMultiplicand(
+                            varCap.Value,
+                            string.IsNullOrEmpty(degCap.Value) ? 1 : int.Parse(LatexUnicode.SuperscriptToNumber(degCap.Value))
+                        )
+                )
+                .Where(x => x.degree != 0)
+            ];
+            return new(coef, mult);
+        }
+        else
+        {
+            throw new Exception($"Failed to parse \"{str}\" to a polynomial term");
+        }
+    }
+
+    public int coefficient;
+    public TermMultiplicand[] multiplicands;
 
     public string MultiplicandsToString() => string.Concat(multiplicands.Where(mult => !mult.IsIdentity));
     public override string ToString()
@@ -25,32 +71,63 @@ public class PolynomialTerm(int coefficient, params TermMultiplicand[] multiplic
         string multStr = MultiplicandsToString();
         return string.IsNullOrEmpty(multStr)
             ? coefficient.ToString()
-            : (coefficient == 1 ? "" : coefficient == -1 ? "-" : coefficient.ToString()) + multStr;
+            : (coefficient == 1 ? "" : (coefficient == -1 ? "-" : coefficient.ToString())) + multStr;
     }
+
+    public override bool Equals(object obj) =>
+        obj is PolynomialTerm other &&
+        coefficient == other.coefficient &&
+        multiplicands.SequenceEqual(other.multiplicands);
 
     public bool IsZero => coefficient == 0;
 
-    public int Degree() => multiplicands.Max(mult => mult.degree);
+    public int Degree() => multiplicands.Length != 0 ? multiplicands.Max(mult => mult.degree) : 0;
     public string[] Variables() => [.. multiplicands.Select(mult => mult.variable).Distinct()];
     public bool IsConstant => multiplicands.Length == 0;
+
+    public static PolynomialTerm operator -(PolynomialTerm rhs) =>
+        new(-rhs.coefficient, rhs.multiplicands);
+
+    public static PolynomialTerm operator *(PolynomialTerm lhs, PolynomialTerm rhs) =>
+        new(lhs.coefficient * rhs.coefficient, [.. lhs.multiplicands.Concat(rhs.multiplicands)]);
+
+    public static PolynomialTerm operator *(PolynomialTerm lhs, int rhs) =>
+        new(lhs.coefficient * rhs, lhs.multiplicands);
+    public static PolynomialTerm operator *(int lhs, PolynomialTerm rhs) =>
+        rhs * lhs;
 }
 
-public class Polynomial(PolynomialTerm[] terms) : IAlgebraicNotation
+public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
 {
-    public PolynomialTerm[] terms = terms;
+    private static readonly Regex rxTermSeparator = new(@"(?<!^)(?:\+|(?=\-))", RegexOptions.Compiled);
+    public static Polynomial Parse(string str) =>
+        new([.. rxTermSeparator.Split(str.Replace(" ", "")).Select(PolynomialTerm.Parse).Where(x => x is not null)]);
+
+    public PolynomialTerm[] terms = [.. terms.Where(term => term.coefficient != 0)];
+
+    public override string ToString() =>
+        string.Join("+", terms.Select(term => term.ToString())).Replace("+-", "-");
+
+    public override bool Equals(object obj) =>
+        obj is Polynomial other &&
+        terms.SequenceEqual(other.terms);
 
     public bool IsInoperable => false;
 
     public int Degree() => terms.Max(term => term.Degree());
     public string[] Variables() => [.. terms.SelectMany(term => term.Variables()).Distinct()];
 
-    public int LeadingCoefficient() => terms.Length > 0
-        ? terms[0].coefficient
-        : 0;
+    public int LeadingCoefficient() =>
+        terms.OrderByDescending(term => term.Degree()).First().coefficient;
 
-    public int ConstantTerm() => terms.Length > 0 && terms.Last().IsConstant
-        ? terms.Last().coefficient
-        : 0;
+    public PolynomialTerm LeadingTerm() =>
+        terms.OrderByDescending(term => term.Degree()).First();
+
+    public int ConstantTerm()
+    {
+        var lastTerm = terms.OrderBy(term => term.Degree()).First();
+        return lastTerm.IsConstant ? lastTerm.coefficient : 0;
+    }
 
     public bool TryMonomial(out PolynomialTerm term)
     {
@@ -78,7 +155,7 @@ public class Polynomial(PolynomialTerm[] terms) : IAlgebraicNotation
         return new Polynomial([..terms
             //Simplify terms and order by degree
             
-            //tex:$$\begin{gathered}
+            //tex:$$\begin{gather}
             //5x^2x + 65x^3xx^0 + 2x^0x^0 - 4x - 4x^2x^{-1} + 3x^2x^{-2} + 7xx + 8x - x^2 + 7yyy^3y^2y^{-4} - 2xyy\\
             //\Downarrow\\
             //\begin{bmatrix}
@@ -94,11 +171,10 @@ public class Polynomial(PolynomialTerm[] terms) : IAlgebraicNotation
             //7yyy^3y^2y^{-4}\\
             //-2xyy\\
             //\end{bmatrix}
-            //\end{gathered}$$
+            //\end{gather}$$
 
             .Select(term => new PolynomialTerm(
-                //tex:$$
-                //\begin{bmatrix}
+                //tex:$$\begin{bmatrix}
                 //5x^2x^1\\
                 //65x^3x^1x^0\\
                 //2x^0x^0\\
@@ -124,8 +200,7 @@ public class Polynomial(PolynomialTerm[] terms) : IAlgebraicNotation
                 //-1\\
                 //7\\
                 //-2\\
-                //\end{bmatrix}
-                //$$
+                //\end{bmatrix}$$
                 term.coefficient,
 
                 //tex:$$
@@ -294,6 +369,7 @@ public class Polynomial(PolynomialTerm[] terms) : IAlgebraicNotation
                     //\end{bmatrix}
                     //$$
                     .OrderByDescending(mult => mult.degree)]))
+
             //tex:$$
             //\begin{bmatrix}
             //5x^{\boxed{3}}\\
@@ -433,4 +509,74 @@ public class Polynomial(PolynomialTerm[] terms) : IAlgebraicNotation
     }
 
     public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+
+    public static Polynomial operator +(Polynomial lhs, Polynomial rhs) =>
+        new([.. lhs.terms.Concat(rhs.terms)]);
+    public static Polynomial operator +(Polynomial lhs, PolynomialTerm rhs) =>
+        new([.. lhs.terms.Append(rhs)]);
+    public static Polynomial operator +(Polynomial lhs, int rhs) =>
+        new([.. lhs.terms.Append(new(rhs))]);
+
+    public static Polynomial operator -(Polynomial rhs) =>
+        new([.. rhs.terms.Select(term => -term)]);
+
+    public static Polynomial operator -(Polynomial lhs, Polynomial rhs) =>
+        new([.. lhs.terms.Concat((-rhs).terms)]);
+
+    // FOIL
+    public static Polynomial operator *(Polynomial lhs, Polynomial rhs) =>
+        new([.. lhs.terms.SelectMany(lterm => rhs.terms.Select(rterm => lterm * rterm))]);
+    public static Polynomial operator *(Polynomial lhs, int rhs) =>
+        new([.. lhs.terms.Select(term => term * rhs)]);
+    public static Polynomial operator *(int lhs, Polynomial rhs) =>
+        rhs * lhs;
+
+    // Polynomial Long Division
+    public static (Polynomial quotient, int remainder) operator /(Polynomial numer, Polynomial denom)
+    {
+        if (numer.terms.Length == 0 || denom.terms.Length == 0)
+            throw new ArgumentException("Polynomials must have at least one term each to divide");
+
+        var numerLeadingTerm = numer.LeadingTerm();
+        var denomLeadingTerm = denom.LeadingTerm();
+
+        if (numerLeadingTerm.multiplicands.Length > 1)
+            throw new NotImplementedException("Cannot divide with multiple variables"); // todo
+
+        if (numerLeadingTerm.multiplicands.Length > 0 &&
+            denomLeadingTerm.multiplicands.Length > 0 &&
+            numerLeadingTerm.multiplicands[0].variable != denomLeadingTerm.multiplicands[0].variable)
+        {
+            throw new NotImplementedException("Must have same variable(s) to divide"); // todo
+        }
+
+        int numerDeg = numerLeadingTerm.Degree();
+        int denomDeg = denomLeadingTerm.Degree();
+
+        int degreeDiff = numerDeg - denomDeg;
+        if (degreeDiff < 0)
+            throw new NotImplementedException("Numerator degree cannot be less than denominator degree");
+
+        int numerLeadCoef = numerLeadingTerm.coefficient;
+        int denomLeadCoef = denomLeadingTerm.coefficient;
+
+        var quotient = new Polynomial(
+            new PolynomialTerm(
+                numerLeadCoef / denomLeadCoef,
+                [new(numerLeadingTerm.multiplicands[0].variable, degreeDiff)]
+            )
+        );
+
+        var remainder = (numer - denom * quotient).SimplifiedToPolynomial();
+        
+        if (remainder.Degree() == 0)
+        {
+            return (quotient, remainder.ConstantTerm());
+        }
+        else
+        {
+            var (subQuotient, subRemainder) = remainder / denom; // Recursive
+            return (quotient + subQuotient, subRemainder);
+        }
+    }
 }

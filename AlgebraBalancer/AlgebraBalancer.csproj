@@ -130,6 +130,7 @@
     </Compile>
     <Compile Include="Algebra\Fraction.cs" />
     <Compile Include="Algebra\Number.cs" />
+    <Compile Include="Algebra\NumericFmt.cs" />
     <Compile Include="Algebra\Polynomial.cs" />
     <Compile Include="Algebra\Radical.cs" />
     <Compile Include="Algebra\RadicalFraction.cs" />
