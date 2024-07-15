@@ -100,13 +100,15 @@ public static class NumericFmt
         return result;
     }
 
-    // Operands can't be adjacent numbers or else they combine into one operand
+    private const string RX_NON_DIGIT_OPERAND =
+        /* lang=regex */ @"\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*|\((?:[^()]+|(?'open'\()|(?'-open'\)))*?(?(open)(?!))\)";
+
     private static readonly Regex rxOperand =
-        new(@"\d+|\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*|\((?:[^()]+|(?'open'\()|(?'-open'\)))*?(?(open)(?!))\)",
+        new(@$"\d+|{RX_NON_DIGIT_OPERAND}",
             RegexOptions.Compiled);
 
     private static readonly Regex rxImpliedMul =
-        new(@$"(?<={rxOperand})(?={rxOperand})",
+        new(@$"(?<=(?'ldigit'\d+)|{RX_NON_DIGIT_OPERAND})(?=(?(ldigit)(?!)|\d+)|{RX_NON_DIGIT_OPERAND})",
             RegexOptions.Compiled);
 
     // Should come first

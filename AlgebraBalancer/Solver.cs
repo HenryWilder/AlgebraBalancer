@@ -49,7 +49,8 @@ public static class Solver
     {
         try
         {
-            object computed = dt.Compute(NumericFmt.ParserFormat(expr), "");
+            expr = NumericFmt.ParserFormat(expr);
+            object computed = dt.Compute(expr, "");
             if (computed is not null)
             {
                 result = Convert.ToDouble(computed).ToString();

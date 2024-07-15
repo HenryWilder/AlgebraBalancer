@@ -404,7 +404,11 @@ public sealed partial class MainPage : Page
         {
             addText = !isAlgebraicError
                 ? $"={resultAlgebraic}"
-                : $"≈{resultApproximate}";
+                : (resultApproximate.Contains('.') ? "≈" : "=") + resultApproximate.ToString();
+        }
+        else if (ParserFormat(resultAlgebraic) == ParserFormat(expr))
+        {
+            addText = $"≈{resultApproximate}";
         }
         else
         {
@@ -548,7 +552,7 @@ public sealed partial class MainPage : Page
         {
             int newSelectionStart;
             string newNotesText;
-            // Calculate approximate value
+            // Calculate inline
             if (Notes.SelectionLength > 0)
             {
                 CalculateInline(
