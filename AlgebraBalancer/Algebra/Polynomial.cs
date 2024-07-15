@@ -31,7 +31,7 @@ public class PolynomialTerm
         new PolynomialTerm(1, multiplicands);
 
     private static readonly Regex rxTerm =
-        new(@"(?'coef'[-+]?\d*)(?:(?'var'\p{L}[₀₁₂₃₄₅₆₇₈₉₌ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*)(?:\^(?'openbr'\{)?(?'deg'\d+)(?(openbr)\})|(?'deg'[⁰¹²³⁴⁵⁶⁷⁸⁹]*)))*",
+        new(@"^(?'coef'[-+]?\d*)(?:(?'var'\p{L}[₀₁₂₃₄₅₆₇₈₉₌ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*)(?:\^(?'openbr'\{)?(?'deg'\d+)(?(openbr)\})|(?'deg'[⁰¹²³⁴⁵⁶⁷⁸⁹]*)))*$",
             RegexOptions.Compiled);
     public static PolynomialTerm Parse(string str)
     {
@@ -110,8 +110,14 @@ public class PolynomialTerm
         rhs * lhs;
 }
 
-public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
+public class Polynomial : IAlgebraicNotation
 {
+    public Polynomial(params PolynomialTerm[] terms) =>
+        this.terms = [.. terms.Where(term => term.coefficient != 0)];
+
+    public Polynomial(int convertFrom) =>
+        terms = [new PolynomialTerm(convertFrom)];
+
     private static readonly Regex rxTermSeparator = new(@"(?<!^)(?:\+|(?=\-))", RegexOptions.Compiled);
     public static Polynomial Parse(string str) =>
         new([.. rxTermSeparator.Split(str.Replace(" ", "")).Select(PolynomialTerm.Parse).Where(x => x is not null)]);
@@ -132,7 +138,7 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
 
     public bool IsConstantMonomial => terms.Length == 1 && terms[0].IsConstant;
 
-    public PolynomialTerm[] terms = [.. terms.Where(term => term.coefficient != 0)];
+    public PolynomialTerm[] terms;
 
     public override string ToString() =>
         string.Join("+", terms.Select(term => term.ToString())).Replace("+-", "-");
@@ -533,6 +539,10 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
         {
             return (Number)term.coefficient;
         }
+        else if (poly.terms.Length == 0)
+        {
+            return (Number)0;
+        }
 
         return poly;
     }
@@ -560,7 +570,7 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
     public static Polynomial operator *(int lhs, Polynomial rhs) =>
         rhs * lhs;
 
-    public static (Polynomial quotient, int remainder) SyntheticDivision(Polynomial numer, Polynomial denom)
+    public static (Polynomial quotient, Polynomial remainder) SyntheticDivision(Polynomial numer, Polynomial denom)
     {
         if (numer.terms.Length == 0 || denom.terms.Length == 0)
             throw new ArgumentException("Polynomials must have at least one term each to divide");
@@ -591,13 +601,16 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
         }
         remainder += numerCoefficients.GetValueOrDefault(0, 0);
 
-        return (quotient, remainder);
+        return (quotient, new(remainder));
     }
 
-    public static (Polynomial quotient, int remainder) LongDivision(Polynomial numer, Polynomial denom)
+    public static (Polynomial quotient, Polynomial remainder) LongDivision(Polynomial numer, Polynomial denom)
     {
         if (numer.terms.Length == 0 || denom.terms.Length == 0)
             throw new ArgumentException("Polynomials must have at least one term each to divide");
+
+        numer = numer.SimplifiedToPolynomial();
+        denom = denom.SimplifiedToPolynomial();
 
         var numerLeadingTerm = numer.LeadingTerm();
         var denomLeadingTerm = denom.LeadingTerm();
@@ -622,18 +635,31 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
         int numerLeadCoef = numerLeadingTerm.coefficient;
         int denomLeadCoef = denomLeadingTerm.coefficient;
 
-        var quotient = new Polynomial(
+        if (degreeDiff == 0 && numerLeadCoef % denomLeadCoef != 0)
+        {
+            return (new(0), numer);
+        }
+
+         var quotient = new Polynomial(
             new PolynomialTerm(
                 numerLeadCoef / denomLeadCoef,
                 [new(numerLeadingTerm.multiplicands[0].variable, degreeDiff)]
             )
-        );
+        ).SimplifiedToPolynomial();
 
         var remainder = (numer - denom * quotient).SimplifiedToPolynomial();
 
-        if (remainder.Degree() == 0)
+        if (remainder.terms.Length == 0)
         {
-            return (quotient, remainder.ConstantTerm());
+            return (quotient, new(0));
+        }
+        else if (remainder.Degree() == 0)
+        {
+            return (quotient, new Polynomial(remainder.ConstantTerm()));
+        }
+        else if (numer == remainder)
+        {
+            return (new(0), remainder);
         }
         else
         {
@@ -643,7 +669,7 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
     }
 
     // Polynomial Long Division
-    public static (Polynomial quotient, int remainder) operator /(Polynomial numer, Polynomial denom)
+    public static (Polynomial quotient, Polynomial remainder) operator /(Polynomial numer, Polynomial denom)
     {
         var denomLeadingTerm = denom.LeadingTerm();
         return (denomLeadingTerm.Degree() == 1 && denomLeadingTerm.coefficient == 1)

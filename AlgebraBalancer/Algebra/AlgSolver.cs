@@ -164,7 +164,7 @@ public static class AlgSolver
     }
 
     private static readonly Regex rxPolynomialLongDivision =
-        new(@"\((?'numer'.+?)\)\s*/\s*\((?'denom'.+?)\)",
+        new(@"^(?'openNumer'\()?(?'numer'[^()*/]+?)(?(openNumer)\))\s*/\s*(?'openDenom'\()?(?'denom'[^()*/]+?)(?(openDenom)\))$",
             RegexOptions.Compiled);
 
     public static bool TrySolvePolynomialDivision(
@@ -172,9 +172,8 @@ public static class AlgSolver
         out Polynomial numer,
         out Polynomial denom,
         out IAlgebraicNotation quotient,
-        out int remainder)
+        out IAlgebraicNotation remainder)
     {
-
         var div = rxPolynomialLongDivision.Match(expr);
         if (div.Success)
         {
@@ -188,8 +187,9 @@ public static class AlgSolver
                     goto NOT_POLYNOMIAL_DIVISION;
                 }
 
-                (var q, remainder) = numer / denom;
+                var (q, r) = numer / denom;
                 quotient = q.Simplified();
+                remainder = r.Simplified();
                 return true;
             }
             catch

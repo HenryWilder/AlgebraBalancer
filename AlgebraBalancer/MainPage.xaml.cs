@@ -344,13 +344,25 @@ public sealed partial class MainPage : Page
         string resultAlgebraic;
         try
         {
-            if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out int remainder))
+            var letter = new Regex(@"\p{L}").Match(expr);
+            if (letter.Success)
             {
-                resultAlgebraic = $"({denom})({quotient})+{remainder}";
-            }
-            else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
-            {
-                resultAlgebraic = simplified.ToString();
+                if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out var remainder))
+                {
+                    resultAlgebraic =
+                        quotient.ToString() +
+                        ((remainder is Number n && n == 0) ? "" : $", {remainder}") +
+                        $" => ({denom})({quotient})+{remainder}";
+                }
+                else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
+                {
+                    resultAlgebraic = simplified.ToString();
+                }
+                else
+                {
+                    resultAlgebraic = $"<Cannot use variable '{letter.Value}' except in polynomial>";
+                    isAlgebraicError = true;
+                }
             }
             else
             {
