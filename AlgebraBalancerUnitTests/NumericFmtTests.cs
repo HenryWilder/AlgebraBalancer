@@ -716,5 +716,16 @@ public class NumericFmtTests
                     MainPage.EXACT_CALC_FMT
                 ));
         }
+
+        [TestMethod]
+        public void TestRadicalCoefficient1()
+        {
+            Assert.AreEqual(
+                "√6",
+                DisplayFormat(
+                    "1√6",
+                    MainPage.EXACT_CALC_FMT
+                ));
+        }
     }
 }

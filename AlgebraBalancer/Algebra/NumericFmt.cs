@@ -103,22 +103,32 @@ public static class NumericFmt
     private const string RX_NON_DIGIT_OPERAND =
         /* lang=regex */ @"\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*|\((?:[^()]+|(?'open'\()|(?'-open'\)))*?(?(open)(?!))\)";
 
+    // The right side of an operand
+    // Comes with an "ldigit" optional capture
+    private const string RX_L_OPERAND =
+        /* lang=regex */ @"(?'ldigit'\d)|\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*|\)";
+
+    // The left side of an operand
+    // Comes with an "ldigit" optional capture
+    private const string RX_R_OPERAND =
+        /* lang=regex */ @"(?'rdigit'\-?\d)|\p{L}|\(|√";
+
     private static readonly Regex rxOperand =
         new(@$"\d+|{RX_NON_DIGIT_OPERAND}",
             RegexOptions.Compiled);
 
     private static readonly Regex rxImpliedMul =
-        new(@$"(?<=(?'ldigit'\d+)|{RX_NON_DIGIT_OPERAND})(?=(?(ldigit)(?!)|\d+)|{RX_NON_DIGIT_OPERAND})",
+        new(@$"(?<={RX_L_OPERAND})(?={RX_R_OPERAND})(?(ldigit)(?(rdigit)(?!)))",
+            RegexOptions.Compiled);
+
+    // Should come last
+    private static readonly Regex rxImpliableMul =
+        new(@$"(?<={RX_L_OPERAND})\s*\*\s*(?={RX_R_OPERAND})(?(ldigit)(?(rdigit)(?!)))",
             RegexOptions.Compiled);
 
     // Should come first
     private static readonly Regex rxAddSubChain =
         new(@"[-+]{2,}",
-            RegexOptions.Compiled);
-
-    // Should come last
-    private static readonly Regex rxImplyableMul =
-        new(@"(?<=(?'ldigit'\d)|\)|\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*)\s*\*\s*(?=(?'rdigit'\d)|\(|\p{L}|√)(?(ldigit)(?(rdigit)(?!)))",
             RegexOptions.Compiled);
 
     private static readonly Regex rxPow =
@@ -127,7 +137,7 @@ public static class NumericFmt
 
     // Should follow Pow conversion to superscript
     private static readonly Regex rxIdentityPower =
-        new(@$"(?<={rxOperand})¹(?![⁰¹²³⁴⁵⁶⁷⁸⁹])",
+        new(@$"(?<={RX_L_OPERAND})¹(?![⁰¹²³⁴⁵⁶⁷⁸⁹])",
             RegexOptions.Compiled);
 
     // Should follow Pow conversion to superscript
@@ -137,12 +147,12 @@ public static class NumericFmt
 
     // Should follow PowerToIdentity
     private static readonly Regex rxIdentityProductQuotient =
-        new(@$"1\*(?={rxOperand})|(?<={rxOperand})[*/]1",
+        new(@$"1\*(?={RX_R_OPERAND})|(?<={RX_L_OPERAND})[*/]1",
             RegexOptions.Compiled);
 
     // Should follow AddSubChain
     private static readonly Regex rxIdentitySumDifference =
-        new(@$"0[-+](?={rxOperand})|(?<={rxOperand})[-+]0",
+        new(@$"0[-+](?={RX_R_OPERAND})|(?<={RX_L_OPERAND})[-+]0",
             RegexOptions.Compiled);
 
     // Should follow AddSubChain
@@ -198,7 +208,7 @@ public static class NumericFmt
         expr = rxIdentityPower          .Replace(expr, "");
         expr = rxPowerToIdentity        .Replace(expr, "");
 
-        expr = rxImplyableMul.Replace(expr, "");
+        expr = rxImpliableMul.Replace(expr, "");
 
         switch (fmt & (FormatOptions.AsciiImaginary | FormatOptions.ItalicImaginary | FormatOptions.ComplexImaginary))
         {

@@ -217,5 +217,5 @@ public class SumOfRadicals(params Radical[] terms)
     }
 
     public override string ToString() =>
-        string.Join("*", terms.Select(term => term.ToString()));
+        string.Join("+", terms.Select(term => term.ToString()));
 }
