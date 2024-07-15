@@ -54,10 +54,10 @@ public static class NumericFmt
 
         if (rxTestSpaceAroundBinaryOperators.IsMatch(example))
         {
-            result |= FormatOptions.SpaceAroundBinaryOperators;
+            result |= FormatOptions.SpaceAroundBinaryOperators
+                | FormatOptions.SpaceAroundRelationalOperators; // "1 + 1=3 - 1" looks weird
         }
-
-        if (rxTestSpaceAroundRelationalOperators.IsMatch(example))
+        else if (rxTestSpaceAroundRelationalOperators.IsMatch(example))
         {
             result |= FormatOptions.SpaceAroundRelationalOperators;
         }
