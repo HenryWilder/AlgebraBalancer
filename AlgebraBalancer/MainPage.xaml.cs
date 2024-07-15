@@ -355,6 +355,10 @@ public sealed partial class MainPage : Page
                         $" => ({denom})({quotient})+{remainder}")
                         .Replace("+-", "-");
                 }
+                else if (AlgSolver.TryFOILPolynomials(expr, out var foiled))
+                {
+                    resultAlgebraic = foiled.ToString();
+                }
                 else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
                 {
                     resultAlgebraic = simplified.ToString();

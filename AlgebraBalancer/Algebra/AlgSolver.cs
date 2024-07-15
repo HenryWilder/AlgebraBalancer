@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -203,6 +204,38 @@ public static class AlgSolver
         denom = null;
         quotient = null;
         remainder = default;
+        return false;
+    }
+
+    private static readonly Regex rxPolynomialMultiplication =
+        new(@"^(?'factors'[^-+*/()]+?)?(?:(?:\((?'factors'[^*/()]+?)\))(?'factors'[^-+*/()]+?)?)+$",
+            RegexOptions.Compiled);
+
+    public static bool TryFOILPolynomials(string expr, out IAlgebraicNotation foiled)
+    {
+        try
+        {
+            var match = rxPolynomialMultiplication.Match(expr);
+            if (match.Success)
+            {
+                string[] factorsStr = [.. match.Groups["factors"].Captures.Select(x => x.Value)];
+                List<Polynomial> factors = [];
+                foreach (string str in factorsStr)
+                {
+                    if (!Polynomial.TryParse(str, out var factor))
+                    {
+                        foiled = null;
+                        return true;
+                    }
+                    factors.Add(factor);
+                }
+                foiled = factors.Aggregate((a, b) => a * b).Simplified();
+                return true;
+            }
+        }
+        catch { }
+
+        foiled = null;
         return false;
     }
 
