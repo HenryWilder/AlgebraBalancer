@@ -208,7 +208,7 @@ public static class AlgSolver
     }
 
     private static readonly Regex rxPolynomialMultiplication =
-        new(@"^(?'factors'[^-+*/()]+?)?(?:(?:\((?'factors'[^*/()]+?)\))(?'factors'[^-+*/()]+?)?)+$",
+        new(@"^(?'factors'\-?[^-+*/()]+?)?(?:(?:\((?'factors'[^*/()]+?)\))(?'factors'[^-+*/()]+?)?)+$",
             RegexOptions.Compiled);
 
     public static bool TryFOILPolynomials(string expr, out IAlgebraicNotation foiled)
