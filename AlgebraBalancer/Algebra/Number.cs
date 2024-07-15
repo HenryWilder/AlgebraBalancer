@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using AlgebraBalancer.Notation;
+﻿using AlgebraBalancer.Notation;
 
 namespace AlgebraBalancer.Algebra;
 public struct Number(int value) : IAlgebraicAtomic
@@ -16,7 +10,7 @@ public struct Number(int value) : IAlgebraicAtomic
     public static implicit operator int(Number num) => num.value;
     public static implicit operator Number(int value) => new(value);
     public override readonly string ToString() => $"{value}";
-    public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public readonly string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     public static Number operator -(Number rhs) => new(-rhs.value);
 

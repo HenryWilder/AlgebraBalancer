@@ -23,7 +23,7 @@ public class RadicalFraction : IAlgebraicExpression
         return $"({numerator})/{denominator}";
     }
 
-    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     public IAlgebraicNotation Simplified()
     {

@@ -11,48 +11,6 @@ public static class AlgSolver
     // Expressions matching this Regex are incompatible with DataTable.
     public static readonly Regex rxNeedsAlgebraic = new(@"i|𝑖|ⅈ|√");
 
-    public static readonly Regex rxImpliedMul =
-        new(@"(?x)
-            # Left side
-            (?<=(?'lparen'[)])|\d)
-
-            # Optional whitespace between (can't be linebreaks)
-            [\s-[\n\r]]*
-
-            # Right side
-            # If the left side didn't have parentheses, this side MUST
-            # It can have parentheses either way, though
-            (?=(?(lparen)[\d(]|[(]))
-
-            |
-
-            # Not every i is implied multiplication. It might be a coefficient.
-            # It's implied multiplication if the item on the immediate left isn't a number literal.
-            (?<=[i𝑖ⅈ)])(?=[i𝑖ⅈ])
-            (?-x)",
-            RegexOptions.Compiled);
-
-    private static readonly Regex rxUnarySignOperator =
-        new(@"(?<=^|\()(?=[-+]\()",
-            RegexOptions.Compiled);
-
-    private static readonly Regex rxSubtraction =
-        new(@"(?<!^|[-+/*(])\-",
-            RegexOptions.Compiled);
-
-    public static string CleanExpr(string expr) =>
-        rxSubtraction.Replace(
-            rxUnarySignOperator.Replace(
-                rxImpliedMul.Replace(
-                    LatexUnicode.SuperscriptToNumber(expr)
-                    .Replace(" ", ""),
-                    "*"),
-                "0")
-                .Replace("÷", "/")
-                .Replace("×", "*")
-                .Replace("--", "+"),
-        "+-");
-
     public static readonly Regex rxTerm =
         new(@"(?x)
             (?'sign'
@@ -67,9 +25,13 @@ public static class AlgSolver
                 \d+
             )? # Negative with no number represents coefficient of -1
 
+            \*?
+
             (?'imag' # imaginary
                 i|𝑖|ⅈ
             )?
+
+            \*?
 
             (?:√ # Don't need to capture the radical, it just marks where the radicand is
                 (?'radi' # radicand
@@ -257,9 +219,9 @@ public static class AlgSolver
 
     public static Algebraic SolveAlgebraic(string expr)
     {
-        expr = CleanExpr(expr);
+        expr = NumericFmt.ParserFormat(expr);
         // Replace subexpressions with their solutions first
-        expr = CleanExpr(rxSubExpression.Replace(expr, match =>
+        expr = NumericFmt.ParserFormat(rxSubExpression.Replace(expr, match =>
         {
             var algMatch = rxAlgebraic.Match(match.Value);
 
@@ -324,7 +286,7 @@ public static class AlgSolver
 
                 var result = op switch
                 {
-                    '^' => lhs ^ rhs, // not xor
+                    '^' => lhs ^ rhs, // pow, not xor
                     '+' => lhs + rhs,
                     '-' => lhs - rhs,
                     '*' => lhs * rhs,

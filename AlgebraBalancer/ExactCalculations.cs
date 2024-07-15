@@ -18,19 +18,19 @@ internal class ExactCalculations
             string posOrNeg = x > 0 ? "⁺" : x < 0 ? "⁻" : "";
             if (x > 0 && ExactMath.IsPrime(x))
             {
-                result.Add((null, $"{x} ∈ ℙ"));
+                result.Add((null, $"{x}∈ℙ"));
             }
             else
             {
                 string oddOrEven = ExactMath.IsOdd(x) ? "+1" : "";
-                result.Add((null, $"{x} ∈ 2ℤ{posOrNeg}{oddOrEven}"));
+                result.Add((null, $"{x}∈2ℤ{posOrNeg}{oddOrEven}"));
             }
         }
 
         // Prime Factors
         var pfac = ExactMath.PrimeFactors(x);
-        result.Add((null, $"{x} = " + string.Join(" × ", pfac.Select(p =>
-            p.prime.ToString() + (p.exponent == 1 ? "" : LatexUnicode.ToSuperscript(p.exponent.ToString()))
+        result.Add((null, $"{x}=" + string.Join("*", pfac.Select(p =>
+            $"{p.prime}{LatexUnicode.ToSuperscript(p.exponent.ToString())}"
         ))));
 
         // Root
@@ -38,7 +38,7 @@ internal class ExactCalculations
         string middlestep;
         if (root is Radical radical && radical.coefficient != 1 && radical.radicand != 1)
         {
-            middlestep = $" = (√{radical.coefficient * radical.coefficient})√{radical.radicand}";
+            middlestep = $"=(√{radical.coefficient * radical.coefficient})√{radical.radicand}";
         }
         else
         {
@@ -62,7 +62,7 @@ internal class ExactCalculations
             int aPad = factorStrings.Max((f) => f.a.Length);
             int bPad = factorStrings.Max((f) => f.b.Length);
 
-            result.Add(("Factors:\n", string.Join("\n", factorStrings.Select((x) => $"{x.a.PadLeft(aPad)} × {x.b.PadLeft(bPad)}"))));
+            result.Add(("Factors:\n", string.Join("\n", factorStrings.Select((x) => $"{x.a.PadLeft(aPad)},{x.b.PadLeft(bPad)}"))));
         }
 
         return result;
@@ -74,19 +74,19 @@ internal class ExactCalculations
 
         {
             string inequality = a > b ? ">" : a < b ? "<" : "=";
-            result.Add((null, $"{a} {inequality} {b}"));
+            result.Add((null, $"{a}{inequality}{b}"));
         }
 
-        result.Add((null, ExactMath.Sum(a, b).AsEquality($"{a} + {b}")));
-        result.Add((null, ExactMath.Sum(a, -b).AsEquality($"{a} - {b}")));
-        result.Add((null, ExactMath.Product(a, b).AsEquality($"{a} × {b}")));
-        result.Add((null, new Fraction(a, b).Simplified().AsEquality($"{a} ÷ {b}")));
-        result.Add((null, (b != 0 ? new Number(a % b) : UNDEFINED as IAlgebraicAtomic).AsEquality($"{a} % {b}")));
+        result.Add((null, ExactMath.Sum(a, b).AsEquality($"{a}+{b}")));
+        result.Add((null, ExactMath.Sum(a, -b).AsEquality($"{a}-{b}")));
+        result.Add((null, ExactMath.Product(a, b).AsEquality($"{a}*{b}")));
+        result.Add((null, new Fraction(a, b).Simplified().AsEquality($"{a}/{b}")));
+        result.Add((null, (b != 0 ? new Number(a % b) : UNDEFINED as IAlgebraicAtomic).AsEquality($"{a}%{b}")));
         result.Add((null, ExactMath.Power(a, b).AsEquality($"{a}{LatexUnicode.ToSuperscript(b.ToString())}")));
 
 
-        result.Add(($"GCF({a}, {b})", $" = {ExactMath.GCF(a, b)}"));
-        result.Add(($"LCM({a}, {b})", $" = {ExactMath.LCM(a, b)}"));
+        result.Add(($"GCF({a},{b})", $"={ExactMath.GCF(a, b)}"));
+        result.Add(($"LCM({a},{b})", $"={ExactMath.LCM(a, b)}"));
 
         // Common factors
         {
@@ -100,7 +100,7 @@ internal class ExactCalculations
             int bPad = factorStrings.Max((f) => f.b.Length);
 
             result.Add(("Common Factors:\n", string.Join("\n",
-                factorStrings.Select((x) => $"{x.common.PadLeft(commonPad)} × ({x.a.PadLeft(aPad)}, {x.b.PadLeft(bPad)})"))));
+                factorStrings.Select((x) => $"{x.common.PadLeft(commonPad)},({x.a.PadLeft(aPad)},{x.b.PadLeft(bPad)})"))));
         }
 
         return result;
@@ -135,25 +135,25 @@ internal class ExactCalculations
                 {
                     throw new NotImplementedException();
                 }
-                result.Add((null, $"Â = ({aPart}, {bPart}, {cPart})"));
+                result.Add((null, $"Â=({aPart},{bPart},{cPart})"));
             }
         }
         else
         {
-            result.Add((null, $"|A| = ?"));
-            result.Add((null, $"Â = ({a}, {b}, {c})(?⁻¹)"));
+            result.Add((null, $"|A|=?"));
+            result.Add((null, $"Â=({a}, {b}, {c})(?⁻¹)"));
         }
-        result.Add((null, $"Σ({a}, {b}, {c}) = {a + b + c}"));
-        result.Add((null, $"∏({a}, {b}, {c}) = {a * b * c}"));
+        result.Add((null, $"Σ({a},{b},{c})={a + b + c}"));
+        result.Add((null, $"∏({a},{b},{c})={a * b * c}"));
 
-        result.Add(($"GCF({a}, {b}, {c}): ", $"{ExactMath.GCF(a, b, c)}"));
+        result.Add(($"GCF({a},{b},{c}): ", $"{ExactMath.GCF(a, b, c)}"));
 
-        result.Add(($"LCM({a}, {b}, {c}): ", $"{ExactMath.LCM(a, b, c)}"));
+        result.Add(($"LCM({a},{b},{c}): ", $"{ExactMath.LCM(a, b, c)}"));
 
         // Quadratic
         {
             string stepsStr =
-                $"  {a}𝑥²+{b}𝑥+{c} = 0 =>\n" +
+                $"  {a}𝑥²+{b}𝑥+{c}=0 =>\n" +
                 $"  𝑥 = (-𝑏±√(𝑏²-4𝑎𝑐))/(2𝑎)\n" +
                 $"    = (-({b})±√(({b})²-4({a})({c})))/(2({a}))\n" +
                 $"    = ({-b}±√({b * b}+{-(4 * a * c)}))/({2 * a})\n";

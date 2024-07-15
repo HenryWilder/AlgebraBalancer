@@ -29,14 +29,9 @@ public class Complex : IAlgebraicExpression
     public Number real;
     public Imaginary imag;
 
-    public override string ToString()
-    {
-        if (IsReal()) return real.ToString();
-        if (IsImaginary()) return imag.ToString();
-        else return $"{real}{imag:+#;-#;+0}";
-    }
+    public override string ToString() =>  $"{real}+{imag}";
 
-    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     public bool IsReal() => imag.coef == 0;
     public bool IsImaginary() => real == 0;

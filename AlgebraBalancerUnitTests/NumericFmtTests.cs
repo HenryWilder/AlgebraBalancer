@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using AlgebraBalancer;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using static AlgebraBalancer.Algebra.NumericFmt;
 
@@ -691,6 +693,27 @@ public class NumericFmtTests
                 "x",
                 DisplayFormat(
                     "0+-+-+-+0+-+-+-+-+x+-+-+-+-+0+-+-+-+0"
+                ));
+        }
+
+        [TestMethod]
+        public void TestRadical()
+        {
+            Assert.AreEqual(
+                "2i√6",
+                DisplayFormat(
+                    "2*i*√6"
+                ));
+        }
+
+        [TestMethod]
+        public void TestRadicalExactCalculations()
+        {
+            Assert.AreEqual(
+                "2𝑖√6",
+                DisplayFormat(
+                    "2*i*√6",
+                    MainPage.EXACT_CALC_FMT
                 ));
         }
     }

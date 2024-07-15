@@ -14,7 +14,7 @@ public class Fraction(int numerator = 1, int denominator = 1) : IAlgebraicExpres
     public override string ToString() =>
         $"{numerator}/{denominator}";
 
-    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     public IAlgebraicNotation Simplified()
     {

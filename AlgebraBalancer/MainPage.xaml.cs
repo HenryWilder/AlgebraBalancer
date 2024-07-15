@@ -14,6 +14,7 @@ using AlgebraBalancer.Substitute;
 using AlgebraBalancer.Algebra;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Text;
+using static AlgebraBalancer.Algebra.NumericFmt;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -50,6 +51,13 @@ public sealed partial class MainPage : Page
     {
         UpdateAsync();
     }
+
+    public const FormatOptions EXACT_CALC_FMT =
+                FormatOptions.ItalicImaginary |
+                FormatOptions.TimesMul |
+                FormatOptions.SlashDiv |
+                FormatOptions.SpaceAroundBinaryOperators |
+                FormatOptions.SpaceAroundRelationalOperators;
 
     private async void UpdateAsync()
     {
@@ -92,7 +100,7 @@ public sealed partial class MainPage : Page
         {
             var para = new Paragraph();
             if (!string.IsNullOrEmpty(name)) para.Inlines.Add(new Run { Text = name, FontWeight = FontWeights.Bold });
-            para.Inlines.Add(new Run { Text = value });
+            para.Inlines.Add(new Run { Text = DisplayFormat(value, EXACT_CALC_FMT) });
             para.Margin = new Thickness(5);
             Output.Blocks.Add(para);
         }
@@ -349,11 +357,7 @@ public sealed partial class MainPage : Page
             {
                 if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out var remainder))
                 {
-                    resultAlgebraic =
-                        (quotient.ToString() +
-                        ((remainder is Number n && n == 0) ? "" : $", {remainder}") +
-                        $" => ({denom})({quotient})+{remainder}")
-                        .Replace("+-", "-");
+                    resultAlgebraic = $"({denom})({quotient})+{remainder}";
                 }
                 else if (AlgSolver.TryFOILPolynomials(expr, out var foiled))
                 {
@@ -394,18 +398,20 @@ public sealed partial class MainPage : Page
         string addText;
         if (resultApproximate == resultAlgebraic)
         {
-            addText = $" = {resultAlgebraic}";
+            addText = $"={resultAlgebraic}";
         }
         else if (isApproximationError != isAlgebraicError)
         {
             addText = !isAlgebraicError
-                ? $" = {resultAlgebraic}"
-                : $" ≈ {resultApproximate}";
+                ? $"={resultAlgebraic}"
+                : $"≈{resultApproximate}";
         }
         else
         {
-            addText = $" = {resultAlgebraic} ≈ {resultApproximate}";
+            addText = $"={resultAlgebraic}≈{resultApproximate}";
         }
+
+        addText = DisplayFormat(addText, IdentifyPreference(expr));
 
         int insertAt = selectionStart + selectionLength;
         int insertEnd = insertAt + addText.Length;
@@ -430,41 +436,41 @@ public sealed partial class MainPage : Page
     private static readonly Regex rxOperator = new(@"^\s*([-+/*])\s*(.*)\s*$");
 
     // TODO: Currently broken
-    public static void BalanceAlgebra(
-        int selectionStart,
-        in string notesText,
-        out int selectionStartFinal,
-        out string notesTextFinal
-    )
-    {
-        var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
-        string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
+    //public static void BalanceAlgebra(
+    //    int selectionStart,
+    //    in string notesText,
+    //    out int selectionStartFinal,
+    //    out string notesTextFinal
+    //)
+    //{
+    //    var (startOfLine, endOfLine) = GetLineContainingPosition(notesText, selectionStart);
+    //    string lineText = notesText.Substring(startOfLine, endOfLine - startOfLine);
 
-        string[] args = lineText.Split(@"\\");
-        var rel = Relationship.Parse(args[0]);
-        var match = rxOperator.Match(args[1]);
-        if (match.Success)
-        {
-            var op = match.Groups[1].Value switch
-            {
-                "+" => Operation.Add,
-                "-" => Operation.Sub,
-                "*" => Operation.Mul,
-                "/" => Operation.Div,
-                _ => throw new NotImplementedException(),
-            };
-            rel.ApplyOperation(op, match.Groups[2].Value);
-            string refactor = rel.ToString();
-            notesTextFinal = notesText
-                .Remove(startOfLine, endOfLine - startOfLine)
-                .Insert(startOfLine, refactor);
-            selectionStartFinal = startOfLine + refactor.Length;
-            return;
-        }
+    //    string[] args = lineText.Split(@"\\");
+    //    var rel = Relationship.Parse(args[0]);
+    //    var match = rxOperator.Match(args[1]);
+    //    if (match.Success)
+    //    {
+    //        var op = match.Groups[1].Value switch
+    //        {
+    //            "+" => Operation.Add,
+    //            "-" => Operation.Sub,
+    //            "*" => Operation.Mul,
+    //            "/" => Operation.Div,
+    //            _ => throw new NotImplementedException(),
+    //        };
+    //        rel.ApplyOperation(op, match.Groups[2].Value);
+    //        string refactor = rel.ToString();
+    //        notesTextFinal = notesText
+    //            .Remove(startOfLine, endOfLine - startOfLine)
+    //            .Insert(startOfLine, refactor);
+    //        selectionStartFinal = startOfLine + refactor.Length;
+    //        return;
+    //    }
 
-        selectionStartFinal = selectionStart;
-        notesTextFinal = notesText;
-    }
+    //    selectionStartFinal = selectionStart;
+    //    notesTextFinal = notesText;
+    //}
 
     private void Notes_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
     {

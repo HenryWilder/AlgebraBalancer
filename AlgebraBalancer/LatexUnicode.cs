@@ -2057,6 +2057,7 @@ internal static class LatexUnicode
         /* lang=regex */ @"\^\{(?'key'(?:{keys}|\s)+?)\}|\^(?'key'{keys})",
         superscriptMapping);
     public static string ToSuperscript(string str) => Remap(str, superscriptMapping);
+    public static string ToSuperscript(int n) => ToSuperscript(n.ToString());
 
     private static readonly Regex superscriptNumberPattern = new(@"⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+", RegexOptions.Compiled);
     private const string SUPERSCRIPT_NUMBERS = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻";

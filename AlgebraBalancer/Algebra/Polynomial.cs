@@ -12,7 +12,7 @@ public class TermMultiplicand(string variable, int degree = 1)
     public string variable = variable;
     public int degree = degree;
 
-    public override string ToString() => variable + (degree == 1 ? "" : LatexUnicode.ToSuperscript(degree.ToString()));
+    public override string ToString() => variable + LatexUnicode.ToSuperscript(degree.ToString());
 
     public override bool Equals(object obj) =>
         obj is TermMultiplicand other &&
@@ -78,14 +78,8 @@ public class PolynomialTerm
     public int coefficient;
     public TermMultiplicand[] multiplicands;
 
-    public string MultiplicandsToString() => string.Concat(multiplicands.Where(mult => !mult.IsIdentity));
-    public override string ToString()
-    {
-        string multStr = MultiplicandsToString();
-        return string.IsNullOrEmpty(multStr)
-            ? coefficient.ToString()
-            : (coefficient == 1 ? "" : (coefficient == -1 ? "-" : coefficient.ToString())) + multStr;
-    }
+    public string MultiplicandsToString() => string.Join("*", multiplicands.Where(mult => !mult.IsIdentity));
+    public override string ToString() => $"{coefficient}*{MultiplicandsToString()}";
 
     public override bool Equals(object obj) =>
         obj is PolynomialTerm other &&
@@ -547,7 +541,7 @@ public class Polynomial : IAlgebraicNotation
         return poly;
     }
 
-    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     public static Polynomial operator +(Polynomial lhs, Polynomial rhs) =>
         new([.. lhs.terms.Concat(rhs.terms)]);

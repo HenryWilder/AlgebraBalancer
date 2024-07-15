@@ -24,21 +24,21 @@ public struct Huge : IAlgebraicAtomic
 {
     public readonly bool IsInoperable => true;
     public override readonly string ToString() => "𝑥 : |𝑥|≥2³²";
-    public readonly string AsEquality(string lhs) => $"|{lhs}| ≥ 2³²";
+    public readonly string AsEquality(string lhs) => $"|{lhs}|≥2³²";
 }
 
 public struct Tiny : IAlgebraicAtomic
 {
     public readonly bool IsInoperable => true;
     public override readonly string ToString() => "𝑥 : |𝑥|≤2⁻³²";
-    public readonly string AsEquality(string lhs) => $"|{lhs}| ≤ 2⁻³²";
+    public readonly string AsEquality(string lhs) => $"|{lhs}|≤2⁻³²";
 }
 
 public struct NotEnoughInfo : IAlgebraicAtomic
 {
     public readonly bool IsInoperable => true;
     public override readonly string ToString() => "?";
-    public readonly string AsEquality(string lhs) => $"{lhs} = ?";
+    public readonly string AsEquality(string lhs) => $"{lhs}=?";
 }
 
 /// <summary>

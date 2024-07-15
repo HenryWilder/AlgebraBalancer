@@ -33,15 +33,15 @@ public static class NumericFmt
     }
 
     private static readonly Regex rxBinaryOperator =
-        new(@"(?<!(?:^|\()\s*)\-|[+*/×÷⋅]",
+        new(@$"(?<!(?:^|\(|{rxRelationalOperator})\s*)\-|[+*/×÷⋅%]",
             RegexOptions.Compiled);
 
     private static readonly Regex rxTestSpaceAroundBinaryOperators =
-        new(@"(?<!^|\()\s+\-\s+|\s+[+*/×÷⋅]\s+",
+        new(@$"(?<!^|\(|{rxRelationalOperator})\s+\-\s+|\s+[+*/×÷⋅%]\s+",
             RegexOptions.Compiled);
 
     private static readonly Regex rxRelationalOperator =
-        new(@"[>=<!]=?|[≠≡≢≤≥∈∋∉∌⊂⊃⊄⊅⊆⊇⊈⊉⊊⊋⊏⊐⊄⊅⊑⊒⋢⋣⋤⋥]",
+        new(@"[>=<!]=?|[≈≠≡≢≤≥∈∋∉∌⊂⊃⊄⊅⊆⊇⊈⊉⊊⊋⊏⊐⊄⊅⊑⊒⋢⋣⋤⋥]",
             RegexOptions.Compiled);
 
     private static readonly Regex rxTestSpaceAroundRelationalOperators =
@@ -116,7 +116,7 @@ public static class NumericFmt
 
     // Should come last
     private static readonly Regex rxImplyableMul =
-        new(@"(?<=(?'ldigit'\d)|\)|\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*)\s*\*\s*(?=(?'rdigit'\d)|\(|\p{L})(?(ldigit)(?(rdigit)(?!)))",
+        new(@"(?<=(?'ldigit'\d)|\)|\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*)\s*\*\s*(?=(?'rdigit'\d)|\(|\p{L}|√)(?(ldigit)(?(rdigit)(?!)))",
             RegexOptions.Compiled);
 
     private static readonly Regex rxPow =
@@ -142,6 +142,14 @@ public static class NumericFmt
     private static readonly Regex rxIdentitySumDifference =
         new(@$"0[-+](?={rxOperand})|(?<={rxOperand})[-+]0",
             RegexOptions.Compiled);
+
+    // Should follow AddSubChain
+    private static readonly Regex rxSpacedUnaryPrefixMinus =
+        new(@$"(?:(?<=^|\()\s*|(?<={rxRelationalOperator}\s*))\-\s*",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxMultipleSpaces =
+        new(@" +", RegexOptions.Compiled);
 
     /// <summary>
     /// Takes a string from the user and expands it for parsing.
@@ -187,6 +195,8 @@ public static class NumericFmt
         expr = rxIdentitySumDifference  .Replace(expr, "");
         expr = rxIdentityPower          .Replace(expr, "");
         expr = rxPowerToIdentity        .Replace(expr, "");
+
+        expr = rxImplyableMul.Replace(expr, "");
 
         switch (fmt & (FormatOptions.AsciiImaginary | FormatOptions.ItalicImaginary | FormatOptions.ComplexImaginary))
         {
@@ -235,7 +245,9 @@ public static class NumericFmt
             expr = rxBinaryOperator.Replace(expr, (match) => " " + match.Value + " ");
         }
 
-        expr = rxImplyableMul.Replace(expr, "");
+        expr = rxSpacedUnaryPrefixMinus.Replace(expr, "-");
+
+        expr = rxMultipleSpaces.Replace(expr, " ");
 
         return expr;
     }

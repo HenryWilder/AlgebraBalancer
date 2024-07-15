@@ -8,6 +8,10 @@ public class SumOfRadicals(params Radical[] terms)
 
     public Radical[] terms = terms;
 
+    public override bool Equals(object obj) =>
+        obj is SumOfRadicals other &&
+        terms.SequenceEqual(other.terms);
+
     public static SumOfRadicals operator *(SumOfRadicals lhs, int rhs) =>
         new([.. lhs.terms.Select(term => new Radical(term.coefficient * rhs, term.radicand))]);
 
@@ -211,4 +215,7 @@ public class SumOfRadicals(params Radical[] terms)
         (term1, term2) = isBinomial ? (terms[0], terms[1]) : (default, default);
         return isBinomial;
     }
+
+    public override string ToString() =>
+        string.Join("*", terms.Select(term => term.ToString()));
 }

@@ -1043,17 +1043,17 @@ public class MainPageTests
     }
 
     //[TestClass]
-    public class BalanceAlgebraTests
-    {
-        [TestMethod]
-        public void TestBasic()
-        {
-            string notesText       = @$"4 - 2 = 3  with +2{SEL_BEG_IN}";
-            string expectNotesText = @$"4 = 3 + 2{SEL_BEG_EX}";
-            GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
-            BalanceAlgebra(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
-            Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
-            Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
-        }
-    }
+    //public class BalanceAlgebraTests
+    //{
+    //    [TestMethod]
+    //    public void TestBasic()
+    //    {
+    //        string notesText       = @$"4 - 2 = 3  with +2{SEL_BEG_IN}";
+    //        string expectNotesText = @$"4 = 3 + 2{SEL_BEG_EX}";
+    //        GetModifiedTextSelectionPositions(ref notesText, ref expectNotesText, out int selectionStart, out int expectStart, out _, out _);
+    //        BalanceAlgebra(selectionStart, notesText, out int newSelectionStart, out string newNotesText);
+    //        Assert.AreEqual(expectNotesText, newNotesText, "Notes Text");
+    //        Assert.AreEqual(expectStart, newSelectionStart, "Selection Start");
+    //    }
+    //}
 }

@@ -9,8 +9,8 @@ public struct Imaginary(int coef) : IAlgebraicAtomic
     public readonly bool IsInoperable => false;
 
     public static implicit operator Complex(Imaginary imag) => new(0, imag.coef);
-    public override readonly string ToString() => (coef == 1 ? "" : coef.ToString()) + "𝑖";
-    public readonly string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public override readonly string ToString() => $"{coef}*i";
+    public readonly string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     public static Imaginary operator +(Imaginary a, Imaginary b)
     {

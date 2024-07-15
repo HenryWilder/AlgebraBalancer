@@ -10,7 +10,7 @@ public class MultipleSolutions(params IAlgebraicNotation[] solutions) : IAlgebra
         ? $"{solutions[0]} or {solutions[1]}"
         : string.Join<IAlgebraicNotation>(", ", solutions));
 
-    public string AsEquality(string lhs) => lhs + " = " + ToString();
+    public string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     public bool IsInoperable => false;
 }

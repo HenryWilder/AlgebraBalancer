@@ -211,15 +211,14 @@ public class Algebraic : IAlgebraicExpression
         return alg;
     }
 
-    public override string ToString()
-    {
-        string numeratorStr = string.Join<Radical>("+", numerator.terms).Replace("+-", "-");
-        return denominator == 1
-            ? numeratorStr
-            : $"({numeratorStr})/{denominator}";
-    }
+    public override string ToString() => $"({numerator})/{denominator}";
 
-    public string AsEquality(string lhs) => $"{lhs} = {ToString()}";
+    public override bool Equals(object obj) =>
+        obj is Algebraic other &&
+        numerator == other.numerator &&
+        denominator == other.denominator;
+
+    public string AsEquality(string lhs) => $"{lhs}={ToString()}";
 
     //tex:$$\begin{gathered}
     //\frac{\sqrt{a_1}+\sqrt{a_2}+\dots+\sqrt{a_n}}{b}

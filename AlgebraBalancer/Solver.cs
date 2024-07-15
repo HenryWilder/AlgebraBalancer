@@ -16,7 +16,7 @@ public static class Solver
 
         try
         {
-            object computed = dt.Compute(AlgSolver.CleanExpr(expr), "");
+            object computed = dt.Compute(NumericFmt.ParserFormat(expr), "");
             if (computed is not null)
             {
                 double computedDouble = Convert.ToDouble(computed);
@@ -49,7 +49,7 @@ public static class Solver
     {
         try
         {
-            object computed = dt.Compute(AlgSolver.CleanExpr(expr), "");
+            object computed = dt.Compute(NumericFmt.ParserFormat(expr), "");
             if (computed is not null)
             {
                 result = Convert.ToDouble(computed).ToString();
