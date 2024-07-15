@@ -79,7 +79,13 @@ public class PolynomialTerm
     public TermMultiplicand[] multiplicands;
 
     public string MultiplicandsToString() => string.Join("*", multiplicands.Where(mult => !mult.IsIdentity));
-    public override string ToString() => $"{coefficient}*{MultiplicandsToString()}";
+    public override string ToString()
+    {
+        string multStr = MultiplicandsToString();
+        return string.IsNullOrWhiteSpace(multStr)
+            ? $"{coefficient}"
+            : $"{coefficient}*{MultiplicandsToString()}";
+    }
 
     public override bool Equals(object obj) =>
         obj is PolynomialTerm other &&
