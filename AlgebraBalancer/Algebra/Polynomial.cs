@@ -647,6 +647,11 @@ public class Polynomial : IAlgebraicNotation
             )
         ).SimplifiedToPolynomial();
 
+        if (quotient.terms.Length == 0)
+        {
+            return (new(0), numer);
+        }
+
         var remainder = (numer - denom * quotient).SimplifiedToPolynomial();
 
         if (remainder.terms.Length == 0)

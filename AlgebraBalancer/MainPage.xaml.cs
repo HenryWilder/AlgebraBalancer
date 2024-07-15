@@ -347,26 +347,32 @@ public sealed partial class MainPage : Page
             var letter = new Regex(@"\p{L}").Match(expr);
             if (letter.Success)
             {
-                if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out var remainder))
+                try
                 {
-                    resultAlgebraic =
-                        (quotient.ToString() +
-                        ((remainder is Number n && n == 0) ? "" : $", {remainder}") +
-                        $" => ({denom})({quotient})+{remainder}")
-                        .Replace("+-", "-");
+                    if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out var remainder))
+                    {
+                        resultAlgebraic =
+                            (quotient.ToString() +
+                            ((remainder is Number n && n == 0) ? "" : $", {remainder}") +
+                            $" => ({denom})({quotient})+{remainder}")
+                            .Replace("+-", "-");
+                    }
+                    else if (AlgSolver.TryFOILPolynomials(expr, out var foiled))
+                    {
+                        resultAlgebraic = foiled.ToString();
+                    }
+                    else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
+                    {
+                        resultAlgebraic = simplified.ToString();
+                    }
+                    else
+                    {
+                        throw new Exception($"Cannot use variable '{letter.Value}' except in polynomial");
+                    }
                 }
-                else if (AlgSolver.TryFOILPolynomials(expr, out var foiled))
+                catch (StackOverflowException)
                 {
-                    resultAlgebraic = foiled.ToString();
-                }
-                else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
-                {
-                    resultAlgebraic = simplified.ToString();
-                }
-                else
-                {
-                    resultAlgebraic = $"<Cannot use variable '{letter.Value}' except in polynomial>";
-                    isAlgebraicError = true;
+                    throw new NotImplementedException("Current implementation results in an infinite loop");
                 }
             }
             else
