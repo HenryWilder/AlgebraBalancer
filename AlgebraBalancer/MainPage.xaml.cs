@@ -347,32 +347,25 @@ public sealed partial class MainPage : Page
             var letter = new Regex(@"\p{L}").Match(expr);
             if (letter.Success)
             {
-                try
+                if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out var remainder))
                 {
-                    if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out var remainder))
-                    {
-                        resultAlgebraic =
-                            (quotient.ToString() +
-                            ((remainder is Number n && n == 0) ? "" : $", {remainder}") +
-                            $" => ({denom})({quotient})+{remainder}")
-                            .Replace("+-", "-");
-                    }
-                    else if (AlgSolver.TryFOILPolynomials(expr, out var foiled))
-                    {
-                        resultAlgebraic = foiled.ToString();
-                    }
-                    else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
-                    {
-                        resultAlgebraic = simplified.ToString();
-                    }
-                    else
-                    {
-                        throw new Exception($"Cannot use variable '{letter.Value}' except in polynomial");
-                    }
+                    resultAlgebraic =
+                        (quotient.ToString() +
+                        ((remainder is Number n && n == 0) ? "" : $", {remainder}") +
+                        $" => ({denom})({quotient})+{remainder}")
+                        .Replace("+-", "-");
                 }
-                catch (StackOverflowException)
+                else if (AlgSolver.TryFOILPolynomials(expr, out var foiled))
                 {
-                    throw new NotImplementedException("Current implementation results in an infinite loop");
+                    resultAlgebraic = foiled.ToString();
+                }
+                else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
+                {
+                    resultAlgebraic = simplified.ToString();
+                }
+                else
+                {
+                    throw new Exception($"Cannot use variable '{letter.Value}' except in polynomial");
                 }
             }
             else

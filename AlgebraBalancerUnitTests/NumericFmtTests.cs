@@ -311,7 +311,149 @@ public class NumericFmtTests
     [TestClass]
     public class ParserFormatTests
     {
+        [TestMethod]
+        public void TestSpaceRemoval()
+        {
+            Assert.AreEqual(
+                "2+2-1/5+3-2",
+                ParserFormat("2 + 2   -    1/5   +3     - 2"));
+        }
 
+        [TestClass]
+        public class ImpliedMultiplicationTests
+        {
+            [TestMethod, TestCategory("Subexpression"), TestCategory("Number")]
+            public void TestNumberTimesSubexpr()
+            {
+                Assert.AreEqual(
+                    "2*(2+3)",
+                    ParserFormat("2(2+3)"));
+            }
+
+            [TestMethod, TestCategory("Subexpression"), TestCategory("Number")]
+            public void TestSubexprTimesNumber()
+            {
+                Assert.AreEqual(
+                    "(2+3)*2",
+                    ParserFormat("(2+3)2"));
+            }
+
+            [TestMethod, TestCategory("Subexpression")]
+            public void TestSubexprTimesSubexpr()
+            {
+                Assert.AreEqual(
+                    "(2+3)*(2+5)",
+                    ParserFormat("(2+3)(2+5)"));
+            }
+
+            [TestMethod, TestCategory("Variable"), TestCategory("Number")]
+            public void TestNumberTimesVariable()
+            {
+                Assert.AreEqual(
+                    "2*x",
+                    ParserFormat("2x"));
+            }
+
+            [TestMethod, TestCategory("Variable"), TestCategory("Number")]
+            public void TestVariableTimesNumber()
+            {
+                Assert.AreEqual(
+                    "x*2",
+                    ParserFormat("x2"));
+            }
+
+            [TestMethod, TestCategory("Variable"), TestCategory("Subexpr")]
+            public void TestSubexprTimesVariable()
+            {
+                Assert.AreEqual(
+                    "(2+2)*x",
+                    ParserFormat("(2+2)x"));
+            }
+
+            [TestMethod, TestCategory("Variable"), TestCategory("Subexpr")]
+            public void TestVariableTimesSubexpr()
+            {
+                Assert.AreEqual(
+                    "x*(2+2)",
+                    ParserFormat("x(2+2)"));
+            }
+
+            [TestMethod, TestCategory("Variable")]
+            public void TestVariableTimesVariable()
+            {
+                Assert.AreEqual(
+                    "x*y",
+                    ParserFormat("xy"));
+            }
+
+            [TestMethod, TestCategory("Number")]
+            public void TestNumberNearNumber()
+            {
+                Assert.AreNotEqual(
+                    "23*65",
+                    ParserFormat("23 65"));
+            }
+
+            [TestMethod, TestCategory("Number")]
+            public void TestSubtractionNotMultiplication()
+            {
+                Assert.AreNotEqual(
+                    "23*-65",
+                    ParserFormat("23 -65"));
+            }
+        }
+
+        [TestClass]
+        public class ImaginaryTests
+        {
+            [TestMethod]
+            public void TestImaginaryItalicToAscii()
+            {
+                Assert.AreEqual(
+                    "3+6i-4",
+                    ParserFormat("3+6𝑖-4"));
+            }
+
+            [TestMethod]
+            public void TestImaginaryComplexToAscii()
+            {
+                Assert.AreEqual(
+                    "3+6i-4",
+                    ParserFormat("3+6ⅈ-4"));
+            }
+        }
+
+        [TestClass]
+        public class MulTests
+        {
+            [TestMethod]
+            public void TestMulCDotToAscii()
+            {
+                Assert.AreEqual(
+                    "3+6*4",
+                    ParserFormat("3+6⋅4"));
+            }
+
+            [TestMethod]
+            public void TestMulTimesToAscii()
+            {
+                Assert.AreEqual(
+                    "3+6*4",
+                    ParserFormat("3+6×4"));
+            }
+        }
+
+        [TestClass]
+        public class DivTests
+        {
+            [TestMethod]
+            public void TestDivDivToSlash()
+            {
+                Assert.AreEqual(
+                    "3+6/4",
+                    ParserFormat("3+6÷4"));
+            }
+        }
     }
 
     ////////////////////
@@ -321,6 +463,175 @@ public class NumericFmtTests
     [TestClass]
     public class DisplayFormatTests
     {
+        [TestMethod]
+        public void TestDefault()
+        {
+            Assert.AreEqual(
+                "3+6/4=23i+7³",
+                DisplayFormat(
+                    "3+6/4=23*i+7^3"
+                ));
+        }
 
+        [TestMethod]
+        public void TestSpacesAroundBinary()
+        {
+            Assert.AreEqual(
+                "3 + 6 / 4=23i + 7³",
+                DisplayFormat(
+                    "3+6/4=23*i+7^3",
+                    FormatOptions.SpaceAroundBinaryOperators
+                ));
+        }
+
+        [TestMethod]
+        public void TestSpacesAroundRelational()
+        {
+            Assert.AreEqual(
+                "3+6/4 = 23i+7³",
+                DisplayFormat(
+                    "3+6/4=23*i+7^3",
+                    FormatOptions.SpaceAroundRelationalOperators
+                ));
+        }
+
+        [TestMethod]
+        public void TestSpacesAroundBinaryAndRelational()
+        {
+            Assert.AreEqual(
+                "3 + 6 / 4 = 23i + 7³",
+                DisplayFormat(
+                    "3+6/4=23*i+7^3",
+                    FormatOptions.SpaceAroundBinaryOperators | FormatOptions.SpaceAroundRelationalOperators
+                ));
+        }
+
+        [TestMethod]
+        public void TestAsciiImaginary()
+        {
+            Assert.AreEqual(
+                "2i",
+                DisplayFormat(
+                    "2i",
+                    FormatOptions.AsciiImaginary
+                ));
+        }
+
+        [TestMethod]
+        public void TestItalicImaginary()
+        {
+            Assert.AreEqual(
+                "2𝑖",
+                DisplayFormat(
+                    "2i",
+                    FormatOptions.ItalicImaginary
+                ));
+        }
+
+        [TestMethod]
+        public void TestComplexImaginary()
+        {
+            Assert.AreEqual(
+                "2ⅈ",
+                DisplayFormat(
+                    "2i",
+                    FormatOptions.ComplexImaginary
+                ));
+        }
+
+        [TestMethod]
+        public void TestSlashDiv()
+        {
+            Assert.AreEqual(
+                "6/4",
+                DisplayFormat(
+                    "6/4",
+                    FormatOptions.SlashDiv
+                ));
+        }
+
+        [TestMethod]
+        public void TestDivDiv()
+        {
+            Assert.AreEqual(
+                "6÷4",
+                DisplayFormat(
+                    "6/4",
+                    FormatOptions.DivDiv
+                ));
+        }
+
+        [TestMethod]
+        public void TestAsciiMul()
+        {
+            Assert.AreEqual(
+                "3*3",
+                DisplayFormat(
+                    "3*3",
+                    FormatOptions.AsciiMul
+                ));
+        }
+
+        [TestMethod]
+        public void TestTimesMul()
+        {
+            Assert.AreEqual(
+                "3×3",
+                DisplayFormat(
+                    "3*3",
+                    FormatOptions.TimesMul
+                ));
+        }
+
+        [TestMethod]
+        public void TestCDotMul()
+        {
+            Assert.AreEqual(
+                "3⋅3",
+                DisplayFormat(
+                    "3*3",
+                    FormatOptions.CDotMul
+                ));
+        }
+
+        [TestMethod]
+        public void TestAddNegative()
+        {
+            Assert.AreEqual(
+                "3-3",
+                DisplayFormat(
+                    "3+-3"
+                ));
+        }
+
+        [TestMethod]
+        public void TestSubNegative()
+        {
+            Assert.AreEqual(
+                "3+3",
+                DisplayFormat(
+                    "3--3"
+                ));
+        }
+
+        [TestMethod]
+        public void TestAddSubChainA()
+        {
+            Assert.AreEqual(
+                "3-3",
+                DisplayFormat(
+                    "3+--+-+---+-+++-+-3"
+                ));
+        }
+
+        [TestMethod]
+        public void TestAddSubChainB()
+        {
+            Assert.AreEqual(
+                "3+3",
+                DisplayFormat(
+                    "3+--+-+---+-+++-+--3"
+                ));
+        }
     }
 }

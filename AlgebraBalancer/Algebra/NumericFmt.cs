@@ -102,7 +102,7 @@ public static class NumericFmt
 
     // Operands can't be adjacent numbers or else they combine into one operand (as intended)
     private static readonly Regex rxOperand =
-        new(@"\d+|\p{L}[₀₁₂₃₄₅₆₇₈₉₌ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*|\((?:[^()]+|(?'open'\()|(?'-open'\)))*?(?(open)(?!))\)",
+        new(@"\d+|\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*|\((?:[^()]+|(?'open'\()|(?'-open'\)))*?(?(open)(?!))\)",
             RegexOptions.Compiled);
 
     private static readonly Regex rxImpliedMul =
@@ -111,6 +111,14 @@ public static class NumericFmt
 
     private static readonly Regex rxAddSubChain =
         new(@"[-+]{2,}",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxImplyableMul =
+        new(@"(?<=(?'ldigit'\d)|\)|\p{L}[₀₁₂₃₄₅₆₇₈₉ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*)\s*\*\s*(?=(?'rdigit'\d)|\(|\p{L})(?(ldigit)(?(rdigit)(?!)))",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxPow =
+        new(@"\^(?'open'[({])?(?'exponent'\-?\d+)(?(open)[)}])",
             RegexOptions.Compiled);
 
     /// <summary>
@@ -142,7 +150,7 @@ public static class NumericFmt
     /// Example:
     /// <c>3*(4+2+-1)^2+-7*3</c> => <c>3(4 + 2 - 1)² - 7 * 3</c>
     /// </summary>
-    public static string DisplayFormat(string expr, FormatOptions fmt)
+    public static string DisplayFormat(string expr, FormatOptions fmt = 0)
     {
         expr = rxAddSubChain.Replace(expr, (chain) =>
         {
@@ -150,6 +158,10 @@ public static class NumericFmt
             int subCount = chainStr.Count(ch => ch == '-');
             return (subCount % 2 == 0) ? "+" : "-";
         });
+
+        expr = rxPow.Replace(expr, (match) => LatexUnicode.ToSuperscript(match.Groups["exponent"].Value));
+
+        expr = rxImplyableMul.Replace(expr, "");
 
         switch (fmt & (FormatOptions.AsciiImaginary | FormatOptions.ItalicImaginary | FormatOptions.ComplexImaginary))
         {
@@ -197,9 +209,6 @@ public static class NumericFmt
         {
             expr = rxBinaryOperator.Replace(expr, (match) => " " + match.Value + " ");
         }
-
-        // Just in case
-        expr = expr.Replace("  ", " ");
 
         return expr;
     }
