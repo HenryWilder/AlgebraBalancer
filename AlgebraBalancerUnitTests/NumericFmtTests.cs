@@ -410,7 +410,7 @@ public class NumericFmtTests
             public void TestImaginaryItalicToAscii()
             {
                 Assert.AreEqual(
-                    "3+6i-4",
+                    "3+6*i-4",
                     ParserFormat("3+6𝑖-4"));
             }
 
@@ -418,7 +418,7 @@ public class NumericFmtTests
             public void TestImaginaryComplexToAscii()
             {
                 Assert.AreEqual(
-                    "3+6i-4",
+                    "3+6*i-4",
                     ParserFormat("3+6ⅈ-4"));
             }
         }
@@ -631,6 +631,66 @@ public class NumericFmtTests
                 "3+3",
                 DisplayFormat(
                     "3+--+-+---+-+++-+--3"
+                ));
+        }
+
+        [TestMethod]
+        public void TestIdentityProduct()
+        {
+            Assert.AreEqual(
+                "x",
+                DisplayFormat(
+                    "1*x*1"
+                ));
+        }
+
+        [TestMethod]
+        public void TestNegativeIdentityProduct()
+        {
+            Assert.AreEqual(
+                "-x",
+                DisplayFormat(
+                    "-1*x"
+                ));
+        }
+
+        [TestMethod]
+        public void TestIdentityQuotient()
+        {
+            Assert.AreEqual(
+                "x",
+                DisplayFormat(
+                    "x/1"
+                ));
+        }
+
+        [TestMethod]
+        public void TestIdentitySum()
+        {
+            Assert.AreEqual(
+                "x",
+                DisplayFormat(
+                    "0+x+0"
+                ));
+        }
+
+        [TestMethod]
+        public void TestIdentityDifference()
+        {
+            Assert.AreEqual(
+                "x",
+                DisplayFormat(
+                    "0-x-0"
+                ));
+        }
+
+        [TestMethod]
+        public void TestChainedIdentitySumDifference()
+        {
+            Assert.AreEqual(
+                "x",
+                DisplayFormat(
+                    "0+-+-+-+0+-+-+-+-+x+-+-+-+-+0+-+-+-+0"
                 ));
         }
     }
