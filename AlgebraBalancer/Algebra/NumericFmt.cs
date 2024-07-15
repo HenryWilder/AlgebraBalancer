@@ -1,34 +1,206 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace AlgebraBalancer.Algebra;
 public static class NumericFmt
 {
+    public enum FormatOptions
+    {
+        /// <summary><c>2+6*8(3-1)</c> => <c>2 + 6 * 8(3 - 1)</c></summary>
+        SpaceAroundBinaryOperators = 1,
+        /// <summary><c>2+2=6-2</c> => <c>2+2 = 6-2</c></summary>
+        SpaceAroundRelationalOperators = 1 << 1,
+
+        /// <summary><c>√-1</c> => <c>i</c></summary>
+        AsciiImaginary = 0,
+        /// <summary><c>√-1</c> => <c>𝑖</c></summary>
+        ItalicImaginary = 1 << 2,
+        /// <summary><c>√-1</c> => <c>ⅈ</c></summary>
+        ComplexImaginary = 1 << 3,
+
+        /// <summary><c>*</c> => <c>*</c></summary>
+        AsciiMul = 0,
+        /// <summary><c>*</c> => <c>×</c></summary>
+        TimesMul = 1 << 4,
+        /// <summary><c>*</c> => <c>⋅</c></summary>
+        CDotMul = 1 << 5,
+
+        /// <summary><c>/</c> => <c>/</c></summary>
+        SlashDiv = 0,
+        /// <summary><c>/</c> => <c>÷</c></summary>
+        DivDiv = 1 << 6,
+    }
+
+    private static readonly Regex rxBinaryOperator =
+        new(@"(?<!(?:^|\()\s*)\-|[+*/×÷⋅]",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxTestSpaceAroundBinaryOperators =
+        new(@"(?<!^|\()\s+\-\s+|\s+[+*/×÷⋅]\s+",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxRelationalOperator =
+        new(@"[>=<!]=?|[≠≡≢≤≥∈∋∉∌⊂⊃⊄⊅⊆⊇⊈⊉⊊⊋⊏⊐⊄⊅⊑⊒⋢⋣⋤⋥]",
+            RegexOptions.Compiled);
+
+    private static readonly Regex rxTestSpaceAroundRelationalOperators =
+        new(@$"\s+(?:{rxRelationalOperator})\s+",
+            RegexOptions.Compiled);
+
+    public static FormatOptions IdentifyPreference(string example)
+    {
+        FormatOptions result = 0;
+
+        if (rxTestSpaceAroundBinaryOperators.IsMatch(example))
+        {
+            result |= FormatOptions.SpaceAroundBinaryOperators;
+        }
+
+        if (rxTestSpaceAroundRelationalOperators.IsMatch(example))
+        {
+            result |= FormatOptions.SpaceAroundRelationalOperators;
+        }
+
+        if (example.Contains("ⅈ"))
+        {
+            result |= FormatOptions.ComplexImaginary;
+        }
+        else if (example.Contains("𝑖"))
+        {
+            result |= FormatOptions.ItalicImaginary;
+        }
+        else // i
+        {
+            result |= FormatOptions.AsciiImaginary;
+        }
+
+        if (example.Contains("⋅"))
+        {
+            result |= FormatOptions.CDotMul;
+        }
+        else if (example.Contains("×"))
+        {
+            result |= FormatOptions.TimesMul;
+        }
+        else // *
+        {
+            result |= FormatOptions.AsciiMul;
+        }
+
+        if (example.Contains("÷"))
+        {
+            result |= FormatOptions.DivDiv;
+        }
+        else // /
+        {
+            result |= FormatOptions.SlashDiv;
+        }
+
+        return result;
+    }
+
+    // Operands can't be adjacent numbers or else they combine into one operand (as intended)
     private static readonly Regex rxOperand =
         new(@"\d+|\p{L}[₀₁₂₃₄₅₆₇₈₉₌ₐₑₕₖₗₘₙₒₚₛₜₓ'""`′″‴‵‶‷]*|\((?:[^()]+|(?'open'\()|(?'-open'\)))*?(?(open)(?!))\)",
             RegexOptions.Compiled);
 
-    private const string RX_ADD =
-        /* lang=regex */ @"(?'lhs'{operand})[*×⋅]?(?'rhs'{operand})";
+    private static readonly Regex rxImpliedMul =
+        new(@$"(?<={rxOperand})(?={rxOperand})",
+            RegexOptions.Compiled);
 
-    private const string RX_SUB =
-        /* lang=regex */ @"(?'lhs'{operand})[*×⋅]?(?'rhs'{operand})";
+    private static readonly Regex rxAddSubChain =
+        new(@"[-+]{2,}",
+            RegexOptions.Compiled);
 
-    private const string RX_MUL =
-        /* lang=regex */ @"(?'lhs'{operand})[*×⋅]?(?'rhs'{operand})";
-
-    private const string RX_DIV =
-        /* lang=regex */ @"(?'lhs'{operand})[*×⋅]?(?'rhs'{operand})";
-
-    private const string RX_POW =
-        /* lang=regex */ @"(?'base'{operand})(?:\^(?'powbrace'\{)(?'exp'\d+)(?(powbrace)\})|(?'exp'[⁰¹²³⁴⁵⁶⁷⁸⁹]+))";
-
-    public static string FormatExpr(string expr)
+    /// <summary>
+    /// Takes a string from the user and expands it for parsing.
+    /// 
+    /// Example:
+    /// <c>3(4 + 2 - 1)² - 7 × 3</c> => <c>3*(4+2+-1)^2+-7*3</c>
+    /// </summary>
+    public static string ParserFormat(string expr)
     {
-        return expr
-            .Replace("+-", "-")
-            .Replace("-+", "-")
-            .Replace("--", "+")
-            .Replace("++", "+")
+        expr = expr
+            .Replace(" ", "")
+            .Replace("×", "*")
+            .Replace("⋅", "*")
+            .Replace("÷", "/")
+            .Replace("ⅈ", "i")
+            .Replace("𝑖", "i")
         ;
+
+        expr = rxImpliedMul.Replace(expr, "*");
+        expr = LatexUnicode.SuperscriptToNumber(expr);
+
+        return expr;
+    }
+
+    /// <summary>
+    /// Takes a string generated by the program and simplifies it for display.
+    /// 
+    /// Example:
+    /// <c>3*(4+2+-1)^2+-7*3</c> => <c>3(4 + 2 - 1)² - 7 * 3</c>
+    /// </summary>
+    public static string DisplayFormat(string expr, FormatOptions fmt)
+    {
+        expr = rxAddSubChain.Replace(expr, (chain) =>
+        {
+            string chainStr = chain.Value;
+            int subCount = chainStr.Count(ch => ch == '-');
+            return (subCount % 2 == 0) ? "+" : "-";
+        });
+
+        switch (fmt & (FormatOptions.AsciiImaginary | FormatOptions.ItalicImaginary | FormatOptions.ComplexImaginary))
+        {
+            case FormatOptions.AsciiImaginary:
+                break;
+            case FormatOptions.ItalicImaginary:
+                expr = expr.Replace("i", "𝑖");
+                break;
+            case FormatOptions.ComplexImaginary:
+                expr = expr.Replace("i", "ⅈ");
+                break;
+            default:
+                throw new Exception("Imaginary cannot simultaneously be 'ⅈ' and '𝑖'");
+        }
+
+        switch (fmt & (FormatOptions.AsciiMul | FormatOptions.TimesMul | FormatOptions.CDotMul))
+        {
+            case FormatOptions.AsciiMul:
+                break;
+            case FormatOptions.TimesMul:
+                expr = expr.Replace("*", "×");
+                break;
+            case FormatOptions.CDotMul:
+                expr = expr.Replace("*", "⋅");
+                break;
+            default:
+                throw new Exception("Multiplication cannot simultaneously be '×' and '⋅'");
+        }
+
+        switch (fmt & (FormatOptions.SlashDiv | FormatOptions.DivDiv))
+        {
+            case FormatOptions.SlashDiv:
+                break;
+            case FormatOptions.DivDiv:
+                expr = expr.Replace("/", "÷");
+                break;
+        }
+
+        if (fmt.HasFlag(FormatOptions.SpaceAroundRelationalOperators))
+        {
+            expr = rxRelationalOperator.Replace(expr, (match) => " " + match.Value + " ");
+        }
+
+        if (fmt.HasFlag(FormatOptions.SpaceAroundBinaryOperators))
+        {
+            expr = rxBinaryOperator.Replace(expr, (match) => " " + match.Value + " ");
+        }
+
+        // Just in case
+        expr = expr.Replace("  ", " ");
+
+        return expr;
     }
 }
