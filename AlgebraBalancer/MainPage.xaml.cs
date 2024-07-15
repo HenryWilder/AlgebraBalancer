@@ -350,9 +350,10 @@ public sealed partial class MainPage : Page
                 if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out var remainder))
                 {
                     resultAlgebraic =
-                        quotient.ToString() +
+                        (quotient.ToString() +
                         ((remainder is Number n && n == 0) ? "" : $", {remainder}") +
-                        $" => ({denom})({quotient})+{remainder}";
+                        $" => ({denom})({quotient})+{remainder}")
+                        .Replace("+-", "-");
                 }
                 else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
                 {
