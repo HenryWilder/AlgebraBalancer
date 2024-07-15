@@ -344,9 +344,13 @@ public sealed partial class MainPage : Page
         string resultAlgebraic;
         try
         {
-            if (AlgSolver.TrySolvePolynomialDivision(expr, out var numer, out var denom, out var quotient, out int remainder))
+            if (AlgSolver.TrySolvePolynomialDivision(expr, out _, out var denom, out var quotient, out int remainder))
             {
                 resultAlgebraic = $"({denom})({quotient})+{remainder}";
+            }
+            else if (AlgSolver.TrySimplifyPolynomial(expr, out var simplified))
+            {
+                resultAlgebraic = simplified.ToString();
             }
             else
             {

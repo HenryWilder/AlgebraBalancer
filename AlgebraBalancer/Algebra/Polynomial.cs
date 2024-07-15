@@ -61,6 +61,19 @@ public class PolynomialTerm
             throw new Exception($"Failed to parse \"{str}\" to a polynomial term");
         }
     }
+    public static bool TryParse(string str, out PolynomialTerm term)
+    {
+        try
+        {
+            term = Parse(str);
+            return true;
+        }
+        catch
+        {
+            term = null;
+            return false;
+        }
+    }
 
     public int coefficient;
     public TermMultiplicand[] multiplicands;
@@ -102,6 +115,22 @@ public class Polynomial(params PolynomialTerm[] terms) : IAlgebraicNotation
     private static readonly Regex rxTermSeparator = new(@"(?<!^)(?:\+|(?=\-))", RegexOptions.Compiled);
     public static Polynomial Parse(string str) =>
         new([.. rxTermSeparator.Split(str.Replace(" ", "")).Select(PolynomialTerm.Parse).Where(x => x is not null)]);
+
+    public static bool TryParse(string str, out Polynomial poly)
+    {
+        try
+        {
+            poly = Parse(str);
+            return true;
+        }
+        catch
+        {
+            poly = null;
+            return false;
+        }
+    }
+
+    public bool IsConstantMonomial => terms.Length == 1 && terms[0].IsConstant;
 
     public PolynomialTerm[] terms = [.. terms.Where(term => term.coefficient != 0)];
 

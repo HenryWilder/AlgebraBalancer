@@ -164,7 +164,7 @@ public static class AlgSolver
     }
 
     private static readonly Regex rxPolynomialLongDivision =
-        new(@"\((?'numer'(?:[-+]?\d*(?:\p{L}[⁰¹²³⁴⁵⁶⁷⁸⁹]*)*)+)\)/\((?'denom'(?:[-+]?\d*(?:\p{L}[⁰¹²³⁴⁵⁶⁷⁸⁹]*)*)+)\)",
+        new(@"\((?'numer'.+?)\)\s*/\s*\((?'denom'.+?)\)",
             RegexOptions.Compiled);
 
     public static bool TrySolvePolynomialDivision(
@@ -174,23 +174,52 @@ public static class AlgSolver
         out IAlgebraicNotation quotient,
         out int remainder)
     {
-        var div = rxPolynomialLongDivision.Match(expr.Replace(" ", ""));
+
+        var div = rxPolynomialLongDivision.Match(expr);
         if (div.Success)
         {
-            numer = Polynomial.Parse(div.Groups["numer"].Value);
-            denom = Polynomial.Parse(div.Groups["denom"].Value);
-            (var q, remainder) = numer / denom;
-            quotient = q.Simplified();
-            return true;
+            try
+            {
+                if (!Polynomial.TryParse(div.Groups["numer"].Value, out numer) ||
+                    !Polynomial.TryParse(div.Groups["denom"].Value, out denom) ||
+                    numer.IsConstantMonomial && denom.IsConstantMonomial
+                )
+                {
+                    goto NOT_POLYNOMIAL_DIVISION;
+                }
+
+                (var q, remainder) = numer / denom;
+                quotient = q.Simplified();
+                return true;
+            }
+            catch
+            {
+                goto NOT_POLYNOMIAL_DIVISION;
+            }
         }
-        else
+
+    NOT_POLYNOMIAL_DIVISION:
+        numer = null;
+        denom = null;
+        quotient = null;
+        remainder = default;
+        return false;
+    }
+
+    public static bool TrySimplifyPolynomial(string expr, out IAlgebraicNotation simplified)
+    {
+        try
         {
-            numer = null;
-            denom = null;
-            quotient = null;
-            remainder = -1;
-            return false;
+            if (Polynomial.TryParse(expr, out var polynomial))
+            {
+                simplified = polynomial.Simplified();
+                return true;
+            }
         }
+        catch { }
+
+        simplified = null;
+        return false;
     }
 
     public static Algebraic SolveAlgebraic(string expr)
